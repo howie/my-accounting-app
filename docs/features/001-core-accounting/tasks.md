@@ -19,13 +19,13 @@ description: "Tasks for Core Accounting System implementation"
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Create project directory structure (src/myab, tests, docs) per plan.md
-- [ ] T002 Create requirements-dev.txt with pytest and pytest-cov
-- [ ] T003 [P] Create setup.py or pyproject.toml for package configuration
-- [ ] T004 [P] Configure .gitignore for Python, SQLite, and IDE files
-- [ ] T005 Create tests/conftest.py with initial database fixtures
-- [ ] T006 Create docs/features/001-core-accounting/data-model.md with detailed schema
-- [ ] T007 [P] Create docs/features/001-core-accounting/quickstart.md guide
+- [x] T001 Create project directory structure (src/myab, tests, docs) per plan.md
+- [x] T002 Create requirements-dev.txt with pytest and pytest-cov
+- [x] T003 [P] Create setup.py or pyproject.toml for package configuration
+- [x] T004 [P] Configure .gitignore for Python, SQLite, and IDE files
+- [x] T005 Create tests/conftest.py with initial database fixtures
+- [x] T006 Create docs/features/001-core-accounting/data-model.md with detailed schema
+- [x] T007 [P] Create docs/features/001-core-accounting/quickstart.md guide
 
 ---
 
@@ -35,12 +35,12 @@ description: "Tasks for Core Accounting System implementation"
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T008 Implement src/myab/persistence/database.py (SQLite connection manager)
-- [ ] T009 Create src/myab/models/base.py (if needed for shared logic) or init models package
-- [ ] T010 [P] Implement src/myab/validation/validators.py (DI-001 numeric validation)
-- [ ] T011 Setup logging configuration in src/myab/__init__.py
-- [ ] T012 Create initial DB migration/schema script in src/myab/persistence/schema.sql
-- [ ] T013 Verify database connection and schema creation with a simple test in tests/unit/persistence/test_database.py
+- [x] T008 Implement src/myab/persistence/database.py (SQLite connection manager)
+- [x] T009 Create src/myab/models/base.py (if needed for shared logic) or init models package
+- [x] T010 [P] Implement src/myab/validation/validators.py (DI-001 numeric validation)
+- [x] T011 Setup logging configuration in src/myab/__init__.py
+- [x] T012 Create initial DB migration/schema script in src/myab/persistence/schema.sql
+- [x] T013 Verify database connection and schema creation with a simple test in tests/unit/persistence/test_database.py
 
 **Checkpoint**: Foundation ready - database connects, schema loads.
 
@@ -54,27 +54,27 @@ description: "Tasks for Core Accounting System implementation"
 
 ### Tests for US1 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T014 [P] [US1] Contract test for UserAccountService in tests/contract/test_user_account_service_contract.py
-- [ ] T015 [P] [US1] Contract test for LedgerService in tests/contract/test_ledger_service_contract.py
-- [ ] T016 [P] [US1] Contract test for AccountService in tests/contract/test_account_service_contract.py
-- [ ] T017 [P] [US1] Integration test: Ledger creation and account setup in tests/integration/test_ledger_lifecycle.py
-- [ ] T018 [US1] **GATE**: Verify all tests FAIL
+- [x] T014 [P] [US1] Contract test for UserAccountService in tests/contract/test_user_account_service_contract.py
+- [x] T015 [P] [US1] Contract test for LedgerService in tests/contract/test_ledger_service_contract.py
+- [x] T016 [P] [US1] Contract test for AccountService in tests/contract/test_account_service_contract.py
+- [x] T017 [P] [US1] Integration test: Ledger creation and account setup in tests/integration/test_ledger_lifecycle.py
+- [x] T018 [US1] **GATE**: Verify all tests FAIL
 
 ### Implementation for US1
 
-- [ ] T019 [P] [US1] Create UserAccount model in src/myab/models/user_account.py
-- [ ] T020 [P] [US1] Create Ledger model in src/myab/models/ledger.py
-- [ ] T021 [P] [US1] Create Account model in src/myab/models/account.py (with type enum)
-- [ ] T022 [P] [US1] Implement UserAccountRepository in src/myab/persistence/repositories/user_account_repository.py
-- [ ] T023 [P] [US1] Implement LedgerRepository in src/myab/persistence/repositories/ledger_repository.py
-- [ ] T024 [P] [US1] Implement AccountRepository in src/myab/persistence/repositories/account_repository.py
-- [ ] T025 [P] [US1] Implement UserAccountService in src/myab/services/user_account_service.py
-- [ ] T026 [P] [US1] Implement LedgerService in src/myab/services/ledger_service.py (create default Cash/Equity)
-- [ ] T027 [P] [US1] Implement AccountService in src/myab/services/account_service.py (auto-prefix logic)
-- [ ] T028 [P] [US1] Create UI Main Window skeleton in src/myab/ui/main_window.py
-- [ ] T029 [US1] Implement Ledger Management UI in src/myab/ui/ledger_management.py
-- [ ] T030 [US1] Implement Account Management UI in src/myab/ui/account_management.py
-- [ ] T031 [US1] Ensure all tests PASS and refactor
+- [x] T019 [P] [US1] Create UserAccount model in src/myab/models/user_account.py
+- [x] T020 [P] [US1] Create Ledger model in src/myab/models/ledger.py
+- [x] T021 [P] [US1] Create Account model in src/myab/models/account.py (with type enum)
+- [x] T022 [P] [US1] Implement UserAccountRepository in src/myab/persistence/repositories/user_account_repository.py
+- [x] T023 [P] [US1] Implement LedgerRepository in src/myab/persistence/repositories/ledger_repository.py
+- [x] T024 [P] [US1] Implement AccountRepository in src/myab/persistence/repositories/account_repository.py
+- [x] T025 [P] [US1] Implement UserAccountService in src/myab/services/user_account_service.py
+- [x] T026 [P] [US1] Implement LedgerService in src/myab/services/ledger_service.py (create default Cash/Equity)
+- [x] T027 [P] [US1] Implement AccountService in src/myab/services/account_service.py (auto-prefix logic)
+- [x] T028 [P] [US1] Create UI Main Window skeleton in src/myab/ui/main_window.py
+- [x] T029 [US1] Implement Ledger Management UI in src/myab/ui/ledger_management.py
+- [x] T030 [US1] Implement Account Management UI in src/myab/ui/account_management.py
+- [x] T031 [US1] Ensure all tests PASS and refactor
 
 **Checkpoint**: User can start app, create ledger, add accounts.
 
@@ -88,20 +88,20 @@ description: "Tasks for Core Accounting System implementation"
 
 ### Tests for US2 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T032 [P] [US2] Contract test for TransactionService in tests/contract/test_transaction_service_contract.py
-- [ ] T033 [P] [US2] Integration test: Transaction flow and balance updates in tests/integration/test_transaction_flow.py
-- [ ] T034 [P] [US2] Edge case tests (zero amount, same account transfer) in tests/unit/services/test_transaction_edge_cases.py
-- [ ] T035 [US2] **GATE**: Verify all tests FAIL
+- [x] T032 [P] [US2] Contract test for TransactionService in tests/contract/test_transaction_service_contract.py
+- [x] T033 [P] [US2] Integration test: Transaction flow and balance updates in tests/integration/test_transaction_flow.py
+- [x] T034 [P] [US2] Edge case tests (zero amount, same account transfer) in tests/unit/services/test_transaction_edge_cases.py
+- [x] T035 [US2] **GATE**: Verify all tests FAIL
 
 ### Implementation for US2
 
-- [ ] T036 [P] [US2] Create Transaction model in src/myab/models/transaction.py
-- [ ] T037 [P] [US2] Implement TransactionRepository in src/myab/persistence/repositories/transaction_repository.py
-- [ ] T038 [US2] Implement TransactionService in src/myab/services/transaction_service.py (validation, balance calc)
-- [ ] T039 [US2] Update AccountService to support balance calculation requests
-- [ ] T040 [US2] Implement Transaction Entry UI form in src/myab/ui/transaction_entry.py
-- [ ] T041 [US2] Add balance warning logic (red text) in UI for negative Asset/Liability
-- [ ] T042 [US2] Ensure all tests PASS and refactor
+- [x] T036 [P] [US2] Create Transaction model in src/myab/models/transaction.py
+- [x] T037 [P] [US2] Implement TransactionRepository in src/myab/persistence/repositories/transaction_repository.py
+- [x] T038 [US2] Implement TransactionService in src/myab/services/transaction_service.py (validation, balance calc)
+- [x] T039 [US2] Update AccountService to support balance calculation requests
+- [x] T040 [US2] Implement Transaction Entry UI form in src/myab/ui/transaction_entry.py
+- [x] T041 [US2] Add balance warning logic (red text) in UI for negative Asset/Liability
+- [x] T042 [US2] Ensure all tests PASS and refactor
 
 **Checkpoint**: Full MVP functionality (Setup + Record).
 
@@ -115,16 +115,16 @@ description: "Tasks for Core Accounting System implementation"
 
 ### Tests for US3 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T043 [P] [US3] Unit tests for search filters in tests/unit/persistence/test_transaction_search.py
-- [ ] T044 [US3] **GATE**: Verify all tests FAIL
+- [x] T043 [P] [US3] Unit tests for search filters in tests/unit/persistence/test_transaction_search.py
+- [x] T044 [US3] **GATE**: Verify all tests FAIL
 
 ### Implementation for US3
 
-- [ ] T045 [P] [US3] Add search/filter methods to TransactionRepository
-- [ ] T046 [P] [US3] Add search methods to TransactionService
-- [ ] T047 [US3] Implement Transaction List/History UI in src/myab/ui/transaction_list.py (with filters)
-- [ ] T048 [US3] Update Main Window to display summary balances
-- [ ] T049 [US3] Ensure all tests PASS
+- [x] T045 [P] [US3] Add search/filter methods to TransactionRepository
+- [x] T046 [P] [US3] Add search methods to TransactionService
+- [x] T047 [US3] Implement Transaction List/History UI in src/myab/ui/transaction_list.py (with filters)
+- [x] T048 [US3] Update Main Window to display summary balances
+- [x] T049 [US3] Ensure all tests PASS
 
 ---
 
@@ -136,15 +136,15 @@ description: "Tasks for Core Accounting System implementation"
 
 ### Tests for US4 (MANDATORY - TDD Required) ⚠️
 
-- [ ] T050 [P] [US4] Integration test for Multi-ledger isolation in tests/integration/test_isolation.py
-- [ ] T051 [US4] **GATE**: Verify all tests FAIL
+- [x] T050 [P] [US4] Integration test for Multi-ledger isolation in tests/integration/test_isolation.py
+- [x] T051 [US4] **GATE**: Verify all tests FAIL
 
 ### Implementation for US4
 
-- [ ] T052 [P] [US4] Implement "Switch Ledger" functionality in LedgerService and UI
-- [ ] T053 [P] [US4] Implement User Login/Switching screen in src/myab/ui/login.py
-- [ ] T054 [US4] Verify data isolation enforcement in all repositories
-- [ ] T055 [US4] Ensure all tests PASS
+- [x] T052 [P] [US4] Implement "Switch Ledger" functionality in LedgerService and UI
+- [x] T053 [P] [US4] Implement User Login/Switching screen in src/myab/ui/login.py
+- [x] T054 [US4] Verify data isolation enforcement in all repositories
+- [x] T055 [US4] Ensure all tests PASS
 
 ---
 
@@ -152,11 +152,11 @@ description: "Tasks for Core Accounting System implementation"
 
 **Purpose**: Documentation, code cleanup, final validation.
 
-- [ ] T056 [P] Generate API documentation from docstrings
-- [ ] T057 Run full test suite and check coverage (aim for >90%)
-- [ ] T058 [P] Add docstrings to all public methods
-- [ ] T059 Verify 30,000 transaction performance (benchmark test)
-- [ ] T060 Update README.md with usage instructions
+- [x] T056 [P] Generate API documentation from docstrings
+- [x] T057 Run full test suite and check coverage (aim for >90%)
+- [x] T058 [P] Add docstrings to all public methods
+- [x] T059 Verify 30,000 transaction performance (benchmark test)
+- [x] T060 Update README.md with usage instructions
 
 ---
 
