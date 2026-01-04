@@ -12,7 +12,7 @@ import { TransactionList } from '@/components/tables/TransactionList'
 import { TransactionFiltersComponent } from '@/components/filters/TransactionFilters'
 import { LedgerSwitcher } from '@/components/ui/LedgerSwitcher'
 import { useLedger, useDeleteLedger } from '@/lib/hooks/useLedgers'
-import { useAccounts } from '@/lib/hooks/useAccounts'
+import { useAccounts, useAccountTree } from '@/lib/hooks/useAccounts'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { formatAmount, formatDate } from '@/lib/utils'
 import type { TransactionFilters } from '@/lib/hooks/useTransactions'
@@ -24,6 +24,7 @@ export default function LedgerDetailPage() {
 
   const { data: ledger, isLoading: ledgerLoading, error: ledgerError } = useLedger(ledgerId)
   const { data: accounts, isLoading: accountsLoading } = useAccounts(ledgerId)
+  const { data: accountTree, isLoading: accountTreeLoading } = useAccountTree(ledgerId)
   const deleteLedger = useDeleteLedger()
   const { setCurrentLedger } = useLedgerContext()
 
@@ -135,10 +136,10 @@ export default function LedgerDetailPage() {
         </div>
       )}
 
-      {accountsLoading ? (
+      {accountTreeLoading ? (
         <p className="text-muted-foreground">Loading accounts...</p>
-      ) : accounts && accounts.length > 0 ? (
-        <AccountList accounts={accounts} ledgerId={ledgerId} />
+      ) : accountTree && accountTree.length > 0 ? (
+        <AccountList accounts={accountTree} ledgerId={ledgerId} />
       ) : (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">

@@ -1,6 +1,7 @@
 """Account service for business logic.
 
 Based on contracts/account_service.md
+Supports hierarchical account structure (up to 3 levels deep).
 """
 
 import uuid
@@ -10,7 +11,9 @@ from sqlmodel import Session, select, func
 
 from src.models.account import Account, AccountType
 from src.models.transaction import Transaction
-from src.schemas.account import AccountCreate, AccountUpdate
+from src.schemas.account import AccountCreate, AccountUpdate, AccountTreeNode
+
+MAX_DEPTH = 3  # Maximum hierarchy depth
 
 
 class AccountService:
@@ -18,6 +21,11 @@ class AccountService:
 
     Handles account CRUD operations with protection for system accounts
     and accounts with transactions.
+
+    Supports hierarchical structure:
+    - depth=1: Root level (no parent)
+    - depth=2: Child of root
+    - depth=3: Grandchild (max depth)
     """
 
     def __init__(self, session: Session) -> None:
@@ -27,7 +35,11 @@ class AccountService:
     def create_account(self, ledger_id: uuid.UUID, data: AccountCreate) -> Account:
         """Create a new account in the ledger.
 
-        Raises ValueError if account name already exists in the ledger.
+        Raises ValueError if:
+        - Account name already exists in the ledger
+        - Parent doesn't exist or belongs to different ledger
+        - Parent has different account type
+        - Depth would exceed MAX_DEPTH (3)
         """
         # Check for duplicate name
         existing = self.session.exec(
@@ -39,11 +51,39 @@ class AccountService:
         if existing:
             raise ValueError(f"Account with name '{data.name}' already exists")
 
+        # Validate parent and calculate depth
+        depth = 1
+        parent_id = data.parent_id
+
+        if parent_id is not None:
+            parent = self.session.exec(
+                select(Account).where(Account.id == parent_id)
+            ).first()
+
+            if not parent:
+                raise ValueError("Parent account not found")
+
+            if parent.ledger_id != ledger_id:
+                raise ValueError("Parent account belongs to a different ledger")
+
+            if parent.type != data.type:
+                raise ValueError(
+                    f"Child account type must match parent type ({parent.type.value})"
+                )
+
+            depth = parent.depth + 1
+            if depth > MAX_DEPTH:
+                raise ValueError(
+                    f"Maximum hierarchy depth ({MAX_DEPTH}) exceeded"
+                )
+
         account = Account(
             ledger_id=ledger_id,
             name=data.name,
             type=data.type,
             is_system=False,
+            parent_id=parent_id,
+            depth=depth,
         )
         self.session.add(account)
         self.session.commit()
@@ -124,7 +164,8 @@ class AccountService:
     def delete_account(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> bool:
         """Delete an account.
 
-        Raises ValueError for system accounts or accounts with transactions.
+        Raises ValueError for system accounts, accounts with transactions,
+        or accounts with children.
         Returns True if deleted, False if not found.
         """
         account = self.session.exec(
@@ -140,6 +181,10 @@ class AccountService:
         if account.is_system:
             raise ValueError("Cannot delete system account")
 
+        # Cannot delete accounts with children
+        if self.has_children(account_id):
+            raise ValueError("Cannot delete account that has child accounts")
+
         # Cannot delete accounts with transactions
         if self.has_transactions(account_id):
             raise ValueError("Cannot delete account that has transactions")
@@ -150,6 +195,8 @@ class AccountService:
 
     def calculate_balance(self, account_id: uuid.UUID) -> Decimal:
         """Calculate account balance from all transactions.
+
+        For accounts with children, this aggregates all descendant balances.
 
         For Asset: SUM(incoming) - SUM(outgoing) (what you have)
         For Liability: SUM(outgoing) - SUM(incoming) (what you owe)
@@ -162,18 +209,21 @@ class AccountService:
         if not account:
             return Decimal("0")
 
-        # Sum of transactions where this account is the destination (incoming)
+        # Get all descendant account IDs (including self)
+        descendant_ids = self.get_descendant_ids(account_id)
+
+        # Sum of transactions where any descendant is the destination (incoming)
         incoming_result = self.session.exec(
             select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
-                Transaction.to_account_id == account_id
+                Transaction.to_account_id.in_(descendant_ids)
             )
         ).one()
         incoming = Decimal(str(incoming_result)) if incoming_result else Decimal("0")
 
-        # Sum of transactions where this account is the source (outgoing)
+        # Sum of transactions where any descendant is the source (outgoing)
         outgoing_result = self.session.exec(
             select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
-                Transaction.from_account_id == account_id
+                Transaction.from_account_id.in_(descendant_ids)
             )
         ).one()
         outgoing = Decimal(str(outgoing_result)) if outgoing_result else Decimal("0")
@@ -196,3 +246,77 @@ class AccountService:
             )
         ).one()
         return count > 0
+
+    def has_children(self, account_id: uuid.UUID) -> bool:
+        """Check if account has any child accounts."""
+        count = self.session.exec(
+            select(func.count()).where(Account.parent_id == account_id)
+        ).one()
+        return count > 0
+
+    def can_have_transactions(self, account_id: uuid.UUID) -> bool:
+        """Check if account can have transactions (must be a leaf account)."""
+        return not self.has_children(account_id)
+
+    def get_descendant_ids(self, account_id: uuid.UUID) -> list[uuid.UUID]:
+        """Get all descendant account IDs including the account itself.
+
+        Uses recursive query to get entire subtree.
+        """
+        result = [account_id]
+
+        # Get direct children
+        children = self.session.exec(
+            select(Account.id).where(Account.parent_id == account_id)
+        ).all()
+
+        # Recursively get descendants of each child
+        for child_id in children:
+            result.extend(self.get_descendant_ids(child_id))
+
+        return result
+
+    def get_account_tree(
+        self, ledger_id: uuid.UUID, type_filter: AccountType | None = None
+    ) -> list[AccountTreeNode]:
+        """Get hierarchical tree of accounts for a ledger.
+
+        Returns only root-level accounts with nested children.
+        Each node includes aggregated balance from all descendants.
+        """
+        # Get all accounts for the ledger
+        statement = select(Account).where(Account.ledger_id == ledger_id)
+        if type_filter is not None:
+            statement = statement.where(Account.type == type_filter)
+
+        accounts = list(self.session.exec(statement).all())
+
+        # Build account lookup and children map
+        account_map: dict[uuid.UUID, Account] = {a.id: a for a in accounts}
+        children_map: dict[uuid.UUID | None, list[Account]] = {}
+
+        for account in accounts:
+            parent_key = account.parent_id
+            if parent_key not in children_map:
+                children_map[parent_key] = []
+            children_map[parent_key].append(account)
+
+        def build_tree_node(account: Account) -> AccountTreeNode:
+            """Recursively build tree node with children."""
+            children = children_map.get(account.id, [])
+            child_nodes = [build_tree_node(child) for child in children]
+
+            return AccountTreeNode(
+                id=account.id,
+                name=account.name,
+                type=account.type,
+                balance=self.calculate_balance(account.id),
+                is_system=account.is_system,
+                parent_id=account.parent_id,
+                depth=account.depth,
+                children=child_nodes,
+            )
+
+        # Build tree starting from root accounts (parent_id is None)
+        root_accounts = children_map.get(None, [])
+        return [build_tree_node(root) for root in root_accounts]

@@ -43,6 +43,9 @@ export interface Account {
   type: AccountType
   balance: string
   is_system: boolean
+  parent_id: string | null
+  depth: number
+  has_children: boolean
   created_at: string
   updated_at: string
 }
@@ -50,10 +53,12 @@ export interface Account {
 export interface AccountCreate {
   name: string
   type: AccountType
+  parent_id?: string | null
 }
 
 export interface AccountUpdate {
   name?: string
+  parent_id?: string | null
 }
 
 export interface AccountListItem {
@@ -62,6 +67,20 @@ export interface AccountListItem {
   type: AccountType
   balance: string
   is_system: boolean
+  parent_id: string | null
+  depth: number
+  has_children: boolean
+}
+
+export interface AccountTreeNode {
+  id: string
+  name: string
+  type: AccountType
+  balance: string
+  is_system: boolean
+  parent_id: string | null
+  depth: number
+  children: AccountTreeNode[]
 }
 
 // Transaction

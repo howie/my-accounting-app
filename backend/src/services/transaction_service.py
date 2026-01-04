@@ -332,7 +332,10 @@ class TransactionService:
     def _get_account(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> Account:
         """Get an account and validate it belongs to the ledger.
 
-        Raises ValueError if account not found or belongs to different ledger.
+        Raises ValueError if:
+        - Account not found
+        - Account belongs to different ledger
+        - Account has children (only leaf accounts can have transactions)
         """
         account = self.session.get(Account, account_id)
 
@@ -342,6 +345,15 @@ class TransactionService:
         if account.ledger_id != ledger_id:
             raise ValueError(
                 f"Account {account_id} does not belong to ledger {ledger_id}"
+            )
+
+        # Check if account has children (only leaf accounts can have transactions)
+        from src.services.account_service import AccountService
+        account_service = AccountService(self.session)
+        if account_service.has_children(account_id):
+            raise ValueError(
+                f"Account '{account.name}' has child accounts. "
+                f"Transactions can only be recorded on leaf accounts."
             )
 
         return account

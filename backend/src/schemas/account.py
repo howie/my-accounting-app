@@ -1,7 +1,10 @@
 """Account-related schemas for request/response validation.
 
 Based on contracts/account_service.md
+Supports hierarchical account structure.
 """
+
+from __future__ import annotations
 
 import uuid
 from datetime import datetime
@@ -18,6 +21,7 @@ class AccountCreate(SQLModel):
 
     name: str = Field(min_length=1, max_length=100)
     type: AccountType
+    parent_id: uuid.UUID | None = Field(default=None)
 
 
 class AccountRead(SQLModel):
@@ -29,6 +33,9 @@ class AccountRead(SQLModel):
     type: AccountType
     balance: Decimal
     is_system: bool
+    parent_id: uuid.UUID | None
+    depth: int
+    has_children: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -41,9 +48,30 @@ class AccountListItem(SQLModel):
     type: AccountType
     balance: Decimal
     is_system: bool
+    parent_id: uuid.UUID | None
+    depth: int
+    has_children: bool = False
+
+
+class AccountTreeNode(SQLModel):
+    """Schema for hierarchical account tree node."""
+
+    id: uuid.UUID
+    name: str
+    type: AccountType
+    balance: Decimal  # Aggregated balance including all descendants
+    is_system: bool
+    parent_id: uuid.UUID | None
+    depth: int
+    children: list[AccountTreeNode] = Field(default_factory=list)
 
 
 class AccountUpdate(SQLModel):
     """Schema for updating an account."""
 
     name: str | None = Field(default=None, min_length=1, max_length=100)
+    parent_id: uuid.UUID | None = Field(default=None)
+
+
+# Enable self-referential model
+AccountTreeNode.model_rebuild()

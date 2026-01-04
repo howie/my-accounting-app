@@ -1,10 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useCreateAccount } from '@/lib/hooks/useAccounts'
+import { useAccounts, useCreateAccount } from '@/lib/hooks/useAccounts'
 import type { AccountType } from '@/types'
 
 interface AccountFormProps {
@@ -23,9 +23,19 @@ const accountTypes: { value: AccountType; label: string; description: string }[]
 export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps) {
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('EXPENSE')
+  const [parentId, setParentId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
+  const { data: accounts } = useAccounts(ledgerId)
   const createAccount = useCreateAccount(ledgerId)
+
+  // Filter potential parent accounts: same type and depth < 3
+  const parentOptions = useMemo(() => {
+    if (!accounts) return []
+    return accounts.filter((account) => {
+      return account.type === type && account.depth < 3 && !account.is_system
+    })
+  }, [accounts, type])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,11 +50,18 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
       await createAccount.mutateAsync({
         name: name.trim(),
         type,
+        parent_id: parentId || null,
       })
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create account')
     }
+  }
+
+  // Reset parent when type changes
+  const handleTypeChange = (newType: AccountType) => {
+    setType(newType)
+    setParentId('') // Clear parent selection when type changes
   }
 
   return (
@@ -71,14 +88,14 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
         />
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4">
         <label className="mb-2 block text-sm font-medium">Account Type</label>
         <div className="grid gap-2 sm:grid-cols-2">
           {accountTypes.map((accountType) => (
             <button
               key={accountType.value}
               type="button"
-              onClick={() => setType(accountType.value)}
+              onClick={() => handleTypeChange(accountType.value)}
               className={`rounded-lg border p-3 text-left transition-colors ${
                 type === accountType.value
                   ? 'border-primary bg-primary/10'
@@ -90,6 +107,30 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Parent Account Selector */}
+      <div className="mb-6">
+        <label htmlFor="parent" className="mb-2 block text-sm font-medium">
+          Parent Account (Optional)
+        </label>
+        <select
+          id="parent"
+          value={parentId}
+          onChange={(e) => setParentId(e.target.value)}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <option value="">None (Root Level)</option>
+          {parentOptions.map((account) => (
+            <option key={account.id} value={account.id}>
+              {'─'.repeat(account.depth)} {account.name}
+              {account.depth === 2 ? ' (max depth)' : ''}
+            </option>
+          ))}
+        </select>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Create as a sub-account under an existing account (max 3 levels deep)
+        </p>
       </div>
 
       <div className="flex gap-2">

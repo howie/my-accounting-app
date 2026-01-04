@@ -1,6 +1,7 @@
 """Account API routes.
 
 Based on contracts/account_service.md
+Supports hierarchical account structure.
 """
 
 import uuid
@@ -13,7 +14,13 @@ from src.api.deps import get_session, get_current_user_id
 from src.models.account import AccountType
 from src.services.ledger_service import LedgerService
 from src.services.account_service import AccountService
-from src.schemas.account import AccountCreate, AccountRead, AccountListItem, AccountUpdate
+from src.schemas.account import (
+    AccountCreate,
+    AccountRead,
+    AccountListItem,
+    AccountUpdate,
+    AccountTreeNode,
+)
 
 router = APIRouter(prefix="/ledgers/{ledger_id}/accounts", tags=["accounts"])
 
@@ -81,6 +88,9 @@ def create_account(
         type=account.type,
         balance=account.balance,
         is_system=account.is_system,
+        parent_id=account.parent_id,
+        depth=account.depth,
+        has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -102,10 +112,28 @@ def list_accounts(
                 type=a.type,
                 balance=service.calculate_balance(a.id),
                 is_system=a.is_system,
+                parent_id=a.parent_id,
+                depth=a.depth,
+                has_children=service.has_children(a.id),
             )
             for a in accounts
         ]
     }
+
+
+@router.get("/tree", response_model=dict)
+def get_account_tree(
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+    type: Annotated[AccountType | None, Query()] = None,
+) -> dict:
+    """Get hierarchical tree of accounts for a ledger.
+
+    Returns only root-level accounts with nested children.
+    Each node includes aggregated balance from all descendants.
+    """
+    tree = service.get_account_tree(ledger_id, type_filter=type)
+    return {"data": tree}
 
 
 @router.get("/{account_id}", response_model=AccountRead)
@@ -128,6 +156,9 @@ def get_account(
         type=account.type,
         balance=service.calculate_balance(account.id),
         is_system=account.is_system,
+        parent_id=account.parent_id,
+        depth=account.depth,
+        has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -172,6 +203,9 @@ def update_account(
         type=account.type,
         balance=service.calculate_balance(account.id),
         is_system=account.is_system,
+        parent_id=account.parent_id,
+        depth=account.depth,
+        has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -192,7 +226,7 @@ def delete_account(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=str(e),
             )
-        if "has transactions" in str(e):
+        if "has transactions" in str(e) or "has child accounts" in str(e):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=str(e),
