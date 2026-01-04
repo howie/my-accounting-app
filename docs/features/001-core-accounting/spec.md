@@ -1,197 +1,247 @@
-# Feature Specification: Core Accounting System
+# Feature Specification: LedgerOne - Core Accounting System
 
 **Feature Branch**: `001-core-accounting`
 **Created**: 2025-11-20
+**Updated**: 2026-01-02
 **Status**: Draft
-**Input**: User description: "core accounting design @docs/myab-spec/README.md"
+
+## Project Vision
+
+打造一個「隱私優先」、「數據主權在己」的個人財務管理系統。目標是超越傳統記帳軟體（僅記錄流水帳），轉向資產管理視角（關注淨值成長與資產配置）。
+
+本 Feature 專注於**核心記帳功能**，採用雙重記帳邏輯確保財務數據完整性。
+
+## System Architecture
+
+採用**前後端分離 (Separation of Concerns)** 架構，結合 Next.js 的 UI 渲染能力與 Python 的數據處理強項。
+
+### Tech Stack
+
+**Frontend (UI/UX):**
+- **Framework:** Next.js 15 (App Router) - SSR 渲染、路由
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + ShadcnUI (元件庫) + Tremor (圖表庫)
+- **Desktop Wrapper:** Tauri (將 Web App 包裝為原生 Mac App)
+
+**Backend (Core Logic):**
+- **Framework:** Python FastAPI
+- **Data Processing:** Pandas, NumPy
+- **ORM:** SQLModel
+
+**Database (Storage):**
+- **Core:** PostgreSQL (Supabase 或 Local Docker)
 
 ## Clarifications
 
 ### Session 2025-11-20
 
-- Q: How do users specify account type when creating accounts - do they manually type prefixes or select from a dropdown? → A: Users select account type from dropdown (Asset/Liability/Income/Expense), system auto-adds prefix ("A-", "L-", etc.) to the account name
-- Q: What happens when account balance would become negative (overdraft scenario)? → A: Allow negative balances for Asset/Liability accounts but display warning indicator (e.g., red text, warning icon)
-- Q: What decimal precision should the system support for financial amounts and how should rounding be handled? → A: Support exactly 2 decimal places with standard rounding (banker's rounding to nearest even)
+- Q: How do users specify account type when creating accounts? → A: Users select account type from dropdown (Asset/Liability/Income/Expense)
+- Q: What happens when account balance would become negative? → A: Allow negative balances for Asset/Liability accounts but display warning indicator
+- Q: What decimal precision should the system support? → A: Support exactly 2 decimal places with banker's rounding
 
-## User Scenarios & Testing *(mandatory)*
+### Session 2025-11-22
 
-### User Story 1 - Create Ledger and Initial Setup (Priority: P1)
+- Q: Should zero-amount transactions be blocked or allowed? → A: Allowed with warning confirmation before saving
+- Q: How should the transaction list handle large datasets? → A: Implement virtual scrolling for UI responsiveness
+- Q: How should the system handle unbalanced transactions? → A: Block saving entirely until balanced
 
-A user needs to start tracking their personal finances by creating a ledger (account book) and setting up the chart of accounts.
+### Session 2026-01-02
 
-**Why this priority**: This is the foundational capability - without a ledger and account categories, no financial tracking can occur. It represents the minimum viable product.
+- Q: Architecture decision? → A: Next.js frontend + Python FastAPI backend + PostgreSQL
+- Q: Keep double-entry bookkeeping? → A: Yes, maintain strict double-entry validation
+- Q: Dashboard, AI import, PWA scope? → A: Split into separate features (002, 003, etc.)
 
-**Independent Test**: Can be fully tested by creating a new ledger, setting initial cash balance, and verifying that predefined accounts (Cash, Equity) exist and custom accounts can be added.
+## User Scenarios & Testing
+
+### User Story 1 - Create Ledger and Chart of Accounts (Priority: P1)
+
+使用者需要建立帳本並設定科目表來開始追蹤個人財務。
+
+**Why this priority**: 這是基礎功能 - 沒有帳本和科目，無法進行任何財務追蹤。
 
 **Acceptance Scenarios**:
 
-1. **Given** a new user opens the application, **When** they create a new ledger with name "2024 Budget" and initial cash of 10,000, **Then** the system creates the ledger with Cash account showing balance of 10,000
-2. **Given** a ledger exists, **When** user adds a new account "Bank Account" and selects type Asset from dropdown, **Then** the system creates account "A-Bank Account" (with auto-added prefix) and it appears in the account list
-3. **Given** a ledger with predefined Cash and Equity accounts, **When** user attempts to delete either account, **Then** system prevents deletion and shows error message
-4. **Given** user creates accounts of different types using the type dropdown, **When** viewing account list, **Then** accounts display with auto-added prefixes ("A-", "L-", "I-", "E-") and are categorized correctly
+1. **Given** 新使用者開啟應用程式，**When** 建立名為 "2024 Personal" 的帳本並設定初始現金 10,000，**Then** 系統建立帳本，Cash 帳戶顯示餘額 10,000
+2. **Given** 帳本存在，**When** 使用者新增 "Bank Account" 並選擇類型 Asset，**Then** 系統建立帳戶並顯示在帳戶列表
+3. **Given** 帳本有預設的 Cash 和 Equity 帳戶，**When** 使用者嘗試刪除這些帳戶，**Then** 系統阻止刪除並顯示錯誤訊息
+4. **Given** 使用者建立不同類型的帳戶，**When** 檢視帳戶列表，**Then** 帳戶依類型分類顯示（Asset/Liability/Income/Expense）
 
 ---
 
-### User Story 2 - Record Basic Transactions (Priority: P1)
+### User Story 2 - Record Transactions with Double-Entry (Priority: P1)
 
-A user needs to record daily financial transactions including expenses, income, and transfers between accounts.
+使用者需要記錄日常財務交易，包括支出、收入和帳戶間轉帳。
 
-**Why this priority**: Recording transactions is the core purpose of accounting software. Without this, the system provides no value. This is the second critical piece of the MVP.
-
-**Independent Test**: Can be fully tested by creating expense, income, and transfer transactions and verifying that account balances update correctly according to double-entry bookkeeping rules.
+**Why this priority**: 記錄交易是記帳軟體的核心目的。
 
 **Acceptance Scenarios**:
 
-1. **Given** a ledger with Cash account having 10,000 balance, **When** user records expense of 50 from Cash to "E-Food", **Then** Cash balance decreases to 9,950 and Food expense shows 50
-2. **Given** user records income of 30,000 from "I-Salary" to "A-Bank Account", **When** viewing account balances, **Then** Bank Account shows increase of 30,000 and Salary income shows 30,000
-3. **Given** user has 5,000 in Cash and 10,000 in Bank, **When** user transfers 2,000 from Cash to Bank, **Then** Cash shows 3,000 and Bank shows 12,000 (net assets unchanged)
-4. **Given** user records a transaction, **When** they immediately double-click the transaction, **Then** they can edit any field (date, amount, accounts, description) and changes are saved
-5. **Given** Cash account has 100 balance, **When** user records expense of 150, **Then** Cash balance becomes -50 and displays with warning indicator (red text or warning icon)
+1. **Given** Cash 帳戶有 10,000 餘額，**When** 使用者記錄支出 50 從 Cash 到 "Food" (Expense)，**Then** Cash 餘額減少至 9,950，Food 支出顯示 50
+2. **Given** 使用者記錄收入 30,000 從 "Salary" (Income) 到 "Bank Account"，**When** 檢視帳戶餘額，**Then** Bank Account 增加 30,000，Salary 顯示 30,000
+3. **Given** 使用者有 Cash 5,000 和 Bank 10,000，**When** 轉帳 2,000 從 Cash 到 Bank，**Then** Cash 顯示 3,000，Bank 顯示 12,000（淨資產不變）
+4. **Given** 使用者嘗試建立借貸不平衡的交易，**When** 點擊儲存，**Then** 系統阻止儲存並提示錯誤
+5. **Given** Cash 帳戶有 100 餘額，**When** 使用者記錄支出 150，**Then** Cash 餘額變為 -50 並顯示警告指示
 
 ---
 
-### User Story 3 - View Account Balances and Transaction History (Priority: P2)
+### User Story 3 - View Balances and Transaction History (Priority: P2)
 
-A user needs to view current account balances and search through transaction history to understand their financial position.
+使用者需要查看帳戶餘額和交易歷史以了解財務狀況。
 
-**Why this priority**: While essential for usefulness, viewing can come after basic recording capability. Users can still add transactions without sophisticated viewing features.
-
-**Independent Test**: Can be independently tested by creating various transactions and verifying that balances reflect all transactions correctly and search/filter features return expected results.
+**Why this priority**: 雖然必要，但可在基本記錄功能之後實作。
 
 **Acceptance Scenarios**:
 
-1. **Given** multiple transactions have been recorded, **When** user views the account list, **Then** each account shows its current balance calculated from all transactions
-2. **Given** 50 transactions exist, **When** user searches by description keyword "lunch", **Then** system displays only transactions containing "lunch" in description field
-3. **Given** transactions span 3 months, **When** user filters by date range (March 1-31), **Then** only March transactions are displayed
-4. **Given** user selects account "E-Food", **When** viewing transactions for that account, **Then** only transactions involving the Food expense account are shown
+1. **Given** 已記錄多筆交易，**When** 使用者檢視帳戶列表，**Then** 每個帳戶顯示根據所有交易計算的當前餘額
+2. **Given** 存在 50 筆交易，**When** 使用者搜尋 "lunch"，**Then** 系統只顯示描述中包含 "lunch" 的交易
+3. **Given** 交易跨越 3 個月，**When** 使用者篩選日期範圍（3月1日-31日），**Then** 只顯示 3 月的交易
+4. **Given** 使用者選擇 "Food" 帳戶，**When** 檢視該帳戶的交易，**Then** 只顯示涉及 Food 帳戶的交易
 
 ---
 
-### User Story 4 - Multiple Ledgers and User Accounts (Priority: P3)
+### User Story 4 - Multiple Ledgers Management (Priority: P3)
 
-A user wants to separate different financial contexts (personal vs. business, different years, different family members) using multiple ledgers or user accounts.
+使用者想要分離不同的財務情境（個人 vs. 商業、不同年度）。
 
-**Why this priority**: This is a convenience and organizational feature that enhances the basic product but isn't essential for initial financial tracking.
-
-**Independent Test**: Can be tested independently by creating multiple ledgers under one user account and verifying complete data isolation between them.
+**Why this priority**: 這是組織性功能，增強基本產品但非初期必須。
 
 **Acceptance Scenarios**:
 
-1. **Given** a user account exists, **When** user creates ledgers "2024 Personal" and "2024 Business", **Then** each ledger has independent account charts and transaction lists
-2. **Given** two ledgers exist with same account name "A-Cash", **When** user records transaction in one ledger, **Then** the other ledger's Cash account is unaffected
-3. **Given** multiple ledgers exist, **When** user switches between ledgers, **Then** system loads the correct accounts and transactions for the selected ledger
-4. **Given** user creates ledger "Japan Trip" with initial cash 50,000, **When** trip ends and ledger is deleted, **Then** system prompts for confirmation and permanently removes the ledger data
+1. **Given** 使用者帳號存在，**When** 建立 "2024 Personal" 和 "2024 Business" 帳本，**Then** 每個帳本有獨立的科目表和交易列表
+2. **Given** 兩個帳本都有名為 "Cash" 的帳戶，**When** 在一個帳本記錄交易，**Then** 另一個帳本的 Cash 帳戶不受影響
+3. **Given** 存在多個帳本，**When** 使用者切換帳本，**Then** 系統載入正確的帳戶和交易
 
 ---
 
 ### Edge Cases
 
-- What happens when user attempts to record a transaction with zero amount?
-- How does system handle very large amounts (e.g., 999,999,999)?
-- What happens when user tries to transfer between the same account (A-Cash to A-Cash)?
-- How does system handle transactions with future dates?
-- Negative balances (overdrafts): System allows Asset/Liability accounts to have negative balances and displays visual warning indicators (red text or warning icon) to alert users
-- How does system prevent deletion of accounts that have associated transactions?
-- What happens when user creates more than 30,000 transactions (database limit)?
+- Zero-amount transactions: 允許，但儲存前必須顯示警告確認
+- Very large amounts (999,999,999): 系統應正確處理
+- Same account transfer (Cash to Cash): 應阻止
+- Future dated transactions: 允許
+- Negative balances: Asset/Liability 帳戶允許負餘額並顯示警告
+- Delete accounts with transactions: 應阻止刪除
 
-## Requirements *(mandatory)*
+## Requirements
 
 ### Functional Requirements
 
-- **FR-001**: System MUST support creation of multiple ledgers per user account, each with independent chart of accounts and transaction records
-- **FR-002**: System MUST enforce double-entry bookkeeping for all transactions (every transaction affects exactly two accounts with equal amounts)
-- **FR-003**: System MUST support four account types: Asset (A), Liability (L), Income (I), Expense (E)
-- **FR-003a**: System MUST automatically prepend the appropriate prefix (A-, L-, I-, E-) to account names based on the user-selected account type from dropdown
-- **FR-004**: System MUST prevent deletion of two predefined accounts: "Cash" (Asset) and "Equity" (Asset)
-- **FR-005**: System MUST support three transaction types: Expense (Asset/Liability → Expense), Income (Income → Asset/Liability), Transfer (Asset/Liability → Asset/Liability)
-- **FR-006**: System MUST validate transaction rules: Expense must debit Expense account and credit Asset/Liability; Income must debit Asset/Liability and credit Income; Transfer must involve two different Asset/Liability accounts
-- **FR-007**: Users MUST be able to edit existing transactions with all field modifications reflected in account balances immediately
-- **FR-008**: Users MUST be able to delete single or multiple transactions with confirmation prompt
-- **FR-009**: System MUST recalculate all affected account balances automatically when transactions are added, edited, or deleted
-- **FR-010**: System MUST support searching transactions by description keyword, account, date range, or tag/mark
-- **FR-011**: System MUST store transaction metadata: date, transaction type, debit account, credit account, amount, description, invoice number (optional)
-- **FR-012**: System MUST limit total transactions per ledger to 30,000 records
-- **FR-013**: System MUST support negative amounts for special cases (e.g., refunds, returns)
-- **FR-014**: Users MUST be able to set initial balance when creating a new ledger
-- **FR-015**: System MUST support account renaming, copying, and deletion (with transaction validation)
-- **FR-016**: System MUST allow Asset and Liability accounts to have negative balances and display visual warning indicators (red text, warning icon) when balance is negative
+- **FR-001**: System MUST support creation of multiple ledgers per user, each with independent chart of accounts and transactions
+- **FR-002**: System MUST enforce double-entry bookkeeping (every transaction affects exactly two accounts with equal amounts)
+- **FR-003**: System MUST support four account types: Asset, Liability, Income, Expense
+- **FR-004**: System MUST prevent deletion of predefined accounts: "Cash" and "Equity"
+- **FR-005**: System MUST support three transaction types: Expense, Income, Transfer
+- **FR-006**: System MUST block saving unbalanced transactions (Debits MUST equal Credits)
+- **FR-007**: Users MUST be able to edit existing transactions with balances updated immediately
+- **FR-008**: Users MUST be able to delete transactions with confirmation prompt
+- **FR-009**: System MUST recalculate affected account balances when transactions change
+- **FR-010**: System MUST support searching transactions by description, account, or date range
+- **FR-011**: System MUST store: date, transaction type, from_account, to_account, amount, description
+- **FR-012**: System MUST allow negative balances for Asset/Liability with visual warning
+- **FR-013**: System MUST require confirmation for zero-amount transactions
 
-### Data Integrity Requirements *(required for features modifying financial data)*
+### Data Integrity Requirements
 
-For features that create, modify, or delete financial transactions:
+- **DI-001**: All amounts MUST support exactly 2 decimal places with banker's rounding
+- **DI-002**: System MUST maintain audit trail through transaction log
+- **DI-003**: System MUST enforce double-entry where total debits equal total credits
+- **DI-004**: System MUST require confirmation before deleting transactions or ledgers
+- **DI-005**: All balance calculations MUST be traceable to source transactions
 
-- **DI-001**: System MUST validate all financial amounts are numeric and support exactly 2 decimal places; all calculations MUST use banker's rounding (round to nearest even) to prevent accumulation errors
-- **DI-002**: System MUST maintain audit trail showing which transactions modified account balances (implicit through transaction log)
-- **DI-003**: System MUST enforce double-entry bookkeeping where total debits equal total credits for every transaction
-- **DI-004**: System MUST require confirmation before deleting transactions or ledgers to prevent silent data loss
-- **DI-005**: System MUST ensure all account balance calculations are traceable to source transactions
+### API Requirements
 
-### Key Entities *(include if feature involves data)*
+- **API-001**: FastAPI backend MUST expose RESTful endpoints for all CRUD operations
+- **API-002**: All endpoints MUST return proper HTTP status codes and error messages
+- **API-003**: API MUST support pagination for transaction lists
+- **API-004**: API MUST validate all inputs before database operations
 
-- **User Account**: Represents a unique user with password protection. Multiple user accounts can exist in one installation. Each user account contains multiple ledgers. Attributes: account name (alphanumeric), password (alphanumeric only).
+## Database Schema
 
-- **Ledger (Account Book)**: A container for financial records representing a specific tracking context (e.g., personal finances for 2024, business accounts, travel budget). Each ledger has independent chart of accounts and transaction list. Attributes: ledger name (supports Unicode), initial cash amount, creation date.
+### `accounts`
 
-- **Account (Category)**: A classification category in the chart of accounts. Must be one of four types: Asset (things you own), Liability (things you owe), Income (increases net worth), Expense (decreases net worth). When creating an account, users select the type from a dropdown and enter the account name; the system automatically prepends the appropriate prefix (A-, L-, I-, E-) to the name. Attributes: account name (includes system-added prefix), account type, current balance (calculated), initial balance (for Asset/Liability only).
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `ledger_id` | UUID | Foreign key to ledger |
+| `name` | String | Account name (e.g., Cash, Bank, Food) |
+| `type` | Enum | ASSET, LIABILITY, INCOME, EXPENSE |
+| `balance` | Decimal(15,2) | Current balance (cached, calculated) |
+| `is_system` | Boolean | True for predefined accounts (Cash, Equity) |
+| `created_at` | Timestamp | Creation time |
+| `updated_at` | Timestamp | Last update time |
 
-- **Transaction**: A financial event recorded using double-entry bookkeeping. Every transaction has exactly two sides (debit and credit) affecting two different accounts. Attributes: transaction date, transaction type (expense/income/transfer), debit account, credit account, amount (exactly 2 decimal places), description, optional invoice number.
+### `transactions`
 
-## Success Criteria *(mandatory)*
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `ledger_id` | UUID | Foreign key to ledger |
+| `date` | Date | Transaction date |
+| `description` | String | Transaction description |
+| `amount` | Decimal(15,2) | Amount (positive value) |
+| `from_account_id` | UUID | Source account (Credit side) |
+| `to_account_id` | UUID | Destination account (Debit side) |
+| `transaction_type` | Enum | EXPENSE, INCOME, TRANSFER |
+| `created_at` | Timestamp | Creation time |
+| `updated_at` | Timestamp | Last update time |
 
-### Measurable Outcomes
+### `ledgers`
 
-- **SC-001**: Users can create a new ledger and record their first transaction in under 3 minutes
-- **SC-002**: System maintains data integrity for ledgers containing up to 30,000 transactions without balance calculation errors
-- **SC-003**: Users can find a specific transaction using search within 10 seconds for ledgers with up to 5,000 transactions
-- **SC-004**: 95% of users successfully create their first expense transaction without viewing help documentation
-- **SC-005**: Account balance calculations complete instantly (under 100ms) after transaction entry for typical use (under 10,000 transactions)
-- **SC-006**: System prevents 100% of invalid transactions that would violate double-entry bookkeeping rules
-- **SC-007**: Users can manage multiple ledgers (e.g., personal + business) without cross-contamination of financial data
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `user_id` | UUID | Foreign key to user |
+| `name` | String | Ledger name |
+| `initial_balance` | Decimal(15,2) | Initial cash balance |
+| `created_at` | Timestamp | Creation time |
+
+### `balance_snapshots` (for future growth analysis)
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | UUID | Primary key |
+| `date` | Date | Snapshot date (typically month-end) |
+| `account_id` | UUID | Foreign key to account |
+| `amount` | Decimal(15,2) | Balance at snapshot time |
+
+## Success Criteria
+
+- **SC-001**: Users can create ledger and record first transaction in under 3 minutes
+- **SC-002**: System maintains data integrity with zero balance calculation errors
+- **SC-003**: Users can find specific transaction via search within 10 seconds
+- **SC-004**: API response time under 200ms for typical operations
+- **SC-005**: System prevents 100% of unbalanced transactions
+- **SC-006**: Multiple ledgers remain completely isolated
 
 ## Assumptions
 
-- **A-001**: Users understand basic accounting concepts (assets, liabilities, income, expenses) or can learn them from brief documentation
-- **A-002**: Single currency per ledger is acceptable; users requiring multi-currency will create separate ledgers per currency
-- **A-003**: Users will manually backup their data; automatic cloud sync is handled through external cloud storage providers
-- **A-004**: Transaction description field supports up to 125 characters for display purposes
-- **A-005**: Desktop application is primary target; web/mobile access will be addressed in future features
-- **A-006**: Users accept that editing historical transactions will immediately affect current balances (no audit lock for closed periods)
-- **A-007**: System will operate on single-user mode; no concurrent multi-user editing required
+- **A-001**: Users understand basic accounting concepts
+- **A-002**: Single currency per ledger
+- **A-003**: Users manually backup data (cloud sync in future feature)
+- **A-004**: Desktop-first, PWA support in separate feature
+- **A-005**: Single-user mode (no concurrent editing)
 
 ## Constraints
 
-- **C-001**: Maximum 30,000 transactions per ledger (database engine limitation)
-- **C-002**: User account passwords restricted to alphanumeric characters only (no special symbols)
-- **C-003**: Predefined accounts "Cash" and "Equity" cannot be deleted (system requirement)
-- **C-004**: Single currency per ledger (architecture limitation)
-- **C-005**: No undo/redo functionality; deleted transactions cannot be recovered except from backups
+- **C-001**: PostgreSQL as primary database
+- **C-002**: Predefined accounts cannot be deleted
+- **C-003**: Single currency per ledger
+- **C-004**: No undo/redo (use transaction edit/delete)
 
-## Out of Scope
+## Out of Scope (Separate Features)
 
-The following features are explicitly NOT included in this core accounting feature:
-
-- Recurring/scheduled transactions (addressed in separate feature)
-- Installment payment tracking (addressed in separate feature)
-- Budget tracking and alerts (addressed in separate feature)
-- Financial reports and charts (addressed in separate feature)
-- Data import/export (CSV, HTML) (addressed in separate feature)
-- Backup and restore functionality (addressed in separate feature)
-- Invoice lottery checking (addressed in separate feature)
-- Mobile web access (addressed in separate feature)
-- Tag/mark system for categorizing transactions (addressed in separate feature)
-- Quick-entry templates for frequent transactions (addressed in separate feature)
-- Bulk edit operations (addressed in separate feature)
-- Amount calculator in entry fields (addressed in separate feature)
+- **002-dashboard**: Dashboard with net worth tracking, balance sheet, CAGR calculation
+- **003-analytics**: Sankey diagrams, YoY/MoM reports, expense heatmaps, budget alerts
+- **004-ai-import**: AI-powered CSV import with auto-categorization, duplicate detection
+- **005-pwa-mobile**: PWA support, mobile-optimized UI, Tauri desktop wrapper
+- **006-reports**: Financial reports and charts export
+- **007-backup**: Backup and restore functionality
 
 ## Dependencies
 
-- None - this is the foundational feature that other features depend on
+- None - this is the foundational feature
 
 ## References
 
-- Official MyAB documentation: https://www.devon.riceball.net/display.php?file=w04_00
-- Internal specification documents: docs/myab-spec/
-  - 00-overview.md: System overview and core concepts
-  - 01-basic-setup.md: Account and ledger setup
-  - 02-transaction-management.md: Transaction recording
-  - 09-business-rules.md: System constraints and rules
+- Project vision document (provided 2026-01-02)
+- Design references: Maybe Finance, Linear (dark mode, minimal UI)

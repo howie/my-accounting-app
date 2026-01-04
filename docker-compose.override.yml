@@ -1,0 +1,27 @@
+# Development overrides for docker-compose.yml
+# This file is automatically loaded alongside docker-compose.yml
+
+services:
+  postgres:
+    # Expose postgres for local development tools
+    ports:
+      - "5433:5432"
+
+  backend:
+    # Development mode settings
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://ledgerone:ledgerone@postgres:5432/ledgerone
+      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+    # Mount source code for hot reload
+    volumes:
+      - ./backend/src:/app/src
+      - ./backend/tests:/app/tests
+    # Enable auto-reload
+    command: uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src
+
+  frontend:
+    # Use production build (hot reload requires local npm install)
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1

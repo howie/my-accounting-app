@@ -68,3 +68,10 @@ Standard Python virtual environment practices apply:
 
 - The `.abstra/` directory contains Abstra-related user credentials, local state, and settings (gitignored)
 - Standard Python build artifacts, test coverage reports, and cache directories are gitignored
+
+## Active Technologies
+- Python 3.12 (Backend), TypeScript 5.x (Frontend) (001-core-accounting)
+- PostgreSQL 16 (via Docker or Supabase) (001-core-accounting)
+
+## Recent Changes
+- 001-core-accounting: Added Python 3.12 (Backend), TypeScript 5.x (Frontend)

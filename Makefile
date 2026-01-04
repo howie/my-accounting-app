@@ -1,18 +1,16 @@
-.PHONY: all deps test lint build deploy clean
+.PHONY: all deps test lint build deploy clean dev-run help
 
 VENV_DIR := .venv
 PYTHON := $(VENV_DIR)/bin/python
-PIP := $(VENV_DIR)/bin/pip
 
 all: deps build test lint
 
 deps: $(VENV_DIR)/.installed
 
 $(VENV_DIR)/.installed: requirements-dev.txt
-	@echo "Setting up virtual environment and installing dependencies..."
-	python3 -m venv $(VENV_DIR)
-	$(PIP) install -U pip
-	$(PIP) install -r requirements-dev.txt
+	@echo "Setting up virtual environment and installing dependencies using uv..."
+	uv venv $(VENV_DIR)
+	uv pip install -r requirements-dev.txt
 	touch $(VENV_DIR)/.installed
 	@echo "Dependencies installed."
 
@@ -39,3 +37,16 @@ clean:
 	@echo "Cleaning up build artifacts and virtual environment..."
 	rm -rf $(VENV_DIR) build dist *.egg-info .pytest_cache .coverage* htmlcov
 	@echo "Cleanup complete."
+
+dev-run: deps
+	@echo "Starting application..."
+	PYTHONPATH=src $(PYTHON) -m myab.main
+
+help:
+	@echo "Available commands:"
+	@echo "  make deps      - Install dependencies using uv"
+	@echo "  make test      - Run tests"
+	@echo "  make lint      - Run linter"
+	@echo "  make build     - Build package"
+	@echo "  make dev-run   - Run application in development mode"
+	@echo "  make clean     - Clean up"

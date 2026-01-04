@@ -1,37 +1,63 @@
-from decimal import Decimal
-from typing import List
-from myab.models.ledger import Ledger
-from myab.models.account import Account, AccountType
-from myab.persistence.repositories.ledger_repository import LedgerRepository
-from myab.persistence.repositories.account_repository import AccountRepository
-from myab.persistence.repositories.transaction_repository import TransactionRepository
+from typing import List, Optional
+from datetime import datetime
+from src.myab.models.ledger import Ledger
+from src.myab.persistence.repositories.ledger_repository import LedgerRepository
+from src.myab.services.account_service import AccountService
+from src.myab.services.transaction_service import TransactionService # New import
 
 class LedgerService:
-    def __init__(self, repo: LedgerRepository, account_repo: AccountRepository, transaction_repo: TransactionRepository):
-        self.repo = repo
-        self.account_repo = account_repo
-        self.transaction_repo = transaction_repo
+    def __init__(self, ledger_repository: LedgerRepository,
+                 account_service: AccountService,
+                 transaction_service: TransactionService): # New dependency
+        self.ledger_repository = ledger_repository
+        self.account_service = account_service
+        self.transaction_service = transaction_service # Store new dependency
 
-    def create_ledger(self, user_id: int, name: str, initial_cash: Decimal = Decimal("0.00")) -> int:
-        ledger_id = self.repo.create(Ledger(user_account_id=user_id, name=name))
-        
-        # Default Accounts
-        self.account_repo.create(Account(
-            ledger_id=ledger_id, 
-            name="A-Cash", 
-            type=AccountType.ASSET,
-            initial_balance=initial_cash
-        ))
-        self.account_repo.create(Account(
-            ledger_id=ledger_id, 
-            name="A-Equity", 
-            type=AccountType.ASSET,
-            initial_balance=Decimal("0.00") # Or balancing amount? For MVP, just 0.
-        ))
-        return ledger_id
+    def create_ledger(self, user_account_id: int, name: str, initial_cash_amount: float) -> Ledger:
+        new_ledger = Ledger(
+            user_account_id=user_account_id,
+            name=name,
+            creation_date=datetime.now().isoformat() # Store as ISO 8601 string
+        )
+        created_ledger = self.ledger_repository.add(new_ledger)
 
-    def get_ledger(self, ledger_id: int) -> Ledger:
-        return self.repo.get_by_id(ledger_id)
+        # Create initial Cash and Equity accounts for the new ledger
+        self.account_service.create_initial_accounts(created_ledger.id, initial_cash_amount)
 
-    def list_ledgers(self, user_id: int) -> List[Ledger]:
-        return self.repo.list_by_user(user_id)
+        # Find the Cash and Equity accounts to create the initial transaction
+        accounts = self.account_service.list_accounts(created_ledger.id)
+        cash_account = next(acc for acc in accounts if acc.name == "A-Cash")
+        equity_account = next(acc for acc in accounts if acc.name == "Equity")
+
+        # Create an initial transaction to set the cash balance
+        if initial_cash_amount > 0:
+            transaction, msg = self.transaction_service.create_transaction(
+                ledger_id=created_ledger.id,
+                date=created_ledger.creation_date, # Use ledger creation date
+                type="INCOME", # Represent as an initial income
+                amount=int(initial_cash_amount), # Assuming amount is in cents
+                debit_account_id=cash_account.id,
+                credit_account_id=equity_account.id, # Equity is the balancing account
+                description="Initial Cash Balance",
+                confirm_zero_amount=False # Not a zero amount
+            )
+            if not transaction:
+                # Handle error if initial transaction creation fails
+                print(f"Warning: Failed to create initial cash transaction: {msg}")
+
+        return created_ledger
+
+    def list_ledgers(self, user_account_id: int) -> List[Ledger]:
+        return self.ledger_repository.get_by_user_account_id(user_account_id)
+
+    def get_ledger(self, ledger_id: int) -> Optional[Ledger]:
+        return self.ledger_repository.get_by_id(ledger_id)
+
+    def update_ledger(self, ledger: Ledger) -> bool:
+        # Before updating, perform any necessary business logic or validation
+        return self.ledger_repository.update(ledger)
+
+    def delete_ledger(self, ledger_id: int) -> bool:
+        # Add checks for existing transactions or user confirmation as per spec
+        # For now, just call repository delete
+        return self.ledger_repository.delete(ledger_id)

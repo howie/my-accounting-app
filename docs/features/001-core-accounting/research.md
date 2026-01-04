@@ -1,440 +1,346 @@
-# Research: Core Accounting System Technology Stack
+# Research: LedgerOne Core Accounting System
 
 **Feature**: 001-core-accounting
-**Date**: 2025-11-20
+**Date**: 2026-01-02 (Updated from 2025-11-22)
 **Status**: Complete
 
-## Purpose
+## Overview
 
-This document captures technology decisions for the core accounting system, resolving all "NEEDS CLARIFICATION" items from the Technical Context and ensuring alignment with the MyAB Constitution principles.
-
-## Research Questions
-
-1. **Database Choice**: What database technology best supports 30k transaction scale with ACID guarantees for double-entry bookkeeping?
-2. **Decimal Precision**: How to ensure financial calculations have no rounding errors?
-3. **GUI Framework**: What's the simplest cross-platform desktop GUI option for Python?
-4. **Testing Framework**: What testing tools support TDD workflow with good fixture management?
-5. **ORM vs Raw SQL**: Should we use an ORM or direct SQL for data access?
+本研究文件記錄 LedgerOne 核心記帳系統的技術決策、最佳實踐和架構選擇。
 
 ---
 
-## Decision 1: Database Technology
+## 1. Architecture Decision: Next.js + FastAPI + PostgreSQL
 
-### Requirement
-- Support up to 30,000 transactions per ledger
-- ACID transactions for double-entry consistency
-- Single-file storage (matches MyAB .mbu backup approach)
-- Cross-platform (Windows, macOS, Linux)
-- Zero-installation (bundled with app)
+### Decision
+採用前後端分離架構：Next.js (Frontend) + Python FastAPI (Backend) + PostgreSQL (Database)
 
-### Options Evaluated
+### Rationale
+1. **關注點分離 (Separation of Concerns)**
+   - Frontend 專注 UI/UX，Backend 專注業務邏輯
+   - 便於獨立部署和擴展
 
-#### Option A: SQLite (Selected)
-**Pros**:
-- Built-in to Python (no dependencies)
-- Single-file database perfect for desktop app
-- ACID compliant (critical for double-entry)
-- Proven performance for 30k+ records
-- Cross-platform, no installation
-- Battle-tested in production systems
+2. **技術優勢互補**
+   - Next.js 15: 優秀的 SSR、路由、開發體驗
+   - Python/FastAPI: 強大的數據處理能力（Pandas、NumPy）、AI 整合潛力
+   - PostgreSQL: 成熟的 ACID 支援、JSON 彈性、優秀的效能
 
-**Cons**:
-- Not suitable for concurrent multi-user (acceptable - single-user requirement)
-- No built-in replication (acceptable - cloud sync via external providers)
+3. **未來擴展性**
+   - 獨立後端便於 AI 功能整合（004-ai-import feature）
+   - API-first 設計支援多平台客戶端
 
-**Performance Data**:
-- 30,000 row SELECT with SUM: ~5-10ms on modern hardware
-- Single INSERT: ~1ms
-- Transaction (multiple INSERT): ~10-50ms depending on size
-
-#### Option B: Embedded PostgreSQL
-**Pros**:
-- Full SQL feature set
-- Better scalability (future-proof)
-
-**Cons**:
-- Requires installation/bundling (complexity)
-- Overkill for single-user desktop
-- Larger footprint
-
-**Rejected**: Violates Simplicity & Maintainability principle (IV)
-
-#### Option C: JSON/CSV Files
-**Pros**:
-- Simple, human-readable
-- Easy backup
-
-**Cons**:
-- No ACID guarantees (fails Data-First Design principle I)
-- No foreign key enforcement
-- Poor performance at scale
-- Manual index management
-
-**Rejected**: Cannot guarantee data integrity
-
-### Decision: SQLite
-
-**Rationale**:
-- Meets all functional requirements
-- Zero dependencies (bundled with Python)
-- ACID transactions essential for double-entry bookkeeping
-- Single-file storage aligns with MyAB backup philosophy
-- Proven performance characteristics
-
-**References**:
-- [SQLite Use Cases](https://www.sqlite.org/whentouse.html)
-- [SQLite Performance](https://www.sqlite.org/speed.html)
-- Python sqlite3 module: Built-in since Python 2.5
+### Alternatives Considered
+| Alternative | Reason Rejected |
+|-------------|-----------------|
+| Full-stack Next.js (API Routes) | 難以整合 Python 數據處理能力 |
+| Django + HTMX | 前端互動性受限，不符合現代 UX 期望 |
+| Electron + SQLite | 難以支援未來的 Web/Mobile 擴展 |
+| PyQt6 + SQLite (previous design) | 不符合新的 Web-first 架構需求 |
 
 ---
 
-## Decision 2: Decimal Precision for Financial Calculations
+## 2. Double-Entry Bookkeeping Implementation
 
-### Requirement
-- Financial calculations accurate to the cent (2 decimal places minimum)
-- No floating-point rounding errors
-- Support for edge cases (large amounts, many decimal places)
+### Decision
+採用簡化的雙重記帳模型：每筆交易有 `from_account_id` 和 `to_account_id`，金額永遠為正值
 
-### Options Evaluated
+### Rationale
+1. **直覺性**: from/to 模型比 debit/credit 更易理解
+2. **簡化驗證**: 只需確認兩個帳戶不同且金額為正
+3. **交易類型推導**:
+   - Expense: Asset/Liability → Expense
+   - Income: Income → Asset/Liability
+   - Transfer: Asset/Liability → Asset/Liability
 
-#### Option A: Python `decimal.Decimal` (Selected)
-**Pros**:
-- Exact decimal arithmetic (no float rounding)
-- Built-in to Python standard library
-- Supports arbitrary precision
-- Industry standard for financial calculations
-- SQLite NUMERIC type maps cleanly
-
-**Cons**:
-- Slightly slower than float (acceptable for our scale)
-- Requires explicit conversion from strings
-
-**Example**:
+### Implementation Pattern
 ```python
-from decimal import Decimal
-price = Decimal('19.99')
-quantity = Decimal('3')
-total = price * quantity  # Decimal('59.97') - exact!
+class Transaction:
+    from_account_id: UUID  # Credit side (source of funds)
+    to_account_id: UUID    # Debit side (destination of funds)
+    amount: Decimal        # Always positive
+
+# Balance calculation
+# For Asset/Liability: SUM(to_account) - SUM(from_account)
+# For Income: SUM(from_account)
+# For Expense: SUM(to_account)
 ```
 
-#### Option B: Integer Cents
-**Pros**:
-- Fast (integer arithmetic)
-- No rounding issues
-
-**Cons**:
-- Awkward API (user sees cents, not dollars)
-- Conversion overhead at boundaries
-- Limited to 2 decimal places (some use cases need more)
-
-**Rejected**: Poor user experience, inflexible
-
-#### Option C: Float
-**Pros**:
-- Fast
-- Native Python type
-
-**Cons**:
-- Rounding errors (0.1 + 0.2 ≠ 0.3)
-- Violates Data-First Design principle (financial accuracy)
-- Not acceptable for financial software
-
-**Rejected**: Fundamentally unsuitable for money
-
-### Decision: Python `decimal.Decimal`
-
-**Rationale**:
-- Constitution Principle I requires financial accuracy
-- Industry best practice for money calculations
-- Python standard library (no dependencies)
-- Clean integration with SQLite NUMERIC columns
-
-**Implementation Notes**:
-- Store as `DECIMAL(19, 2)` in SQLite (19 digits total, 2 after decimal)
-- Convert to Decimal immediately on database read
-- Validate string format before Decimal conversion
-
-**References**:
-- [Python Decimal Documentation](https://docs.python.org/3/library/decimal.html)
-- [Floating Point Hazards](https://docs.python.org/3/tutorial/floatingpoint.html)
+### Best Practices
+1. **永不直接修改 balance 欄位** - 只透過交易計算
+2. **Balance 欄位為快取** - 可隨時由交易重新計算驗證
+3. **交易金額不可為負** - 需要沖銷時使用反向交易
 
 ---
 
-## Decision 3: GUI Framework
+## 3. Decimal Precision and Rounding
 
-### Requirement
-- Cross-platform (Windows, macOS, Linux)
-- Simple CRUD forms (ledgers, accounts, transactions)
-- List views with search/filter
-- Minimal dependencies
+### Decision
+使用 `Decimal(15, 2)` 並採用 Banker's Rounding
 
-### Options Evaluated
+### Rationale
+1. **15,2 精度**: 支援最大 9,999,999,999,999.99 的金額
+2. **Banker's Rounding (Round Half to Even)**:
+   - 統計上無偏差
+   - 會計軟體標準做法
+   - Python `decimal` 模組原生支援
 
-#### Option A: tkinter (Selected)
-**Pros**:
-- Bundled with Python (zero dependencies)
-- Cross-platform out of the box
-- Sufficient for CRUD forms and lists
-- Lightweight, fast startup
-- Good documentation
+### Implementation
+```python
+from decimal import Decimal, ROUND_HALF_EVEN
 
-**Cons**:
-- Less modern appearance than alternatives
-- Limited built-in widgets (acceptable for MVP)
+def round_amount(value: Decimal) -> Decimal:
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
-#### Option B: PyQt/PySide
-**Pros**:
-- Modern, polished UI
-- Rich widget set
-- Professional appearance
+# Examples:
+# 2.445 → 2.44 (rounds to even)
+# 2.435 → 2.44 (rounds to even)
+# 2.455 → 2.46 (rounds to even)
+```
 
-**Cons**:
-- Large dependency (~50MB)
-- LGPL licensing complexity (PySide)
-- Overkill for simple CRUD forms
-
-**Rejected**: Violates Simplicity principle (unnecessary complexity)
-
-#### Option C: Web UI (Flask + HTML)
-**Pros**:
-- Modern web technologies
-- Easier styling (CSS)
-
-**Cons**:
-- Requires bundling web server
-- More complex architecture (frontend + backend)
-- Offline-first requirement complicates sync
-
-**Rejected**: Overcomplicated for desktop-only MVP
-
-### Decision: tkinter
-
-**Rationale**:
-- Meets all UI requirements with zero dependencies
-- Cross-platform compatibility proven
-- Simple enough for rapid TDD iteration
-- Aligns with Simplicity & Maintainability principle
-
-**UI Components Needed**:
-- Main window with menu bar
-- Tree view for account lists
-- Form dialogs for entry/editing
-- Table widget for transaction history
-- Search/filter controls
-
-**References**:
-- [tkinter Documentation](https://docs.python.org/3/library/tkinter.html)
-- [Real Python tkinter Tutorial](https://realpython.com/python-gui-tkinter/)
+### Database Configuration
+```sql
+-- PostgreSQL
+amount NUMERIC(15, 2) NOT NULL
+```
 
 ---
 
-## Decision 4: Testing Framework
+## 4. API Design Patterns
 
-### Requirement
-- Support TDD workflow (red-green-refactor)
-- Fixture management for test data
-- Mocking/patching for isolation
-- Coverage reporting
+### Decision
+RESTful API with resource-based endpoints, cursor-based pagination
 
-### Options Evaluated
+### Endpoint Structure
+```
+/api/v1/ledgers
+/api/v1/ledgers/{ledger_id}/accounts
+/api/v1/ledgers/{ledger_id}/transactions
+```
 
-#### Option A: pytest + pytest-cov (Selected)
-**Pros**:
-- Industry standard for Python
-- Excellent fixture system (`@pytest.fixture`)
-- Clear, readable assertion syntax
-- Plugin ecosystem (coverage, mocking)
-- Parallel test execution
+### Pagination Strategy
+Cursor-based pagination for transaction lists (better for real-time data)
+```json
+{
+  "data": [...],
+  "cursor": "eyJpZCI6MTAwfQ==",
+  "has_more": true
+}
+```
 
-**Cons**:
-- None significant for this use case
+### Error Response Format
+```json
+{
+  "error": {
+    "code": "UNBALANCED_TRANSACTION",
+    "message": "Transaction debits must equal credits",
+    "details": {
+      "from_account": "...",
+      "to_account": "..."
+    }
+  }
+}
+```
 
-#### Option B: unittest (stdlib)
-**Pros**:
-- Built-in to Python
-- No dependencies
+---
 
-**Cons**:
-- More verbose (setUp/tearDown boilerplate)
-- Weaker fixture management
-- Less ergonomic assertions
+## 5. Frontend State Management
 
-**Rejected**: pytest is strictly better with minimal cost
+### Decision
+Server State: TanStack Query (React Query)
+Client State: React Context (minimal)
 
-### Decision: pytest + pytest-cov
+### Rationale
+1. **TanStack Query 優勢**:
+   - 自動快取和失效
+   - 樂觀更新支援
+   - 錯誤重試機制
+   - DevTools 除錯
 
-**Rationale**:
-- Best tool for TDD in Python ecosystem
-- Fixture system perfect for test databases
-- Coverage reporting required for constitution compliance
-- Widely used (good documentation, examples)
+2. **避免過度工程**:
+   - 不使用 Redux/Zustand（狀態簡單）
+   - 利用 URL 作為單一事實來源
 
-**Test Structure**:
+### Pattern
+```typescript
+// Queries
+const { data: accounts } = useQuery({
+  queryKey: ['accounts', ledgerId],
+  queryFn: () => api.getAccounts(ledgerId)
+});
+
+// Mutations with optimistic updates
+const createTransaction = useMutation({
+  mutationFn: api.createTransaction,
+  onMutate: async (newTx) => {
+    // Optimistic update
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries(['transactions']);
+    queryClient.invalidateQueries(['accounts']); // Refresh balances
+  }
+});
+```
+
+---
+
+## 6. UI List Rendering for Large Datasets
+
+### Context
+The specification requires that the transaction list remains responsive with large datasets.
+
+### Decision
+Use TanStack Virtual for virtualized scrolling in React
+
+### Rationale
+1. Only renders visible rows (efficient DOM usage)
+2. Smooth scrolling experience
+3. Works seamlessly with TanStack Query
+
+### Implementation
+```typescript
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+const rowVirtualizer = useVirtualizer({
+  count: transactions.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 48, // row height
+});
+```
+
+### Alternatives Considered
+- **react-window**: Smaller bundle but less features
+- **Full list rendering**: Not viable for 10k+ records
+
+---
+
+## 7. Database Migration Strategy
+
+### Decision
+Alembic for Python backend migrations
+
+### Rationale
+1. SQLModel/SQLAlchemy 原生整合
+2. 版本控制遷移歷史
+3. 可逆遷移支援
+
+### Migration Workflow
+```bash
+# Generate migration
+alembic revision --autogenerate -m "add_transactions_table"
+
+# Apply migration
+alembic upgrade head
+
+# Rollback
+alembic downgrade -1
+```
+
+---
+
+## 8. Testing Strategy
+
+### Decision
+分層測試：Unit → Integration → Contract → E2E
+
+### Backend Testing (pytest)
 ```
 tests/
-├── conftest.py           # Shared fixtures
-├── contract/             # Service contract tests
-├── integration/          # Multi-component tests
-├── unit/                 # Isolated component tests
-└── fixtures/             # Test data generators
+├── unit/           # Service logic, pure functions
+├── integration/    # Database operations, multi-service
+└── contract/       # API endpoint contracts
 ```
 
-**Key Fixtures**:
-- `test_db`: In-memory SQLite database
-- `sample_user`: User account with auth
-- `sample_ledger`: Ledger with initial balance
-- `sample_accounts`: Complete chart of accounts
-- `sample_transactions`: Set of test transactions
+### Frontend Testing (Vitest + Testing Library)
+```
+tests/
+├── components/     # Component rendering, interactions
+└── integration/    # API mocking, user flows
+```
 
-**References**:
-- [pytest Documentation](https://docs.pytest.org/)
-- [pytest-cov Plugin](https://pytest-cov.readthedocs.io/)
+### Key Test Scenarios
+1. **Double-entry validation**: Unbalanced transactions blocked
+2. **Balance calculation**: Correct after CRUD operations
+3. **System account protection**: Cash/Equity cannot be deleted
+4. **Decimal precision**: Banker's rounding applied correctly
 
 ---
 
-## Decision 5: ORM vs Raw SQL
+## 9. Development Environment
 
-### Requirement
-- Data access for CRUD operations
-- Support for complex queries (balance calculations)
-- Testability (ability to mock/fake)
-- Simplicity & Maintainability (Constitution Principle IV)
+### Decision
+Docker Compose for local development
 
-### Options Evaluated
+### Services
+```yaml
+services:
+  postgres:
+    image: postgres:16
+    ports: ["5432:5432"]
 
-#### Option A: Raw SQL with Parameterized Queries (Selected)
-**Pros**:
-- Explicit, auditable queries (important for financial calculations)
-- No magic/implicit behavior
-- Full control over SQL for performance
-- Simple to understand and debug
-- Aligns with "clear over clever" principle
+  backend:
+    build: ./backend
+    ports: ["8000:8000"]
+    depends_on: [postgres]
 
-**Cons**:
-- More boilerplate (manual mapping)
-- No automatic schema migrations
-
-**Example**:
-```python
-def get_account_balance(account_id: int) -> Decimal:
-    query = """
-        SELECT SUM(
-            CASE
-                WHEN debit_account_id = ? THEN -amount
-                WHEN credit_account_id = ? THEN amount
-                ELSE 0
-            END
-        ) as balance
-        FROM transactions
-        WHERE debit_account_id = ? OR credit_account_id = ?
-    """
-    cursor.execute(query, (account_id, account_id, account_id, account_id))
-    return Decimal(cursor.fetchone()[0] or 0)
+  frontend:
+    build: ./frontend
+    ports: ["3000:3000"]
+    depends_on: [backend]
 ```
 
-#### Option B: SQLAlchemy ORM
-**Pros**:
-- Automatic mapping (less boilerplate)
-- Schema migrations with Alembic
-- Relationship management
-
-**Cons**:
-- Complex, "magic" behavior (violates Principle IV)
-- Harder to audit financial queries
-- Performance overhead
-- Learning curve
-
-**Rejected**: Complexity not justified for this scale
-
-#### Option C: Lightweight ORM (peewee)
-**Pros**:
-- Simpler than SQLAlchemy
-- Less magic
-
-**Cons**:
-- Still adds abstraction layer
-- Query builder can obscure SQL
-- Not as simple as raw SQL
-
-**Rejected**: Marginal benefit not worth dependency
-
-### Decision: Raw SQL with Repository Pattern
-
-**Rationale**:
-- Constitution Principle IV: "Use direct, explicit code for financial calculations; avoid excessive layers"
-- Financial calculations must be human-auditable (balance query should be readable SQL)
-- Simple parameterized queries prevent SQL injection
-- Repository pattern provides testability without ORM complexity
-
-**Implementation Pattern**:
-```python
-class TransactionRepository:
-    def __init__(self, db_connection):
-        self.conn = db_connection
-
-    def create(self, transaction: Transaction) -> int:
-        query = """
-            INSERT INTO transactions
-            (date, type, debit_account_id, credit_account_id, amount, description)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """
-        cursor = self.conn.execute(query, (
-            transaction.date,
-            transaction.type,
-            transaction.debit_account_id,
-            transaction.credit_account_id,
-            str(transaction.amount),  # Decimal to string
-            transaction.description
-        ))
-        return cursor.lastrowid
-```
-
-**References**:
-- [Python sqlite3 Tutorial](https://docs.python.org/3/library/sqlite3.html)
-- [Repository Pattern](https://martinfowler.com/eaaCatalog/repository.html)
+### Alternative: Supabase
+For hosted PostgreSQL with built-in auth (future feature consideration)
 
 ---
 
-## Summary of Technology Stack
+## 10. Security Considerations (MVP Scope)
 
-| Component | Technology | Rationale |
-|-----------|------------|-----------|
-| **Language** | Python 3.11+ | Project requirement, good stdlib, cross-platform |
-| **Database** | SQLite | ACID guarantees, zero-install, proven at scale |
-| **Decimal Math** | `decimal.Decimal` | Financial accuracy, no rounding errors |
-| **GUI** | tkinter | Zero dependencies, cross-platform, sufficient features |
-| **Testing** | pytest + pytest-cov | Industry standard, excellent fixtures, coverage reports |
-| **Data Access** | Raw SQL + Repository | Simplicity, auditability, no ORM magic |
+### Decision
+MVP focuses on single-user local deployment; auth deferred
 
-## Dependencies
+### Current Scope
+- No authentication (single-user assumption)
+- CORS configured for local development
+- Input validation via Pydantic
 
-### Production
+### Future Features
+- User authentication (separate feature)
+- API rate limiting
+- HTTPS enforcement
+
+---
+
+## 11. Performance Considerations
+
+### Database Indexing
+```sql
+-- Essential indexes
+CREATE INDEX idx_transactions_ledger_date ON transactions(ledger_id, date DESC);
+CREATE INDEX idx_transactions_from_account ON transactions(from_account_id);
+CREATE INDEX idx_transactions_to_account ON transactions(to_account_id);
+CREATE INDEX idx_accounts_ledger ON accounts(ledger_id);
 ```
-# requirements.txt
-# (No external dependencies - all standard library)
-```
 
-### Development
-```
-# requirements-dev.txt
-pytest>=7.4.0
-pytest-cov>=4.1.0
-```
+### Balance Caching
+- `accounts.balance` 為快取欄位
+- 交易 CRUD 後觸發更新
+- 可透過 SUM(transactions) 驗證
 
-## Next Steps
+### Virtual Scrolling
+Frontend 使用 TanStack Virtual 處理大量交易列表
 
-1. ✅ Technology stack finalized
-2. → Create data-model.md (database schema)
-3. → Create service contracts
-4. → Create quickstart.md (developer setup guide)
-5. → Update agent context with stack decisions
+---
 
-## Constitution Compliance
+## Summary
 
-All technology decisions reviewed against five core principles:
-
-- ✅ **Principle I (Data-First)**: SQLite ACID + Decimal precision ensure financial accuracy
-- ✅ **Principle II (Test-First)**: pytest enables TDD workflow
-- ✅ **Principle III (Financial Accuracy)**: Decimal + double-entry schema enforce correctness
-- ✅ **Principle IV (Simplicity)**: No ORM, minimal dependencies, clear code
-- ✅ **Principle V (Cross-Platform)**: All choices work on Windows/macOS/Linux
+| Topic | Decision | Key Rationale |
+|-------|----------|---------------|
+| Architecture | Next.js + FastAPI + PostgreSQL | Separation of concerns, Python data processing |
+| Double-Entry | from/to model with positive amounts | Intuitive, simple validation |
+| Precision | Decimal(15,2), Banker's Rounding | Industry standard, unbiased |
+| API | RESTful, cursor pagination | Standard patterns, real-time friendly |
+| State | TanStack Query | Caching, optimistic updates |
+| UI Lists | TanStack Virtual | Efficient large list rendering |
+| Migrations | Alembic | SQLModel integration |
+| Testing | pytest + Vitest | Layered coverage |
+| Dev Env | Docker Compose | Reproducible setup |

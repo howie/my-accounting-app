@@ -1,61 +1,97 @@
 import pytest
-from decimal import Decimal
-from datetime import date
-from myab.services.transaction_service import TransactionService
-from myab.services.account_service import AccountService
-from myab.services.ledger_service import LedgerService
-from myab.services.user_account_service import UserAccountService
-from myab.persistence.repositories.transaction_repository import TransactionRepository
-from myab.persistence.repositories.account_repository import AccountRepository
-from myab.persistence.repositories.ledger_repository import LedgerRepository
-from myab.persistence.repositories.user_account_repository import UserAccountRepository
+import sqlite3
+from typing import List, Optional
+from src.myab.persistence.database import get_db_connection
+from src.myab.models.ledger import Ledger
+from src.myab.models.account import Account
+from src.myab.models.transaction import Transaction
+from src.myab.services.ledger_service import LedgerService
+from src.myab.services.account_service import AccountService
+from src.myab.services.transaction_service import TransactionService
+from src.myab.persistence.repositories.transaction_repository import TransactionRepository
+from src.myab.validation.validators import TransactionValidator
+from src.myab.persistence.repositories.account_repository import AccountRepository # Needed for TransactionValidator
 
-def test_transaction_flow(test_db):
-    conn = test_db.get_connection()
+
+def test_transaction_flow(ledger_service: LedgerService, account_service: AccountService, 
+                          transaction_service: TransactionService, dummy_user_id: int, 
+                          db_connection: sqlite3.Connection):
     
-    # Setup Repos
-    txn_repo = TransactionRepository(conn)
-    acc_repo = AccountRepository(conn)
-    ledger_repo = LedgerRepository(conn)
-    user_repo = UserAccountRepository(conn)
+    user_account_id = dummy_user_id
+    ledger_name = "Finance Ledger"
+    initial_cash = 100000 # $1000.00 in cents
+
+    # 1. Create a ledger and initial accounts
+    ledger = ledger_service.create_ledger(user_account_id, ledger_name, initial_cash)
     
-    # Setup Services
-    acc_service = AccountService(acc_repo)
-    txn_service = TransactionService(txn_repo, acc_repo)
+    accounts = account_service.list_accounts(ledger.id)
+    cash_account = next(acc for acc in accounts if acc.name == "A-Cash")
+    equity_account = next(acc for acc in accounts if acc.name == "Equity")
+
+    # Create an expense account
+    expense_account = account_service.create_account(ledger.id, "Food", "EXPENSE")
     
-    # 1. Setup Data
-    user_repo.create(user_repo._map_row({'id':1, 'username':'u', 'password_hash':'p'})) # Quick hack or use service
-    # Better use proper create
-    conn.execute("INSERT INTO user_accounts (username, password_hash) VALUES ('u', 'p')")
-    conn.execute("INSERT INTO ledgers (user_account_id, name) VALUES (1, 'L1')")
-    ledger_id = 1
-    
-    cash_id = acc_service.create_account(ledger_id, "Cash", "Asset", Decimal("100.00"))
-    food_id = acc_service.create_account(ledger_id, "Food", "Expense", Decimal("0.00"))
-    
-    # 2. Record Expense: 20.00 for Food (Debit Food, Credit Cash)
-    txn_service.record_transaction(
-        ledger_id=ledger_id,
-        date=date(2024, 1, 1),
-        type="Expense",
-        debit_account_id=food_id,
-        credit_account_id=cash_id,
-        amount=Decimal("20.00"),
-        description="Lunch"
+    # Create an income account
+    income_account = account_service.create_account(ledger.id, "Salary", "INCOME")
+
+    # Create a bank account
+    bank_account = account_service.create_account(ledger.id, "Bank", "ASSET")
+
+
+    # Verify initial balances (should be handled by a separate test/logic when transaction for initial cash is added)
+    # For now, just ensure accounts exist
+
+    # 2. Record an expense transaction
+    expense_amount = 5000 # $50.00
+    description = "Lunch at cafe"
+    expense_transaction, msg = transaction_service.create_transaction(
+        ledger.id, "2023-11-23", "EXPENSE", expense_amount,
+        expense_account.id, cash_account.id, description
     )
+    assert expense_transaction is not None, msg
+    assert expense_transaction.amount == expense_amount
+
+    # Verify account balances
+    assert transaction_service.calculate_account_balance(cash_account.id) == (initial_cash - expense_amount) # This assumes initial cash is not from a transaction, or is 0
+    assert transaction_service.calculate_account_balance(expense_account.id) == expense_amount
     
-    # 3. Verify Balances
-    # Cash: 100 - 20 = 80
-    # Food: 0 + 20 = 20
+    # 3. Record an income transaction
+    income_amount = 200000 # $2000.00
+    income_transaction, msg = transaction_service.create_transaction(
+        ledger.id, "2023-11-24", "INCOME", income_amount,
+        cash_account.id, income_account.id, "Monthly Salary"
+    )
+    assert income_transaction is not None, msg
+    assert transaction_service.calculate_account_balance(cash_account.id) == (initial_cash - expense_amount + income_amount)
+    assert transaction_service.calculate_account_balance(income_account.id) == income_amount
+
+    # 4. Record a transfer transaction
+    transfer_amount = 100000 # $1000.00
+    transfer_transaction, msg = transaction_service.create_transaction(
+        ledger.id, "2023-11-25", "TRANSFER", transfer_amount,
+        bank_account.id, cash_account.id, "Cash to Bank"
+    )
+    assert transfer_transaction is not None, msg
+    assert transaction_service.calculate_account_balance(cash_account.id) == (initial_cash - expense_amount + income_amount - transfer_amount)
+    assert transaction_service.calculate_account_balance(bank_account.id) == transfer_amount
+
+    # 5. Update a transaction
+    updated_description = "Updated Lunch at fancy cafe"
+    expense_transaction.description = updated_description
+    updated_success, msg = transaction_service.update_transaction(expense_transaction)
+    assert updated_success is True, msg
     
-    # AccountService needs update to calculate balance from transactions!
-    # Currently it only returns initial_balance.
-    # T039 is "Update AccountService to support balance calculation requests".
-    # So this test expects that update.
-    
-    cash_bal = acc_service.get_account_balance(cash_id)
-    # This assertion will FAIL until T039 is done
-    assert cash_bal == Decimal("80.00")
-    
-    food_bal = acc_service.get_account_balance(food_id)
-    assert food_bal == Decimal("20.00")
+    retrieved_expense_transaction = transaction_service.get_transaction(expense_transaction.id)
+    assert retrieved_expense_transaction.description == updated_description
+
+    # 6. Delete a transaction
+    deleted_success, msg = transaction_service.delete_transaction(expense_transaction.id)
+    assert deleted_success is True, msg
+    deleted_transaction = transaction_service.get_transaction(expense_transaction.id)
+    assert deleted_transaction is None
+
+    # Verify final account balances after all operations
+    assert transaction_service.calculate_account_balance(cash_account.id) == (initial_cash + income_amount - transfer_amount)
+    assert transaction_service.calculate_account_balance(expense_account.id) == 0 # Since expense was deleted
+    assert transaction_service.calculate_account_balance(income_account.id) == income_amount
+    assert transaction_service.calculate_account_balance(bank_account.id) == transfer_amount

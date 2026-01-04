@@ -1,119 +1,105 @@
-# Implementation Plan: Core Accounting System
+# Implementation Plan: LedgerOne Core Accounting System
 
-**Branch**: `001-core-accounting` | **Date**: 2025-11-22 | **Spec**: [spec.md](./spec.md)
+**Branch**: `001-core-accounting` | **Date**: 2026-01-02 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `/docs/features/001-core-accounting/spec.md`
-
-**Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/commands/plan.md` for the execution workflow.
 
 ## Summary
 
-Building a core double-entry accounting system that enables users to track personal finances through ledgers, accounts, and transactions. The system enforces strict data integrity through double-entry bookkeeping, supports multiple ledgers per user, and provides transaction search/filtering capabilities. This is the foundational feature that all other accounting features will depend on.
-
-**Technical Approach**: Python desktop application using SQLite for local data storage, following TDD principles with comprehensive test coverage for financial calculations and data integrity.
+實作 LedgerOne 的核心記帳功能，採用 Next.js (Frontend) + Python FastAPI (Backend) + PostgreSQL 架構。系統遵循嚴格的雙重記帳邏輯，支援多帳本管理、科目 CRUD、交易記錄與餘額計算。
 
 ## Technical Context
 
-**Language/Version**: Python 3.11+
-**Primary Dependencies**: SQLite (built-in), pytest (testing), tkinter (GUI - bundled with Python)
-**Storage**: SQLite database (single file per user account, up to 30,000 transactions per ledger)
-**Testing**: pytest for unit/integration tests, pytest-cov for coverage
-**Target Platform**: Desktop (Windows, macOS initially; Linux compatibility)
-**Project Type**: Single desktop application (not web/mobile at this stage)
-**Performance Goals**:
-- Transaction entry: < 100ms response
-- Balance calculations: < 100ms for typical use (< 10k transactions)
-- Search/filter: < 500ms for up to 5,000 transactions
-- Database operations: < 10ms for single transaction CRUD
-
-**Constraints**:
-- 30,000 transaction limit per ledger (SQLite optimization boundary)
-- Single-user desktop mode (no concurrent editing)
-- Offline-first (no network required for core functionality)
-- Password alphanumeric only (security constraint from spec)
-- 125 character description display limit
-
-**Scale/Scope**:
-- Target: Personal finance users (1-5 ledgers per user typical)
-- Expected transactions: 100-500 per month per active ledger
-- User accounts: 1-10 per installation (family members)
+**Language/Version**: Python 3.12 (Backend), TypeScript 5.x (Frontend)
+**Primary Dependencies**:
+- Backend: FastAPI 0.109+, SQLModel 0.0.14+, uvicorn, alembic
+- Frontend: Next.js 15, React 19, Tailwind CSS 3.4+, ShadcnUI, Tremor
+**Storage**: PostgreSQL 16 (via Docker or Supabase)
+**Testing**: pytest (Backend), Vitest + Testing Library (Frontend)
+**Target Platform**: macOS (Tauri desktop wrapper - separate feature), Web browser
+**Project Type**: Web application (frontend + backend separation)
+**Performance Goals**: API response < 200ms, UI interactions < 100ms
+**Constraints**: Single currency per ledger, single-user mode, 2 decimal precision
+**Scale/Scope**: Personal use, thousands of transactions per ledger
 
 ## Constitution Check
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with all five core principles from `.specify/memory/constitution.md`:
-
 ### I. Data-First Design (NON-NEGOTIABLE)
 - [x] Does this feature preserve financial accuracy (calculations correct to the cent)?
-  - Yes: All amounts stored as DECIMAL(19,2) or Python Decimal type
+  - Decimal(15,2) for all amounts, banker's rounding enforced
 - [x] Are audit trails maintained (all modifications logged with timestamp/reason)?
-  - Yes: Transaction table includes created_at, modified_at timestamps; all modifications create new transaction records
+  - created_at/updated_at on all entities, transaction log is immutable record
 - [x] Is data loss prevented (confirmations + backups for destructive operations)?
-  - Yes: Delete operations require confirmation (FR-008, DI-004); ledger deletion shows warning
+  - Confirmation dialogs for delete operations (FR-008, DI-004)
 - [x] Is input validation enforced (amounts, dates, account references)?
-  - Yes: DI-001 mandates numeric validation; FR-006 validates transaction rules; foreign key constraints enforce account references
+  - Pydantic/SQLModel validation on backend, Zod validation on frontend
 - [x] Are destructive operations reversible?
-  - Yes: Through backup/restore (out of scope for this feature, but data structure supports); no undo within app per C-005
+  - Via transaction edit/delete with audit trail; full backup in separate feature (007-backup)
 
 **Violations**: None
 
 ### II. Test-First Development (NON-NEGOTIABLE)
 - [x] Will tests be written BEFORE implementation?
-  - Yes: TDD workflow required; tests for each user story before implementation
+  - TDD workflow: tests → red → green → refactor
 - [x] Will tests be reviewed/approved before coding?
-  - Yes: Test review checkpoint in tasks.md workflow
+  - Tests in tasks.md reviewed before implementation tasks
 - [x] Are contract tests planned for service boundaries?
-  - Yes: Service layer (UserAccountService, LedgerService, TransactionService) will have contract tests
+  - FastAPI endpoint contracts, service layer contracts
 - [x] Are integration tests planned for multi-account transactions?
-  - Yes: User Story 2 scenarios explicitly test double-entry balance updates across accounts
+  - Double-entry balance verification tests
 - [x] Are edge case tests planned (rounding, currency, date boundaries)?
-  - Yes: Edge cases section lists 7 scenarios including zero amounts, large amounts, future dates, overdrafts
+  - Banker's rounding tests, large amount tests, negative balance tests
 
 **Violations**: None
 
 ### III. Financial Accuracy & Audit Trail
 - [x] Does design maintain double-entry bookkeeping (debits = credits)?
-  - Yes: FR-002, DI-003 enforce this; every transaction has debit_account and credit_account with equal amounts
+  - FR-002, FR-006: Every transaction has from_account and to_account with equal amounts
 - [x] Are transactions immutable once posted (void-and-reenter only)?
-  - No: FR-007 allows editing existing transactions. **JUSTIFIED**: Spec assumption A-006 explicitly states users accept immediate balance updates; no audit lock for closed periods required for personal finance use case
+  - Transactions can be edited but changes are tracked via updated_at
+  - Note: Full void-and-reenter pattern deferred to future enhancement
 - [x] Are calculations traceable to source transactions?
-  - Yes: DI-005 requires this; balance = SUM of all transactions for account
+  - Balance is cached but always verifiable by summing transactions
 - [x] Are timestamps tracked (created, modified, business date)?
-  - Yes: transaction_date (business date), created_at, modified_at all tracked
+  - created_at, updated_at, and transaction date fields
 - [x] Is change logging implemented (who, what, when, why)?
-  - Partial: Who/what/when through timestamps; "why" not required for personal finance (single user, no compliance needs)
+  - Partial: timestamps logged; full audit log deferred to future feature
 
-**Violations**: Transaction mutability justified by personal finance use case (Assumption A-006)
+**Violations**:
+- CONDITIONAL: Full immutable transaction history (void-and-reenter) deferred
+  - Justification: Core MVP allows edit/delete with timestamps; full audit log in future feature
+  - Mitigation: All changes tracked via updated_at timestamp
 
 ### IV. Simplicity & Maintainability
 - [x] Is this feature actually needed (not speculative)?
-  - Yes: Core accounting is foundational; no features without it
+  - Core accounting is foundational; no speculative features included
 - [x] Is the design clear over clever (human-auditable)?
-  - Yes: Direct SQL queries, simple Python classes for models, no ORM magic
+  - Simple from/to account model, explicit transaction types
 - [x] Are abstractions minimized (especially for financial calculations)?
-  - Yes: Balance calculation is SUM query; transaction validation is explicit if/else; no framework abstractions
+  - Direct calculations in service layer, no unnecessary patterns
 - [x] Are complex business rules documented with accounting references?
-  - Yes: Double-entry bookkeeping explicitly documented; account types follow standard accounting classification (Asset/Liability/Income/Expense)
+  - Double-entry rules documented in spec and contracts
 
 **Violations**: None
 
 ### V. Cross-Platform Consistency
 - [x] Will calculations produce identical results across platforms?
-  - Yes: Python Decimal + SQLite produce consistent results on Windows/macOS/Linux
+  - All calculations in Python backend; frontend displays only
 - [x] Is data format compatible between desktop and web?
-  - N/A for this feature: Desktop only (A-005); web/mobile out of scope
+  - PostgreSQL as single source; Tauri wraps same web UI
 - [x] Are platform-specific features clearly documented?
-  - Yes: Desktop-only noted in assumptions; GUI using tkinter (cross-platform)
+  - Desktop wrapper (Tauri) in separate feature (005-pwa-mobile)
 - [x] Do workflows follow consistent UX patterns?
-  - Yes: Standard desktop patterns (double-click to edit, delete key, search bar)
+  - ShadcnUI components ensure consistency
 - [x] Does cloud sync maintain transaction ordering?
-  - N/A for this feature: Cloud sync out of scope (handled by external providers per A-003)
+  - N/A for this feature; single-user local/self-hosted
 
-**Violations**: None (cross-platform considerations addressed within desktop scope)
+**Violations**: None
 
-**Overall Assessment**: **PASS**
-
-All five constitution principles are satisfied. The one justifiable deviation (transaction mutability vs. immutability) is explicitly documented in the spec assumptions and appropriate for personal finance software.
+**Overall Assessment**: CONDITIONAL PASS
+- Condition: Full immutable audit log (void-and-reenter pattern) tracked as future enhancement
+- Proceed with current design; timestamps provide sufficient audit trail for MVP
 
 ## Project Structure
 
@@ -121,103 +107,92 @@ All five constitution principles are satisfied. The one justifiable deviation (t
 
 ```text
 docs/features/001-core-accounting/
-├── spec.md              # Feature specification ✓
-├── plan.md              # This file (implementation plan) ✓
-├── research.md          # Phase 0: Technology decisions
-├── data-model.md        # Phase 1: Database schema
-├── quickstart.md        # Phase 1: Developer guide
-├── contracts/           # Phase 1: Service contracts
-│   ├── user_account_service.md
+├── spec.md              # Feature specification
+├── plan.md              # This file
+├── research.md          # Phase 0 output
+├── data-model.md        # Phase 1 output
+├── quickstart.md        # Phase 1 output
+├── contracts/           # Phase 1 output (API contracts)
 │   ├── ledger_service.md
 │   ├── account_service.md
-│   └── transaction_service.md
-├── tasks.md             # Phase 2: Task breakdown (generated by /speckit.tasks)
-├── checklists/          # Quality validation ✓
-│   └── requirements.md
-└── issues/              # Issue tracking ✓
+│   ├── transaction_service.md
+│   └── user_account_service.md
+├── tasks.md             # Phase 2 output
+└── issues/              # Issue tracking for this feature
 ```
 
 ### Source Code (repository root)
 
 ```text
-src/
-├── myab/                      # Main application package
-│   ├── __init__.py
-│   ├── models/                # Data models
+# Web application structure (frontend + backend separation)
+
+backend/
+├── src/
+│   ├── api/
 │   │   ├── __init__.py
-│   │   ├── user_account.py    # UserAccount model
-│   │   ├── ledger.py          # Ledger model
-│   │   ├── account.py         # Account (category) model
-│   │   └── transaction.py     # Transaction model
-│   ├── services/              # Business logic layer
+│   │   ├── main.py              # FastAPI app entry
+│   │   ├── deps.py              # Dependency injection
+│   │   └── routes/
+│   │       ├── ledgers.py
+│   │       ├── accounts.py
+│   │       └── transactions.py
+│   ├── models/
 │   │   ├── __init__.py
-│   │   ├── user_account_service.py
+│   │   ├── ledger.py
+│   │   ├── account.py
+│   │   └── transaction.py
+│   ├── services/
+│   │   ├── __init__.py
 │   │   ├── ledger_service.py
 │   │   ├── account_service.py
 │   │   └── transaction_service.py
-│   ├── persistence/           # Database layer
+│   ├── db/
 │   │   ├── __init__.py
-│   │   ├── database.py        # SQLite connection manager
-│   │   └── repositories/      # Data access objects
-│   │       ├── __init__.py
-│   │       ├── user_account_repository.py
-│   │       ├── ledger_repository.py
-│   │       ├── account_repository.py
-│   │       └── transaction_repository.py
-│   ├── ui/                    # GUI layer (tkinter)
-│   │   ├── __init__.py
-│   │   ├── main_window.py
-│   │   ├── ledger_management.py
-│   │   ├── account_management.py
-│   │   └── transaction_entry.py
-│   └── validation/            # Input validation
-│       ├── __init__.py
-│       └── validators.py
-│
-tests/
-├── contract/                  # Service contract tests
-│   ├── __init__.py
-│   ├── test_user_account_service_contract.py
-│   ├── test_ledger_service_contract.py
-│   ├── test_account_service_contract.py
-│   └── test_transaction_service_contract.py
-├── integration/               # Integration tests
-│   ├── __init__.py
-│   ├── test_ledger_lifecycle.py
-│   ├── test_transaction_flow.py
-│   └── test_balance_calculations.py
-├── unit/                      # Unit tests
-│   ├── models/
-│   ├── services/
-│   ├── persistence/
-│   └── validation/
-└── fixtures/                  # Test data
-    ├── __init__.py
-    └── sample_data.py
+│   │   ├── session.py
+│   │   └── migrations/
+│   └── core/
+│       ├── config.py
+│       └── exceptions.py
+├── tests/
+│   ├── conftest.py
+│   ├── contract/
+│   ├── integration/
+│   └── unit/
+├── pyproject.toml
+└── alembic.ini
 
-.venv/                         # Python virtual environment (gitignored)
-requirements.txt               # Production dependencies
-requirements-dev.txt           # Development dependencies (pytest, etc.)
-setup.py or pyproject.toml     # Package configuration
-README.md                      # Project readme
+frontend/
+├── src/
+│   ├── app/                     # Next.js App Router
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── ledgers/
+│   │   ├── accounts/
+│   │   └── transactions/
+│   ├── components/
+│   │   ├── ui/                  # ShadcnUI components
+│   │   ├── forms/
+│   │   └── tables/
+│   ├── lib/
+│   │   ├── api.ts               # API client
+│   │   └── utils.ts
+│   └── types/
+│       └── index.ts
+├── tests/
+│   ├── components/
+│   └── integration/
+├── package.json
+├── next.config.js
+├── tailwind.config.js
+└── tsconfig.json
+
+docker-compose.yml               # PostgreSQL + backend + frontend
 ```
 
-**Structure Decision**: Single desktop application structure selected.
-
-**Rationale**:
-- Desktop-only scope (Assumption A-005) rules out web/mobile structure
-- No backend API needed (offline-first, local SQLite)
-- Standard Python package layout with clear separation:
-  - `models/`: Pure data classes (POPOs - Plain Old Python Objects)
-  - `services/`: Business logic implementing accounting rules
-  - `persistence/`: Database access isolated to repositories
-  - `ui/`: GUI code separate from business logic for testability
-  - `validation/`: Reusable validators for DI-001 compliance
+**Structure Decision**: Web application with clear frontend/backend separation. Backend handles all business logic and data persistence; frontend is a thin UI layer consuming REST API.
 
 ## Complexity Tracking
 
-> **Fill ONLY if Constitution Check has violations that must be justified**
-
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| Transaction mutability (Principle III) | Personal finance users need to correct mistakes without void-and-reenter workflow | Immutable transactions would require complex void/correction UI unsuitable for non-accountant users |
+| Conditional: Full audit log deferred | MVP needs edit/delete capability | Void-and-reenter adds complexity; timestamps sufficient for personal use |

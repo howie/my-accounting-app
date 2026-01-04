@@ -3,6 +3,8 @@
 Auto-generated from all feature plans. Last updated: 2025-11-22
 
 ## Active Technologies
+- Python 3.11+ + Tkinter (GUI, bundled with Python), SQLite (database, built-in) (001-core-accounting)
+- SQLite single-file database (`.db`) (001-core-accounting)
 
 - Python 3.11+ + SQLite (built-in), pytest (testing), tkinter (GUI - bundled with Python) (001-core-accounting)
 
@@ -23,6 +25,7 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 Python 3.11+: Follow standard conventions
 
 ## Recent Changes
+- 001-core-accounting: Added Python 3.11+ + Tkinter (GUI, bundled with Python), SQLite (database, built-in)
 
 - 001-core-accounting: Added Python 3.11+ + SQLite (built-in), pytest (testing), tkinter (GUI - bundled with Python)
 

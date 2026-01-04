@@ -1,62 +1,64 @@
-from decimal import Decimal
 from typing import List, Optional
-from myab.models.account import Account, AccountType
-from myab.persistence.repositories.account_repository import AccountRepository
-from myab.persistence.repositories.transaction_repository import TransactionRepository
+from src.myab.models.account import Account
+from src.myab.persistence.repositories.account_repository import AccountRepository
 
 class AccountService:
-    def __init__(self, repo: AccountRepository, transaction_repo: Optional[TransactionRepository] = None):
-        self.repo = repo
-        self.transaction_repo = transaction_repo
+    def __init__(self, account_repository: AccountRepository):
+        self.account_repository = account_repository
 
-    def create_account(self, ledger_id: int, name: str, type: str, initial_balance: Decimal = Decimal("0.00")) -> int:
-        prefix_map = {
-            "Asset": "A-",
-            "Liability": "L-",
-            "Income": "I-",
-            "Expense": "E-"
-        }
-        
-        if type not in prefix_map:
-            raise ValueError(f"Invalid account type: {type}")
-            
-        prefix = prefix_map[type]
-        if not name.startswith(prefix):
-            full_name = f"{prefix}{name}"
-        else:
-            full_name = name
-            
-        acc = Account(
+    def create_account(self, ledger_id: int, name: str, account_type: str) -> Account:
+        # FR-003a: System MUST automatically prepend the appropriate prefix
+        prefixed_name = f"{account_type[0].upper()}-{name}"
+        new_account = Account(
             ledger_id=ledger_id,
-            name=full_name,
-            type=AccountType(type),
-            initial_balance=initial_balance
+            name=prefixed_name,
+            type=account_type,
+            is_predefined=0
         )
-        return self.repo.create(acc)
+        return self.account_repository.add(new_account)
+
+    def create_initial_accounts(self, ledger_id: int, initial_cash_amount: float):
+        # FR-004: System MUST prevent deletion of two predefined accounts: "Cash" (Asset) and "Equity" (Asset)
+        cash_account = Account(
+            ledger_id=ledger_id,
+            name="A-Cash",
+            type="ASSET",
+            is_predefined=1
+        )
+        equity_account = Account(
+            ledger_id=ledger_id,
+            name="Equity",
+            type="EQUITY", # Assuming 'EQUITY' is a valid type in the enum, or treated specially
+            is_predefined=1
+        )
+        self.account_repository.add(cash_account)
+        self.account_repository.add(equity_account)
+
+        # In a full implementation, initial_cash_amount would involve creating an initial transaction
+        # between the Cash account and Equity account. For now, we just create the accounts.
 
     def list_accounts(self, ledger_id: int) -> List[Account]:
-        return self.repo.list_by_ledger(ledger_id)
-        
-    def get_account_balance(self, account_id: int) -> Decimal:
-        acc = self.repo.get_by_id(account_id)
-        if not acc:
-            raise ValueError("Account not found")
-            
-        if self.transaction_repo:
-            debits, credits = self.transaction_repo.get_balance_impact(account_id)
-            if acc.type in [AccountType.ASSET, AccountType.EXPENSE]:
-                return acc.initial_balance + debits - credits
-            else:
-                return acc.initial_balance + credits - debits
-        
-        return acc.initial_balance
-        
-    def delete_account(self, account_id: int):
-        acc = self.repo.get_by_id(account_id)
-        if not acc:
-            raise ValueError("Account not found")
-        
-        if acc.name in ["A-Cash", "A-Equity"]:
-             raise ValueError("Cannot delete system account")
-             
-        self.repo.delete(account_id)
+        return self.account_repository.get_by_ledger_id(ledger_id)
+
+    def get_account(self, account_id: int) -> Optional[Account]:
+        return self.account_repository.get_by_id(account_id)
+
+    def update_account(self, account: Account) -> bool:
+        # Logic for renaming/updating accounts (FR-015)
+        # Ensure account_type cannot be changed directly after creation if it's tied to prefix
+        return self.account_repository.update(account)
+
+    def delete_account(self, account_id: int) -> bool:
+        account_to_delete = self.account_repository.get_by_id(account_id)
+        if not account_to_delete:
+            return False
+
+        # FR-004: Prevent deletion of predefined accounts
+        if account_to_delete.is_predefined:
+            # Optionally raise an exception or return a specific error code
+            return False
+
+        # TODO: Check for associated transactions before deletion (as per spec)
+        # This will require a dependency on TransactionRepository/Service
+
+        return self.account_repository.delete(account_id)

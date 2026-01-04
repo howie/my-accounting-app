@@ -1,60 +1,89 @@
-import sqlite3
 from typing import List, Optional
-from decimal import Decimal
-from myab.models.account import Account, AccountType
+import sqlite3
+from src.myab.models.account import Account
+from src.myab.persistence.database import get_db_connection
 
 class AccountRepository:
-    def __init__(self, conn: sqlite3.Connection):
-        self.conn = conn
+    def __init__(self, db_file: str, conn: Optional[sqlite3.Connection] = None):
+        self.db_file = db_file
+        self._conn = conn
 
-    def create(self, account: Account) -> int:
-        try:
-            cursor = self.conn.execute(
-                "INSERT INTO accounts (ledger_id, name, type, initial_balance) VALUES (?, ?, ?, ?)",
-                (account.ledger_id, account.name, account.type.value, str(account.initial_balance))
-            )
-            self.conn.commit()
-            return cursor.lastrowid
-        except sqlite3.IntegrityError:
-            raise ValueError(f"Account {account.name} already exists in ledger")
+    def _get_connection(self) -> sqlite3.Connection:
+        if self._conn:
+            return self._conn
+        return get_db_connection(self.db_file)
+
+    def _execute_query(self, query: str, params: tuple = ()) -> sqlite3.Cursor:
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        if not self._conn:
+             conn.commit()
+             conn.close()
+        elif conn.in_transaction:
+             conn.commit()
+        return cursor
+
+    def _fetch_one(self, query: str, params: tuple = ()) -> Optional[Account]:
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        row = cursor.fetchone()
+        if not self._conn:
+            conn.close()
+        return Account(**row) if row else None
+
+    def _fetch_all(self, query: str, params: tuple = ()) -> List[Account]:
+        conn = self._get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query, params)
+        rows = cursor.fetchall()
+        if not self._conn:
+            conn.close()
+        return [Account(**row) for row in rows]
+
+    def add(self, account: Account) -> Account:
+        query = """
+            INSERT INTO account (ledger_id, name, type, is_predefined, creation_timestamp, modification_timestamp)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """
+        cursor = self._execute_query(query, (
+            account.ledger_id,
+            account.name,
+            account.type,
+            account.is_predefined,
+            account.creation_timestamp,
+            account.modification_timestamp
+        ))
+        account.id = cursor.lastrowid
+        return account
 
     def get_by_id(self, account_id: int) -> Optional[Account]:
-        cursor = self.conn.execute(
-            "SELECT * FROM accounts WHERE id = ?", (account_id,)
-        )
-        row = cursor.fetchone()
-        if row:
-            return self._map_row(row)
-        return None
-        
-    def get_by_name(self, ledger_id: int, name: str) -> Optional[Account]:
-        cursor = self.conn.execute(
-            "SELECT * FROM accounts WHERE ledger_id = ? AND name = ?", (ledger_id, name)
-        )
-        row = cursor.fetchone()
-        if row:
-            return self._map_row(row)
-        return None
+        query = "SELECT * FROM account WHERE id = ?"
+        return self._fetch_one(query, (account_id,))
 
-    def list_by_ledger(self, ledger_id: int) -> List[Account]:
-        cursor = self.conn.execute(
-            "SELECT * FROM accounts WHERE ledger_id = ?", (ledger_id,)
-        )
-        return [self._map_row(row) for row in cursor.fetchall()]
+    def get_by_ledger_id(self, ledger_id: int) -> List[Account]:
+        query = "SELECT * FROM account WHERE ledger_id = ?"
+        return self._fetch_all(query, (ledger_id,))
 
-    def delete(self, account_id: int):
-        try:
-            self.conn.execute("DELETE FROM accounts WHERE id = ?", (account_id,))
-            self.conn.commit()
-        except sqlite3.IntegrityError:
-            # This happens if FK constraint fails (transactions exist)
-            raise ValueError("Cannot delete account with associated transactions")
+    def update(self, account: Account) -> bool:
+        query = """
+            UPDATE account
+            SET ledger_id = ?, name = ?, type = ?, is_predefined = ?, modification_timestamp = ?
+            WHERE id = ?
+        """
+        account.modification_timestamp = sqlite3.Timestamp.now().isoformat()
+        cursor = self._execute_query(query, (
+            account.ledger_id,
+            account.name,
+            account.type,
+            account.is_predefined,
+            account.modification_timestamp,
+            account.id
+        ))
+        return cursor.rowcount > 0
 
-    def _map_row(self, row) -> Account:
-        return Account(
-            id=row['id'],
-            ledger_id=row['ledger_id'],
-            name=row['name'],
-            type=AccountType(row['type']),
-            initial_balance=Decimal(row['initial_balance'])
-        )
+    def delete(self, account_id: int) -> bool:
+        query = "DELETE FROM account WHERE id = ?"
+        cursor = self._execute_query(query, (account_id,))
+        return cursor.rowcount > 0
