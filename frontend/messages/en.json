@@ -1,0 +1,149 @@
+{
+  "common": {
+    "appName": "LedgerOne",
+    "loading": "Loading...",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "create": "Create",
+    "save": "Save",
+    "search": "Search",
+    "clearAll": "Clear All",
+    "loadMore": "Load More",
+    "error": "Error",
+    "system": "System"
+  },
+  "home": {
+    "title": "Personal Accounting System",
+    "getStarted": "Get Started"
+  },
+  "setup": {
+    "title": "Welcome to LedgerOne",
+    "subtitle": "Set up your account to get started",
+    "emailLabel": "Email Address",
+    "emailRequired": "Email is required",
+    "emailPlaceholder": "you@example.com",
+    "settingUp": "Setting up...",
+    "failedToCreate": "Failed to create user. Please try again.",
+    "singleUserNote": "This is a single-user application. Your data is stored locally."
+  },
+  "ledgers": {
+    "title": "Ledgers",
+    "newLedger": "New Ledger",
+    "noLedgers": "No ledgers yet. Create your first ledger to get started.",
+    "initialBalance": "Initial Balance",
+    "created": "Created",
+    "loadingLedgers": "Loading ledgers...",
+    "errorLoading": "Error loading ledgers",
+    "backToLedgers": "Back to Ledgers",
+    "notFound": "Ledger not found",
+    "deleteLedger": "Delete Ledger",
+    "confirmDelete": "Confirm Delete",
+    "deleting": "Deleting..."
+  },
+  "ledgerForm": {
+    "title": "Create New Ledger",
+    "nameLabel": "Ledger Name",
+    "namePlaceholder": "e.g., 2024 Personal Finance",
+    "nameRequired": "Name is required",
+    "initialBalanceLabel": "Initial Balance (optional)",
+    "initialBalanceNote": "This will be added to your Cash account",
+    "invalidBalance": "Initial balance must be a positive number",
+    "creating": "Creating...",
+    "createLedger": "Create Ledger",
+    "failedToCreate": "Failed to create ledger"
+  },
+  "accounts": {
+    "title": "Accounts",
+    "newAccount": "New Account",
+    "noAccounts": "No accounts yet. The system created Cash and Equity accounts when this ledger was created.",
+    "loadingAccounts": "Loading accounts...",
+    "subAccounts": "{count} sub-accounts",
+    "total": "(total)",
+    "hasChildren": "(has children)",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "accountForm": {
+    "title": "Create New Account",
+    "nameLabel": "Account Name",
+    "namePlaceholder": "e.g., Groceries, Savings Account, Rent",
+    "nameRequired": "Name is required",
+    "typeLabel": "Account Type",
+    "parentLabel": "Parent Account (Optional)",
+    "parentNone": "None (Root Level)",
+    "maxDepth": "(max depth)",
+    "parentNote": "Create as a sub-account under an existing account (max 3 levels deep)",
+    "creating": "Creating...",
+    "createAccount": "Create Account",
+    "failedToCreate": "Failed to create account"
+  },
+  "accountTypes": {
+    "ASSET": "Asset",
+    "LIABILITY": "Liability",
+    "INCOME": "Income",
+    "EXPENSE": "Expense",
+    "assetDesc": "Things you own (cash, bank accounts, property)",
+    "liabilityDesc": "Things you owe (credit cards, loans)",
+    "incomeDesc": "Money you receive (salary, interest)",
+    "expenseDesc": "Money you spend (food, rent, utilities)"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "newTransaction": "New Transaction",
+    "noTransactions": "No transactions yet. Create your first transaction above.",
+    "loadingTransactions": "Loading transactions...",
+    "errorLoading": "Error loading transactions",
+    "showFilters": "Show Filters",
+    "hideFilters": "Hide Filters"
+  },
+  "transactionForm": {
+    "title": "Record Transaction",
+    "typeLabel": "Transaction Type",
+    "dateLabel": "Date",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "e.g., Grocery shopping, Monthly salary",
+    "descriptionRequired": "Description is required",
+    "amountLabel": "Amount",
+    "invalidAmount": "Amount must be a positive number",
+    "fromAccountLabel": "From Account",
+    "toAccountLabel": "To Account",
+    "selectAccount": "Select account...",
+    "accountsRequired": "Both from and to accounts are required",
+    "saving": "Saving...",
+    "saveTransaction": "Save Transaction",
+    "failedToCreate": "Failed to create transaction"
+  },
+  "transactionTypes": {
+    "EXPENSE": "Expense",
+    "INCOME": "Income",
+    "TRANSFER": "Transfer",
+    "expenseDesc": "Spend money (from asset/liability to expense)",
+    "incomeDesc": "Receive money (from income to asset/liability)",
+    "transferDesc": "Move between accounts (asset/liability)"
+  },
+  "filters": {
+    "title": "Filters",
+    "searchPlaceholder": "Search description...",
+    "fromDate": "From Date",
+    "toDate": "To Date",
+    "account": "Account",
+    "allAccounts": "All Accounts",
+    "type": "Type",
+    "allTypes": "All Types"
+  },
+  "table": {
+    "date": "Date",
+    "description": "Description",
+    "type": "Type",
+    "from": "From",
+    "to": "To",
+    "amount": "Amount",
+    "actions": "Actions"
+  },
+  "ledgerSwitcher": {
+    "selectLedger": "Select Ledger",
+    "noLedgers": "No ledgers yet",
+    "manageLedgers": "Manage Ledgers"
+  }
+}

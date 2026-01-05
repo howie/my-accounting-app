@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,21 +14,23 @@ interface AccountFormProps {
   onCancel?: () => void
 }
 
-const accountTypes: { value: AccountType; label: string; description: string }[] = [
-  { value: 'ASSET', label: 'Asset', description: 'Things you own (cash, bank accounts, property)' },
-  { value: 'LIABILITY', label: 'Liability', description: 'Things you owe (credit cards, loans)' },
-  { value: 'INCOME', label: 'Income', description: 'Money you receive (salary, interest)' },
-  { value: 'EXPENSE', label: 'Expense', description: 'Money you spend (food, rent, utilities)' },
-]
+const accountTypeKeys: AccountType[] = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE']
 
 export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps) {
   const [name, setName] = useState('')
   const [type, setType] = useState<AccountType>('EXPENSE')
   const [parentId, setParentId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations()
 
   const { data: accounts } = useAccounts(ledgerId)
   const createAccount = useCreateAccount(ledgerId)
+
+  const accountTypes = accountTypeKeys.map((value) => ({
+    value,
+    label: t(`accountTypes.${value}`),
+    description: t(`accountTypes.${value.toLowerCase()}Desc`),
+  }))
 
   // Filter potential parent accounts: same type and depth < 3
   const parentOptions = useMemo(() => {
@@ -42,7 +45,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
     setError(null)
 
     if (!name.trim()) {
-      setError('Name is required')
+      setError(t('accountForm.nameRequired'))
       return
     }
 
@@ -54,7 +57,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
       })
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create account')
+      setError(err instanceof Error ? err.message : t('accountForm.failedToCreate'))
     }
   }
 
@@ -66,7 +69,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border p-6">
-      <h2 className="mb-4 text-xl font-semibold">Create New Account</h2>
+      <h2 className="mb-4 text-xl font-semibold">{t('accountForm.title')}</h2>
 
       {error && (
         <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
@@ -76,20 +79,20 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
 
       <div className="mb-4">
         <label htmlFor="name" className="mb-2 block text-sm font-medium">
-          Account Name
+          {t('accountForm.nameLabel')}
         </label>
         <Input
           id="name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g., Groceries, Savings Account, Rent"
+          placeholder={t('accountForm.namePlaceholder')}
           required
         />
       </div>
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium">Account Type</label>
+        <label className="mb-2 block text-sm font-medium">{t('accountForm.typeLabel')}</label>
         <div className="grid gap-2 sm:grid-cols-2">
           {accountTypes.map((accountType) => (
             <button
@@ -112,7 +115,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
       {/* Parent Account Selector */}
       <div className="mb-6">
         <label htmlFor="parent" className="mb-2 block text-sm font-medium">
-          Parent Account (Optional)
+          {t('accountForm.parentLabel')}
         </label>
         <select
           id="parent"
@@ -120,26 +123,26 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
           onChange={(e) => setParentId(e.target.value)}
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <option value="">None (Root Level)</option>
+          <option value="">{t('accountForm.parentNone')}</option>
           {parentOptions.map((account) => (
             <option key={account.id} value={account.id}>
               {'─'.repeat(account.depth)} {account.name}
-              {account.depth === 2 ? ' (max depth)' : ''}
+              {account.depth === 2 ? ` ${t('accountForm.maxDepth')}` : ''}
             </option>
           ))}
         </select>
         <p className="mt-1 text-xs text-muted-foreground">
-          Create as a sub-account under an existing account (max 3 levels deep)
+          {t('accountForm.parentNote')}
         </p>
       </div>
 
       <div className="flex gap-2">
         <Button type="submit" disabled={createAccount.isPending}>
-          {createAccount.isPending ? 'Creating...' : 'Create Account'}
+          {createAccount.isPending ? t('accountForm.creating') : t('accountForm.createAccount')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
       </div>

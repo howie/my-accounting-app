@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,13 +13,14 @@ export default function SetupPage() {
   const setupUser = useSetupUser()
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
+  const t = useTranslations()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
     if (!email.trim()) {
-      setError('Email is required')
+      setError(t('setup.emailRequired'))
       return
     }
 
@@ -26,7 +28,7 @@ export default function SetupPage() {
       await setupUser.mutateAsync({ email: email.trim() })
       router.push('/ledgers')
     } catch {
-      setError('Failed to create user. Please try again.')
+      setError(t('setup.failedToCreate'))
     }
   }
 
@@ -34,23 +36,23 @@ export default function SetupPage() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold">Welcome to LedgerOne</h1>
+          <h1 className="text-3xl font-bold">{t('setup.title')}</h1>
           <p className="mt-2 text-muted-foreground">
-            Set up your account to get started
+            {t('setup.subtitle')}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
           <div>
             <label htmlFor="email" className="block text-sm font-medium">
-              Email Address
+              {t('setup.emailLabel')}
             </label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              placeholder={t('setup.emailPlaceholder')}
               className="mt-1"
               disabled={setupUser.isPending}
             />
@@ -65,12 +67,12 @@ export default function SetupPage() {
             className="w-full"
             disabled={setupUser.isPending}
           >
-            {setupUser.isPending ? 'Setting up...' : 'Get Started'}
+            {setupUser.isPending ? t('setup.settingUp') : t('home.getStarted')}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          This is a single-user application. Your data is stored locally.
+          {t('setup.singleUserNote')}
         </p>
       </div>
     </div>

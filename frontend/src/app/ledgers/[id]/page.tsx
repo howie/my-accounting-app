@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { AccountForm } from '@/components/forms/AccountForm'
@@ -21,6 +22,7 @@ export default function LedgerDetailPage() {
   const params = useParams()
   const router = useRouter()
   const ledgerId = params.id as string
+  const t = useTranslations()
 
   const { data: ledger, isLoading: ledgerLoading, error: ledgerError } = useLedger(ledgerId)
   const { data: accounts, isLoading: accountsLoading } = useAccounts(ledgerId)
@@ -54,7 +56,7 @@ export default function LedgerDetailPage() {
   if (ledgerLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-muted-foreground">Loading ledger...</p>
+        <p className="text-muted-foreground">{t('common.loading')}</p>
       </div>
     )
   }
@@ -64,10 +66,10 @@ export default function LedgerDetailPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <p className="text-destructive">
-            {ledgerError ? `Error: ${ledgerError.message}` : 'Ledger not found'}
+            {ledgerError ? `${t('common.error')}: ${ledgerError.message}` : t('ledgers.notFound')}
           </p>
           <Link href="/ledgers" className="mt-4 text-primary hover:underline">
-            Back to Ledgers
+            {t('ledgers.backToLedgers')}
           </Link>
         </div>
       </div>
@@ -80,7 +82,7 @@ export default function LedgerDetailPage() {
       <header className="border-b">
         <div className="container mx-auto flex items-center justify-between px-4 py-4">
           <Link href="/" className="text-xl font-bold">
-            LedgerOne
+            {t('common.appName')}
           </Link>
           <LedgerSwitcher />
         </div>
@@ -89,7 +91,7 @@ export default function LedgerDetailPage() {
       <div className="container mx-auto py-8">
         <div className="mb-2">
           <Link href="/ledgers" className="text-sm text-muted-foreground hover:text-primary">
-            &larr; Back to Ledgers
+            &larr; {t('ledgers.backToLedgers')}
           </Link>
         </div>
 
@@ -97,33 +99,33 @@ export default function LedgerDetailPage() {
         <div>
           <h1 className="text-3xl font-bold">{ledger.name}</h1>
           <p className="text-muted-foreground">
-            Initial Balance: ${formatAmount(ledger.initial_balance)}
+            {t('ledgers.initialBalance')}: ${formatAmount(ledger.initial_balance)}
           </p>
           <p className="text-sm text-muted-foreground">
-            Created: {formatDate(ledger.created_at)}
+            {t('ledgers.created')}: {formatDate(ledger.created_at)}
           </p>
         </div>
         <div className="flex gap-2">
           {deleteConfirm ? (
             <>
               <Button variant="destructive" onClick={handleDelete} disabled={deleteLedger.isPending}>
-                {deleteLedger.isPending ? 'Deleting...' : 'Confirm Delete'}
+                {deleteLedger.isPending ? t('ledgers.deleting') : t('ledgers.confirmDelete')}
               </Button>
               <Button variant="outline" onClick={() => setDeleteConfirm(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
             </>
           ) : (
             <Button variant="outline" onClick={() => setDeleteConfirm(true)}>
-              Delete Ledger
+              {t('ledgers.deleteLedger')}
             </Button>
           )}
         </div>
       </div>
 
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Accounts</h2>
-        <Button onClick={() => setShowAccountForm(true)}>New Account</Button>
+        <h2 className="text-2xl font-semibold">{t('accounts.title')}</h2>
+        <Button onClick={() => setShowAccountForm(true)}>{t('accounts.newAccount')}</Button>
       </div>
 
       {showAccountForm && (
@@ -137,25 +139,25 @@ export default function LedgerDetailPage() {
       )}
 
       {accountTreeLoading ? (
-        <p className="text-muted-foreground">Loading accounts...</p>
+        <p className="text-muted-foreground">{t('accounts.loadingAccounts')}</p>
       ) : accountTree && accountTree.length > 0 ? (
         <AccountList accounts={accountTree} ledgerId={ledgerId} />
       ) : (
         <div className="rounded-lg border border-dashed p-8 text-center">
           <p className="text-muted-foreground">
-            No accounts yet. The system created Cash and Equity accounts when this ledger was created.
+            {t('accounts.noAccounts')}
           </p>
         </div>
       )}
 
       {/* Transactions Section */}
       <div className="mt-10 mb-6 flex items-center justify-between">
-        <h2 className="text-2xl font-semibold">Transactions</h2>
+        <h2 className="text-2xl font-semibold">{t('transactions.title')}</h2>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
-            {showFilters ? 'Hide Filters' : 'Show Filters'}
+            {showFilters ? t('transactions.hideFilters') : t('transactions.showFilters')}
           </Button>
-          <Button onClick={() => setShowTransactionForm(true)}>New Transaction</Button>
+          <Button onClick={() => setShowTransactionForm(true)}>{t('transactions.newTransaction')}</Button>
         </div>
       </div>
 

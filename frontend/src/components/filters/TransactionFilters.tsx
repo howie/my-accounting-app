@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,12 +14,7 @@ interface TransactionFiltersProps {
   onFiltersChange: (filters: TransactionFilters) => void
 }
 
-const transactionTypes: { value: TransactionType | ''; label: string }[] = [
-  { value: '', label: 'All Types' },
-  { value: 'EXPENSE', label: 'Expense' },
-  { value: 'INCOME', label: 'Income' },
-  { value: 'TRANSFER', label: 'Transfer' },
-]
+const transactionTypeKeys: (TransactionType | '')[] = ['', 'EXPENSE', 'INCOME', 'TRANSFER']
 
 export function TransactionFiltersComponent({
   accounts,
@@ -26,6 +22,12 @@ export function TransactionFiltersComponent({
   onFiltersChange,
 }: TransactionFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '')
+  const t = useTranslations()
+
+  const transactionTypes = transactionTypeKeys.map((value) => ({
+    value,
+    label: value === '' ? t('filters.allTypes') : t(`transactionTypes.${value}`),
+  }))
 
   const handleSearchSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -82,10 +84,10 @@ export function TransactionFiltersComponent({
   return (
     <div className="mb-6 rounded-lg border p-4">
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="font-medium">Filters</h3>
+        <h3 className="font-medium">{t('filters.title')}</h3>
         {hasActiveFilters && (
           <Button variant="ghost" size="sm" onClick={handleClearFilters}>
-            Clear All
+            {t('common.clearAll')}
           </Button>
         )}
       </div>
@@ -95,20 +97,20 @@ export function TransactionFiltersComponent({
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
           <Input
             type="text"
-            placeholder="Search description..."
+            placeholder={t('filters.searchPlaceholder')}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1"
           />
           <Button type="submit" variant="secondary" size="sm">
-            Search
+            {t('common.search')}
           </Button>
         </form>
 
         {/* From Date */}
         <div>
           <label htmlFor="fromDate" className="mb-1 block text-xs text-muted-foreground">
-            From Date
+            {t('filters.fromDate')}
           </label>
           <Input
             id="fromDate"
@@ -121,7 +123,7 @@ export function TransactionFiltersComponent({
         {/* To Date */}
         <div>
           <label htmlFor="toDate" className="mb-1 block text-xs text-muted-foreground">
-            To Date
+            {t('filters.toDate')}
           </label>
           <Input
             id="toDate"
@@ -134,7 +136,7 @@ export function TransactionFiltersComponent({
         {/* Account Filter */}
         <div>
           <label htmlFor="account" className="mb-1 block text-xs text-muted-foreground">
-            Account
+            {t('filters.account')}
           </label>
           <select
             id="account"
@@ -142,10 +144,10 @@ export function TransactionFiltersComponent({
             onChange={handleAccountChange}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <option value="">All Accounts</option>
+            <option value="">{t('filters.allAccounts')}</option>
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
-                {account.name} ({account.type})
+                {account.name} ({t(`accountTypes.${account.type}`)})
               </option>
             ))}
           </select>
@@ -154,7 +156,7 @@ export function TransactionFiltersComponent({
         {/* Transaction Type Filter */}
         <div>
           <label htmlFor="type" className="mb-1 block text-xs text-muted-foreground">
-            Type
+            {t('filters.type')}
           </label>
           <select
             id="type"

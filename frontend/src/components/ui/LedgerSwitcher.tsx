@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { useLedgers } from '@/lib/hooks/useLedgers'
@@ -13,6 +14,7 @@ export function LedgerSwitcher() {
   const { currentLedger, setCurrentLedger } = useLedgerContext()
   const { data: ledgersData } = useLedgers()
   const ledgers = ledgersData || []
+  const t = useTranslations()
 
   const handleSelect = (ledger: Ledger) => {
     setCurrentLedger(ledger)
@@ -27,7 +29,7 @@ export function LedgerSwitcher() {
         className="min-w-[200px] justify-between"
       >
         <span className="truncate">
-          {currentLedger ? currentLedger.name : 'Select Ledger'}
+          {currentLedger ? currentLedger.name : t('ledgerSwitcher.selectLedger')}
         </span>
         <svg
           className={`ml-2 h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -44,7 +46,7 @@ export function LedgerSwitcher() {
           <div className="max-h-60 overflow-y-auto py-1">
             {ledgers.length === 0 ? (
               <div className="px-3 py-2 text-sm text-muted-foreground">
-                No ledgers yet
+                {t('ledgerSwitcher.noLedgers')}
               </div>
             ) : (
               ledgers.map((ledger) => (
@@ -66,7 +68,7 @@ export function LedgerSwitcher() {
               className="block text-sm text-primary hover:underline"
               onClick={() => setIsOpen(false)}
             >
-              Manage Ledgers
+              {t('ledgerSwitcher.manageLedgers')}
             </Link>
           </div>
         </div>

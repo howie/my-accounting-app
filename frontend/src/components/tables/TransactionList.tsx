@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { useTransactions, useDeleteTransaction, type TransactionFilters } from '@/lib/hooks/useTransactions'
@@ -23,6 +24,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useTransactions(ledgerId, filters)
   const deleteTransaction = useDeleteTransaction(ledgerId)
+  const t = useTranslations()
 
   const handleDelete = async (id: string) => {
     try {
@@ -34,11 +36,11 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
   }
 
   if (isLoading) {
-    return <div className="text-center text-muted-foreground">Loading transactions...</div>
+    return <div className="text-center text-muted-foreground">{t('transactions.loadingTransactions')}</div>
   }
 
   if (error) {
-    return <div className="text-center text-destructive">Error loading transactions</div>
+    return <div className="text-center text-destructive">{t('transactions.errorLoading')}</div>
   }
 
   const transactions = data?.pages.flatMap((page) => page.data) || []
@@ -46,7 +48,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
   if (transactions.length === 0) {
     return (
       <div className="rounded-lg border p-8 text-center text-muted-foreground">
-        No transactions yet. Create your first transaction above.
+        {t('transactions.noTransactions')}
       </div>
     )
   }
@@ -58,13 +60,13 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
           <table className="w-full">
             <thead className="border-b bg-muted/50">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium">Date</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Description</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">Type</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">From</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">To</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Amount</th>
-                <th className="px-4 py-3 text-right text-sm font-medium">Actions</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.date')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.description')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.type')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.from')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.to')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">{t('table.amount')}</th>
+                <th className="px-4 py-3 text-right text-sm font-medium">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -78,7 +80,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
                         transactionTypeStyles[tx.transaction_type]
                       }`}
                     >
-                      {tx.transaction_type}
+                      {t(`transactionTypes.${tx.transaction_type}`)}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-sm">{tx.from_account.name}</td>
@@ -95,14 +97,14 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
                           onClick={() => handleDelete(tx.id)}
                           disabled={deleteTransaction.isPending}
                         >
-                          Confirm
+                          {t('common.confirm')}
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => setDeletingId(null)}
                         >
-                          Cancel
+                          {t('common.cancel')}
                         </Button>
                       </div>
                     ) : (
@@ -111,7 +113,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
                         size="sm"
                         onClick={() => setDeletingId(tx.id)}
                       >
-                        Delete
+                        {t('common.delete')}
                       </Button>
                     )}
                   </td>
@@ -129,7 +131,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
             onClick={() => fetchNextPage()}
             disabled={isFetchingNextPage}
           >
-            {isFetchingNextPage ? 'Loading...' : 'Load More'}
+            {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
           </Button>
         </div>
       )}

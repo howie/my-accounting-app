@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { useDeleteAccount } from '@/lib/hooks/useAccounts'
@@ -42,6 +43,7 @@ function AccountRow({
   onDelete,
   isDeleting,
 }: AccountRowProps) {
+  const t = useTranslations()
   const hasChildren = account.children && account.children.length > 0
   const isExpanded = expandedIds.has(account.id)
   const indentPx = depth * 24
@@ -56,7 +58,7 @@ function AccountRow({
               type="button"
               onClick={() => toggleExpand(account.id)}
               className="flex h-6 w-6 items-center justify-center rounded hover:bg-accent"
-              aria-label={isExpanded ? 'Collapse' : 'Expand'}
+              aria-label={isExpanded ? t('accounts.collapse') : t('accounts.expand')}
             >
               <span className="text-sm">{isExpanded ? '▼' : '▶'}</span>
             </button>
@@ -67,17 +69,17 @@ function AccountRow({
           <span
             className={`rounded px-2 py-1 text-xs font-medium ${accountTypeColors[account.type]}`}
           >
-            {account.type}
+            {t(`accountTypes.${account.type}`)}
           </span>
           <span className="font-medium">{account.name}</span>
           {account.is_system && (
             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              System
+              {t('common.system')}
             </span>
           )}
           {hasChildren && (
             <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              {account.children.length} sub-accounts
+              {t('accounts.subAccounts', { count: account.children.length })}
             </span>
           )}
         </div>
@@ -92,7 +94,7 @@ function AccountRow({
             )}
             ${formatAmount(account.balance)}
             {hasChildren && (
-              <span className="text-xs text-muted-foreground ml-1">(total)</span>
+              <span className="text-xs text-muted-foreground ml-1">{t('accounts.total')}</span>
             )}
           </span>
           {!account.is_system && !hasChildren && (
@@ -105,14 +107,14 @@ function AccountRow({
                     onClick={() => onDelete(account.id)}
                     disabled={isDeleting}
                   >
-                    Confirm
+                    {t('common.confirm')}
                   </Button>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setDeletingId(null)}
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                 </div>
               ) : (
@@ -121,14 +123,14 @@ function AccountRow({
                   size="sm"
                   onClick={() => setDeletingId(account.id)}
                 >
-                  Delete
+                  {t('common.delete')}
                 </Button>
               )}
             </>
           )}
           {hasChildren && (
             <span className="text-xs text-muted-foreground">
-              (has children)
+              {t('accounts.hasChildren')}
             </span>
           )}
         </div>
@@ -157,6 +159,7 @@ export function AccountList({ accounts, ledgerId }: AccountListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const deleteAccount = useDeleteAccount(ledgerId)
+  const t = useTranslations()
 
   const handleDelete = async (id: string) => {
     try {
@@ -203,7 +206,7 @@ export function AccountList({ accounts, ledgerId }: AccountListProps) {
         return (
           <div key={type} className="rounded-lg border">
             <div className="border-b bg-muted/50 px-4 py-2">
-              <h3 className="font-semibold">{type}</h3>
+              <h3 className="font-semibold">{t(`accountTypes.${type}`)}</h3>
             </div>
             <div>
               {typeAccounts.map((account) => (

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -14,11 +15,7 @@ interface TransactionFormProps {
   onCancel?: () => void
 }
 
-const transactionTypes: { value: TransactionType; label: string; description: string }[] = [
-  { value: 'EXPENSE', label: 'Expense', description: 'Spend money (from asset/liability to expense)' },
-  { value: 'INCOME', label: 'Income', description: 'Receive money (from income to asset/liability)' },
-  { value: 'TRANSFER', label: 'Transfer', description: 'Move between accounts (asset/liability)' },
-]
+const transactionTypeKeys: TransactionType[] = ['EXPENSE', 'INCOME', 'TRANSFER']
 
 function getValidFromAccounts(type: TransactionType): AccountType[] {
   switch (type) {
@@ -50,11 +47,18 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
   const [fromAccountId, setFromAccountId] = useState('')
   const [toAccountId, setToAccountId] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations()
 
   const { data: accountsData } = useAccounts(ledgerId)
   const createTransaction = useCreateTransaction(ledgerId)
 
   const accounts = accountsData || []
+
+  const transactionTypes = transactionTypeKeys.map((value) => ({
+    value,
+    label: t(`transactionTypes.${value}`),
+    description: t(`transactionTypes.${value.toLowerCase()}Desc`),
+  }))
 
   const validFromTypes = getValidFromAccounts(transactionType)
   const validToTypes = getValidToAccounts(transactionType)
@@ -81,18 +85,18 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
     setError(null)
 
     if (!description.trim()) {
-      setError('Description is required')
+      setError(t('transactionForm.descriptionRequired'))
       return
     }
 
     const amountNum = parseFloat(amount)
     if (isNaN(amountNum) || amountNum <= 0) {
-      setError('Amount must be a positive number')
+      setError(t('transactionForm.invalidAmount'))
       return
     }
 
     if (!fromAccountId || !toAccountId) {
-      setError('Both from and to accounts are required')
+      setError(t('transactionForm.accountsRequired'))
       return
     }
 
@@ -107,13 +111,13 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       })
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create transaction')
+      setError(err instanceof Error ? err.message : t('transactionForm.failedToCreate'))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border p-6">
-      <h2 className="mb-4 text-xl font-semibold">Record Transaction</h2>
+      <h2 className="mb-4 text-xl font-semibold">{t('transactionForm.title')}</h2>
 
       {error && (
         <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
@@ -123,7 +127,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
 
       {/* Transaction Type */}
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium">Transaction Type</label>
+        <label className="mb-2 block text-sm font-medium">{t('transactionForm.typeLabel')}</label>
         <div className="grid gap-2 sm:grid-cols-3">
           {transactionTypes.map((type) => (
             <button
@@ -146,7 +150,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       {/* Date */}
       <div className="mb-4">
         <label htmlFor="date" className="mb-2 block text-sm font-medium">
-          Date
+          {t('transactionForm.dateLabel')}
         </label>
         <Input
           id="date"
@@ -160,14 +164,14 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       {/* Description */}
       <div className="mb-4">
         <label htmlFor="description" className="mb-2 block text-sm font-medium">
-          Description
+          {t('transactionForm.descriptionLabel')}
         </label>
         <Input
           id="description"
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="e.g., Grocery shopping, Monthly salary"
+          placeholder={t('transactionForm.descriptionPlaceholder')}
           required
         />
       </div>
@@ -175,7 +179,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       {/* Amount */}
       <div className="mb-4">
         <label htmlFor="amount" className="mb-2 block text-sm font-medium">
-          Amount
+          {t('transactionForm.amountLabel')}
         </label>
         <Input
           id="amount"
@@ -192,7 +196,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       {/* From Account */}
       <div className="mb-4">
         <label htmlFor="fromAccount" className="mb-2 block text-sm font-medium">
-          From Account
+          {t('transactionForm.fromAccountLabel')}
         </label>
         <select
           id="fromAccount"
@@ -201,10 +205,10 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           required
         >
-          <option value="">Select account...</option>
+          <option value="">{t('transactionForm.selectAccount')}</option>
           {fromAccounts.map((account) => (
             <option key={account.id} value={account.id}>
-              {account.name} ({account.type})
+              {account.name} ({t(`accountTypes.${account.type}`)})
             </option>
           ))}
         </select>
@@ -213,7 +217,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       {/* To Account */}
       <div className="mb-6">
         <label htmlFor="toAccount" className="mb-2 block text-sm font-medium">
-          To Account
+          {t('transactionForm.toAccountLabel')}
         </label>
         <select
           id="toAccount"
@@ -222,10 +226,10 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           required
         >
-          <option value="">Select account...</option>
+          <option value="">{t('transactionForm.selectAccount')}</option>
           {toAccounts.map((account) => (
             <option key={account.id} value={account.id}>
-              {account.name} ({account.type})
+              {account.name} ({t(`accountTypes.${account.type}`)})
             </option>
           ))}
         </select>
@@ -233,11 +237,11 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
 
       <div className="flex gap-2">
         <Button type="submit" disabled={createTransaction.isPending}>
-          {createTransaction.isPending ? 'Saving...' : 'Save Transaction'}
+          {createTransaction.isPending ? t('transactionForm.saving') : t('transactionForm.saveTransaction')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
       </div>

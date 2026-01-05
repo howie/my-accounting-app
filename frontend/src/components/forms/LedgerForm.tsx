@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +16,7 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
   const [name, setName] = useState('')
   const [initialBalance, setInitialBalance] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations()
 
   const createLedger = useCreateLedger()
 
@@ -23,13 +25,13 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
     setError(null)
 
     if (!name.trim()) {
-      setError('Name is required')
+      setError(t('ledgerForm.nameRequired'))
       return
     }
 
     const balance = initialBalance ? parseFloat(initialBalance) : 0
     if (isNaN(balance) || balance < 0) {
-      setError('Initial balance must be a positive number')
+      setError(t('ledgerForm.invalidBalance'))
       return
     }
 
@@ -40,13 +42,13 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
       })
       onSuccess?.()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create ledger')
+      setError(err instanceof Error ? err.message : t('ledgerForm.failedToCreate'))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-lg border p-6">
-      <h2 className="mb-4 text-xl font-semibold">Create New Ledger</h2>
+      <h2 className="mb-4 text-xl font-semibold">{t('ledgerForm.title')}</h2>
 
       {error && (
         <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
@@ -56,21 +58,21 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
 
       <div className="mb-4">
         <label htmlFor="name" className="mb-2 block text-sm font-medium">
-          Ledger Name
+          {t('ledgerForm.nameLabel')}
         </label>
         <Input
           id="name"
           type="text"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g., 2024 Personal Finance"
+          placeholder={t('ledgerForm.namePlaceholder')}
           required
         />
       </div>
 
       <div className="mb-6">
         <label htmlFor="initialBalance" className="mb-2 block text-sm font-medium">
-          Initial Balance (optional)
+          {t('ledgerForm.initialBalanceLabel')}
         </label>
         <Input
           id="initialBalance"
@@ -82,17 +84,17 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
           placeholder="0.00"
         />
         <p className="mt-1 text-sm text-muted-foreground">
-          This will be added to your Cash account
+          {t('ledgerForm.initialBalanceNote')}
         </p>
       </div>
 
       <div className="flex gap-2">
         <Button type="submit" disabled={createLedger.isPending}>
-          {createLedger.isPending ? 'Creating...' : 'Create Ledger'}
+          {createLedger.isPending ? t('ledgerForm.creating') : t('ledgerForm.createLedger')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            {t('common.cancel')}
           </Button>
         )}
       </div>
