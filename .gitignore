@@ -214,3 +214,4 @@ myab.db
 .claude/settings.local.json
 frontend/.next/
 frontend/node_modules/
+tmp/
