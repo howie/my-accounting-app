@@ -11,7 +11,9 @@
     "clearAll": "清除全部",
     "loadMore": "載入更多",
     "error": "錯誤",
-    "system": "系統"
+    "system": "系統",
+    "previous": "上一頁",
+    "next": "下一頁"
   },
   "home": {
     "title": "個人記帳系統",
