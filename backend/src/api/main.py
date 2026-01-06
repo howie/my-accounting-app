@@ -14,6 +14,7 @@ from src.core.exceptions import (
     NotFoundError,
     ValidationError,
 )
+from src.core.version import VERSION
 from src.db.session import create_db_and_tables
 
 settings = get_settings()
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="LedgerOne API",
     description="Core Accounting System API",
-    version="0.1.0",
+    version=VERSION,
     lifespan=lifespan,
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
@@ -92,7 +93,7 @@ async def ledgerone_handler(request: Request, exc: LedgerOneException) -> JSONRe
 @app.get("/health")
 async def health_check() -> dict[str, Any]:
     """Health check endpoint."""
-    return {"status": "healthy", "version": "0.1.0"}
+    return {"status": "healthy", "version": VERSION}
 
 
 # Include API routes
