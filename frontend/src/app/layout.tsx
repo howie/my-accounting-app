@@ -5,6 +5,7 @@ import { getLocale, getMessages } from 'next-intl/server'
 
 import { Providers } from '@/lib/providers'
 import { Footer } from '@/components/ui/Footer'
+import { AppShell } from '@/components/layout/AppShell'
 
 import './globals.css'
 
@@ -28,7 +29,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>
           <Providers>
-            {children}
+            <AppShell>{children}</AppShell>
             <Footer />
           </Providers>
         </NextIntlClientProvider>

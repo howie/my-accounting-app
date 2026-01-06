@@ -72,6 +72,7 @@ Standard Python virtual environment practices apply:
 ## Active Technologies
 - Python 3.12 (Backend), TypeScript 5.x (Frontend) (001-core-accounting)
 - PostgreSQL 16 (via Docker or Supabase) (001-core-accounting)
+- PostgreSQL 16 (existing data model from 001-core-accounting) (002-ui-layout-dashboard)
 
 ## Recent Changes
 - 001-core-accounting: Added Python 3.12 (Backend), TypeScript 5.x (Frontend)

@@ -2,9 +2,12 @@
 
 from fastapi import APIRouter
 
-from src.api.routes import ledgers, accounts, transactions, users
+from src.api.routes import ledgers, accounts, transactions, users, dashboard
 
 api_router = APIRouter()
+
+# Feature 002: Dashboard (must be registered before accounts to avoid route conflicts)
+api_router.include_router(dashboard.router)
 
 # Phase 3 (US1): Ledgers and Accounts
 api_router.include_router(ledgers.router)
