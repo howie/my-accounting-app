@@ -1,0 +1,25 @@
+# Dependencies
+node_modules
+
+# Test files
+vitest.config.ts
+tests/
+__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+
+# Development
+.env.local
+.env.development
+*.log
+
+# Build outputs
+.next
+out
+dist
+
+# IDE
+.vscode
+.idea

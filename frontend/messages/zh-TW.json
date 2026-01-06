@@ -1,0 +1,149 @@
+{
+  "common": {
+    "appName": "LedgerOne",
+    "loading": "載入中...",
+    "cancel": "取消",
+    "confirm": "確認",
+    "delete": "刪除",
+    "create": "建立",
+    "save": "儲存",
+    "search": "搜尋",
+    "clearAll": "清除全部",
+    "loadMore": "載入更多",
+    "error": "錯誤",
+    "system": "系統"
+  },
+  "home": {
+    "title": "個人記帳系統",
+    "getStarted": "開始使用"
+  },
+  "setup": {
+    "title": "歡迎使用 LedgerOne",
+    "subtitle": "設定您的帳號以開始使用",
+    "emailLabel": "電子郵件",
+    "emailRequired": "電子郵件為必填",
+    "emailPlaceholder": "you@example.com",
+    "settingUp": "設定中...",
+    "failedToCreate": "建立使用者失敗，請重試。",
+    "singleUserNote": "這是單一使用者應用程式。您的資料儲存在本地端。"
+  },
+  "ledgers": {
+    "title": "帳本",
+    "newLedger": "新增帳本",
+    "noLedgers": "尚無帳本。建立您的第一本帳本以開始使用。",
+    "initialBalance": "初始餘額",
+    "created": "建立時間",
+    "loadingLedgers": "載入帳本中...",
+    "errorLoading": "載入帳本錯誤",
+    "backToLedgers": "返回帳本列表",
+    "notFound": "找不到帳本",
+    "deleteLedger": "刪除帳本",
+    "confirmDelete": "確認刪除",
+    "deleting": "刪除中..."
+  },
+  "ledgerForm": {
+    "title": "建立新帳本",
+    "nameLabel": "帳本名稱",
+    "namePlaceholder": "例如：2024 個人財務",
+    "nameRequired": "名稱為必填",
+    "initialBalanceLabel": "初始餘額（選填）",
+    "initialBalanceNote": "此金額將加入您的現金帳戶",
+    "invalidBalance": "初始餘額必須為正數",
+    "creating": "建立中...",
+    "createLedger": "建立帳本",
+    "failedToCreate": "建立帳本失敗"
+  },
+  "accounts": {
+    "title": "科目",
+    "newAccount": "新增科目",
+    "noAccounts": "尚無科目。系統在建立帳本時已自動建立現金和權益科目。",
+    "loadingAccounts": "載入科目中...",
+    "subAccounts": "{count} 個子科目",
+    "total": "（合計）",
+    "hasChildren": "（有子科目）",
+    "expand": "展開",
+    "collapse": "收合"
+  },
+  "accountForm": {
+    "title": "建立新科目",
+    "nameLabel": "科目名稱",
+    "namePlaceholder": "例如：雜貨、儲蓄帳戶、房租",
+    "nameRequired": "名稱為必填",
+    "typeLabel": "科目類型",
+    "parentLabel": "上層科目（選填）",
+    "parentNone": "無（根層級）",
+    "maxDepth": "（最大深度）",
+    "parentNote": "建立為現有科目的子科目（最多 3 層）",
+    "creating": "建立中...",
+    "createAccount": "建立科目",
+    "failedToCreate": "建立科目失敗"
+  },
+  "accountTypes": {
+    "ASSET": "資產",
+    "LIABILITY": "負債",
+    "INCOME": "收入",
+    "EXPENSE": "支出",
+    "assetDesc": "您擁有的東西（現金、銀行帳戶、財產）",
+    "liabilityDesc": "您欠的東西（信用卡、貸款）",
+    "incomeDesc": "您收到的錢（薪資、利息）",
+    "expenseDesc": "您花費的錢（食物、房租、水電）"
+  },
+  "transactions": {
+    "title": "交易",
+    "newTransaction": "新增交易",
+    "noTransactions": "尚無交易。在上方建立您的第一筆交易。",
+    "loadingTransactions": "載入交易中...",
+    "errorLoading": "載入交易錯誤",
+    "showFilters": "顯示篩選",
+    "hideFilters": "隱藏篩選"
+  },
+  "transactionForm": {
+    "title": "記錄交易",
+    "typeLabel": "交易類型",
+    "dateLabel": "日期",
+    "descriptionLabel": "描述",
+    "descriptionPlaceholder": "例如：購買雜貨、月薪",
+    "descriptionRequired": "描述為必填",
+    "amountLabel": "金額",
+    "invalidAmount": "金額必須為正數",
+    "fromAccountLabel": "來源科目",
+    "toAccountLabel": "目標科目",
+    "selectAccount": "選擇科目...",
+    "accountsRequired": "來源和目標科目皆為必填",
+    "saving": "儲存中...",
+    "saveTransaction": "儲存交易",
+    "failedToCreate": "建立交易失敗"
+  },
+  "transactionTypes": {
+    "EXPENSE": "支出",
+    "INCOME": "收入",
+    "TRANSFER": "轉帳",
+    "expenseDesc": "花費金錢（從資產/負債到支出）",
+    "incomeDesc": "收取金錢（從收入到資產/負債）",
+    "transferDesc": "帳戶間轉移（資產/負債）"
+  },
+  "filters": {
+    "title": "篩選",
+    "searchPlaceholder": "搜尋描述...",
+    "fromDate": "起始日期",
+    "toDate": "結束日期",
+    "account": "科目",
+    "allAccounts": "所有科目",
+    "type": "類型",
+    "allTypes": "所有類型"
+  },
+  "table": {
+    "date": "日期",
+    "description": "描述",
+    "type": "類型",
+    "from": "來源",
+    "to": "目標",
+    "amount": "金額",
+    "actions": "操作"
+  },
+  "ledgerSwitcher": {
+    "selectLedger": "選擇帳本",
+    "noLedgers": "尚無帳本",
+    "manageLedgers": "管理帳本"
+  }
+}
