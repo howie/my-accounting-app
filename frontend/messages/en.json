@@ -11,7 +11,9 @@
     "clearAll": "Clear All",
     "loadMore": "Load More",
     "error": "Error",
-    "system": "System"
+    "system": "System",
+    "previous": "Previous",
+    "next": "Next"
   },
   "home": {
     "title": "Personal Accounting System",

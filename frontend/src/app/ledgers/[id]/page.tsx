@@ -36,12 +36,13 @@ export default function LedgerDetailPage() {
   const [transactionFilters, setTransactionFilters] = useState<TransactionFilters>({})
   const [deleteConfirm, setDeleteConfirm] = useState(false)
 
-  // Set current ledger in context when loaded
+  // Set current ledger in context when loaded and redirect to dashboard
   useEffect(() => {
     if (ledger) {
       setCurrentLedger(ledger)
+      router.push('/')
     }
-  }, [ledger, setCurrentLedger])
+  }, [ledger, setCurrentLedger, router])
 
   const handleDelete = async () => {
     try {
