@@ -60,10 +60,10 @@ class DashboardService:
     def get_accounts_by_category(
         self, ledger_id: uuid.UUID
     ) -> dict:
-        """Get all accounts grouped by category type.
+        """Get all accounts grouped by category type with tree structure.
 
         Returns:
-            dict with categories list, each containing type and accounts
+            dict with categories list, each containing type and accounts (tree)
 
         Raises:
             ValueError: If ledger doesn't exist
@@ -83,7 +83,7 @@ class DashboardService:
 
         categories = []
         for account_type in category_order:
-            # Get accounts for this type
+            # Get all accounts for this type
             accounts = self.session.exec(
                 select(Account)
                 .where(Account.ledger_id == ledger_id)
@@ -91,22 +91,42 @@ class DashboardService:
                 .order_by(Account.name)
             ).all()
 
-            # Calculate balance for each account
-            account_list = [
-                {
-                    "id": str(account.id),
-                    "name": account.name,
-                    "balance": float(self._calculate_account_balance(account)),
-                }
-                for account in accounts
-            ]
+            # Build tree structure
+            account_tree = self._build_account_tree(accounts)
 
             categories.append({
                 "type": account_type.value,
-                "accounts": account_list,
+                "accounts": account_tree,
             })
 
         return {"categories": categories}
+
+    def _build_account_tree(self, accounts: list[Account]) -> list[dict]:
+        """Build hierarchical tree from flat account list."""
+        # Create lookup dict
+        account_dict = {}
+        for account in accounts:
+            account_dict[account.id] = {
+                "id": str(account.id),
+                "name": account.name,
+                "balance": float(self._calculate_account_balance(account)),
+                "parent_id": str(account.parent_id) if account.parent_id else None,
+                "depth": account.depth,
+                "children": [],
+            }
+
+        # Build tree
+        root_accounts = []
+        for account in accounts:
+            node = account_dict[account.id]
+            if account.parent_id and account.parent_id in account_dict:
+                # Add as child
+                account_dict[account.parent_id]["children"].append(node)
+            else:
+                # Root level account
+                root_accounts.append(node)
+
+        return root_accounts
 
     def get_account_transactions(
         self,

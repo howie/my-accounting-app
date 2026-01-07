@@ -8,13 +8,16 @@ export type AccountType = 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE'
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'TRANSFER'
 
 /**
- * Sidebar account item for navigation.
+ * Sidebar account item for navigation (tree structure).
  */
 export interface SidebarAccountItem {
   id: string
   name: string
   type: AccountType
   balance: number
+  parent_id: string | null
+  depth: number
+  children: SidebarAccountItem[]
 }
 
 /**
@@ -74,7 +77,7 @@ export interface DashboardResponse {
 }
 
 /**
- * API response for accounts by category.
+ * API response for accounts by category (tree structure).
  */
 export interface AccountsByCategoryResponse {
   categories: Array<{
@@ -83,6 +86,9 @@ export interface AccountsByCategoryResponse {
       id: string
       name: string
       balance: number
+      parent_id: string | null
+      depth: number
+      children: AccountsByCategoryResponse['categories'][0]['accounts']
     }>
   }>
 }
@@ -155,6 +161,24 @@ export function transformDashboardResponse(
 }
 
 /**
+ * Transform API account to frontend SidebarAccountItem (recursive for tree).
+ */
+function transformAccount(
+  account: AccountsByCategoryResponse['categories'][0]['accounts'][0],
+  type: AccountType
+): SidebarAccountItem {
+  return {
+    id: account.id,
+    name: account.name,
+    type,
+    balance: account.balance,
+    parent_id: account.parent_id,
+    depth: account.depth,
+    children: (account.children ?? []).map((child) => transformAccount(child, type)),
+  }
+}
+
+/**
  * Transform API response to frontend SidebarCategory array.
  */
 export function transformAccountsByCategoryResponse(
@@ -167,12 +191,7 @@ export function transformAccountsByCategoryResponse(
     return {
       type,
       label: CATEGORY_CONFIG[type].label,
-      accounts: (category?.accounts ?? []).map((a) => ({
-        id: a.id,
-        name: a.name,
-        type,
-        balance: a.balance,
-      })),
+      accounts: (category?.accounts ?? []).map((a) => transformAccount(a, type)),
       isExpanded: false,
     }
   })

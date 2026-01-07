@@ -81,6 +81,8 @@ export function SidebarItem({
                 selectedAccountId === account.id ||
                 pathname === `/accounts/${account.id}`
               }
+              selectedAccountId={selectedAccountId}
+              pathname={pathname}
             />
           ))}
         </div>
@@ -99,26 +101,44 @@ export function SidebarItem({
 interface AccountLinkProps {
   account: SidebarAccountItem
   isSelected: boolean
+  selectedAccountId?: string
+  pathname: string
 }
 
-function AccountLink({ account, isSelected }: AccountLinkProps) {
+function AccountLink({ account, isSelected, selectedAccountId, pathname }: AccountLinkProps) {
+  // Calculate left padding based on depth (depth 1 = root, depth 2 = child, etc.)
+  const paddingLeft = `${(account.depth - 1) * 12 + 12}px`
+
   return (
-    <Link
-      href={`/accounts/${account.id}`}
-      className={cn(
-        'flex items-center justify-between px-3 py-1.5 text-sm rounded-md',
-        'transition-colors duration-150',
-        isSelected
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-          : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/10'
-      )}
-      title={account.name}
-    >
-      <span className="truncate max-w-[140px]">{account.name}</span>
-      <span className="text-xs text-sidebar-foreground/50 ml-2">
-        {formatBalance(account.balance)}
-      </span>
-    </Link>
+    <>
+      <Link
+        href={`/accounts/${account.id}`}
+        style={{ paddingLeft }}
+        className={cn(
+          'flex items-center justify-between pr-3 py-1.5 text-sm rounded-md',
+          'transition-colors duration-150',
+          isSelected
+            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/10'
+        )}
+        title={account.name}
+      >
+        <span className="truncate max-w-[140px]">{account.name}</span>
+        <span className="text-xs text-sidebar-foreground/50 ml-2">
+          {formatBalance(account.balance)}
+        </span>
+      </Link>
+      {/* Recursively render child accounts */}
+      {account.children?.map((child) => (
+        <AccountLink
+          key={child.id}
+          account={child}
+          isSelected={selectedAccountId === child.id || pathname === `/accounts/${child.id}`}
+          selectedAccountId={selectedAccountId}
+          pathname={pathname}
+        />
+      ))}
+    </>
   )
 }
 

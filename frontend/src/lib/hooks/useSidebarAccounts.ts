@@ -44,13 +44,26 @@ function transformResponse(response: AccountsByCategoryResponse): SidebarCategor
     return {
       type,
       label: CATEGORY_CONFIG[type].label,
-      accounts: (category?.accounts ?? []).map((a) => ({
-        id: a.id,
-        name: a.name,
-        type,
-        balance: a.balance,
-      })),
+      accounts: (category?.accounts ?? []).map((a) => transformAccount(a, type)),
       isExpanded: false,
     }
   })
+}
+
+/**
+ * Recursively transform API account to frontend SidebarAccountItem.
+ */
+function transformAccount(
+  account: AccountsByCategoryResponse['categories'][0]['accounts'][0],
+  type: AccountType
+): SidebarCategory['accounts'][0] {
+  return {
+    id: account.id,
+    name: account.name,
+    type,
+    balance: account.balance,
+    parent_id: account.parent_id,
+    depth: account.depth,
+    children: (account.children ?? []).map((child) => transformAccount(child, type)),
+  }
 }
