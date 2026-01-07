@@ -147,5 +147,31 @@
     "selectLedger": "選擇帳本",
     "noLedgers": "尚無帳本",
     "manageLedgers": "管理帳本"
+  },
+  "settings": {
+    "title": "設定",
+    "preferences": "偏好設定",
+    "accounts": "科目管理",
+    "language": "語言",
+    "theme": "主題",
+    "themeLight": "淺色",
+    "themeDark": "深色",
+    "themeSystem": "系統"
+  },
+  "accountManagement": {
+    "title": "科目管理",
+    "addAccount": "新增科目",
+    "editAccount": "編輯科目",
+    "deleteAccount": "刪除科目",
+    "confirmDelete": "確定要刪除此科目嗎？",
+    "hasTransactions": "此科目有 {count} 筆交易",
+    "hasChildren": "此科目有 {count} 個子科目",
+    "selectReplacement": "選擇替代科目",
+    "reassignAndDelete": "重新指派並刪除",
+    "cannotDeleteChildren": "請先移除子科目",
+    "cannotDeleteSystem": "系統科目無法刪除",
+    "maxDepthReached": "已達最大層級深度",
+    "dragToReorder": "拖曳以重新排序科目",
+    "noAccounts": "此類別無科目"
   }
 }

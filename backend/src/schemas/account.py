@@ -35,6 +35,7 @@ class AccountRead(SQLModel):
     is_system: bool
     parent_id: uuid.UUID | None
     depth: int
+    sort_order: int = 0
     has_children: bool = False
     created_at: datetime
     updated_at: datetime
@@ -50,6 +51,7 @@ class AccountListItem(SQLModel):
     is_system: bool
     parent_id: uuid.UUID | None
     depth: int
+    sort_order: int = 0
     has_children: bool = False
 
 
@@ -63,6 +65,7 @@ class AccountTreeNode(SQLModel):
     is_system: bool
     parent_id: uuid.UUID | None
     depth: int
+    sort_order: int = 0
     children: list[AccountTreeNode] = Field(default_factory=list)
 
 
@@ -75,3 +78,33 @@ class AccountUpdate(SQLModel):
 
 # Enable self-referential model
 AccountTreeNode.model_rebuild()
+
+
+class AccountReorderRequest(SQLModel):
+    """Schema for reordering accounts within a parent."""
+
+    parent_id: uuid.UUID | None = Field(default=None)
+    account_ids: list[uuid.UUID] = Field(min_length=1)
+
+
+class CanDeleteResponse(SQLModel):
+    """Schema for checking if account can be deleted."""
+
+    can_delete: bool
+    has_children: bool
+    has_transactions: bool
+    transaction_count: int = 0
+    child_count: int = 0
+
+
+class ReassignRequest(SQLModel):
+    """Schema for reassigning transactions before deletion."""
+
+    replacement_account_id: uuid.UUID
+
+
+class ReassignResponse(SQLModel):
+    """Schema for reassignment result."""
+
+    transactions_moved: int
+    deleted_account_id: uuid.UUID

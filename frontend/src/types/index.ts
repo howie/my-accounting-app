@@ -45,6 +45,7 @@ export interface Account {
   is_system: boolean
   parent_id: string | null
   depth: number
+  sort_order: number
   has_children: boolean
   created_at: string
   updated_at: string
@@ -69,6 +70,7 @@ export interface AccountListItem {
   is_system: boolean
   parent_id: string | null
   depth: number
+  sort_order: number
   has_children: boolean
 }
 
@@ -80,6 +82,7 @@ export interface AccountTreeNode {
   is_system: boolean
   parent_id: string | null
   depth: number
+  sort_order: number
   children: AccountTreeNode[]
 }
 
@@ -136,4 +139,31 @@ export interface PaginatedResponse<T> {
   data: T[]
   cursor: string | null
   has_more: boolean
+}
+
+// User Preferences (stored in localStorage)
+export interface UserPreferences {
+  language: 'zh-TW' | 'en'
+  theme: 'light' | 'dark' | 'system'
+}
+
+// Can Delete Response
+export interface CanDeleteResponse {
+  can_delete: boolean
+  has_children: boolean
+  has_transactions: boolean
+  transaction_count: number
+  child_count: number
+}
+
+// Reassign Response
+export interface ReassignResponse {
+  transactions_moved: number
+  deleted_account_id: string
+}
+
+// Account Reorder Request
+export interface AccountReorderRequest {
+  parent_id: string | null
+  account_ids: string[]
 }

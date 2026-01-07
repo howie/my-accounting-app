@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, Menu, X, BookOpen } from 'lucide-react'
+import { Home, Menu, X, BookOpen, Settings } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
@@ -154,6 +154,23 @@ export function Sidebar() {
             </div>
           )}
         </nav>
+
+        {/* Settings Link */}
+        <div className="px-2 mt-auto pb-2">
+          <Link
+            href="/settings"
+            className={cn(
+              'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md',
+              'transition-colors duration-150',
+              pathname.startsWith('/settings')
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/10'
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            <span>Settings</span>
+          </Link>
+        </div>
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-sidebar-border">
