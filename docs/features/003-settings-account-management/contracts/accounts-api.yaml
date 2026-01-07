@@ -1,0 +1,383 @@
+openapi: 3.1.0
+info:
+  title: Account Management API
+  description: API extensions for Settings & Account Management feature (003)
+  version: 1.0.0
+
+paths:
+  /ledgers/{ledger_id}/accounts:
+    post:
+      summary: Create a new account
+      description: |
+        Creates a new account in the specified ledger.
+        Validates: unique name within parent, depth <= 3, parent exists.
+        Creates audit log entry.
+      operationId: createAccount
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreate'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountRead'
+        '400':
+          description: Validation error (duplicate name, depth exceeded)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '404':
+          description: Ledger or parent account not found
+
+  /ledgers/{ledger_id}/accounts/{account_id}:
+    patch:
+      summary: Update an account
+      description: |
+        Updates account name or parent.
+        Validates: unique name, no circular reference, depth limit.
+        Creates audit log entry.
+      operationId: updateAccount
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdate'
+      responses:
+        '200':
+          description: Account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountRead'
+        '400':
+          description: Validation error (duplicate name, circular ref, depth exceeded)
+        '404':
+          description: Account not found
+
+    delete:
+      summary: Delete an account
+      description: |
+        Deletes an account if it has no children and no transactions.
+        Returns error with details if deletion blocked.
+        Creates audit log entry on success.
+      operationId: deleteAccount
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+        - $ref: '#/components/parameters/accountId'
+      responses:
+        '204':
+          description: Account deleted successfully
+        '400':
+          description: Cannot delete - has children or transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteBlockedError'
+        '404':
+          description: Account not found
+
+  /ledgers/{ledger_id}/accounts/reorder:
+    patch:
+      summary: Reorder accounts
+      description: |
+        Updates sort_order for multiple accounts in a single operation.
+        Accepts array of account IDs in desired order.
+        Creates audit log entries for changed accounts.
+      operationId: reorderAccounts
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountReorderRequest'
+      responses:
+        '200':
+          description: Accounts reordered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated_count:
+                    type: integer
+                    description: Number of accounts with updated sort_order
+        '400':
+          description: Invalid account IDs or not all siblings
+        '404':
+          description: Ledger not found
+
+  /ledgers/{ledger_id}/accounts/{account_id}/reassign:
+    post:
+      summary: Reassign transactions and delete account
+      description: |
+        Moves all transactions from this account to a replacement account,
+        then deletes the original account.
+        Validates: replacement is same type, not same account.
+        Creates audit log entries for reassignment and deletion.
+      operationId: reassignAndDelete
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+        - $ref: '#/components/parameters/accountId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReassignRequest'
+      responses:
+        '200':
+          description: Transactions reassigned and account deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReassignResponse'
+        '400':
+          description: Invalid replacement account (wrong type, same account, etc.)
+        '404':
+          description: Account or replacement not found
+
+  /ledgers/{ledger_id}/accounts/{account_id}/can-delete:
+    get:
+      summary: Check if account can be deleted
+      description: |
+        Returns deletion status and blockers for an account.
+        Used by frontend to show appropriate delete dialog.
+      operationId: canDeleteAccount
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+        - $ref: '#/components/parameters/accountId'
+      responses:
+        '200':
+          description: Deletion status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CanDeleteResponse'
+        '404':
+          description: Account not found
+
+  /ledgers/{ledger_id}/accounts/{account_id}/replacement-candidates:
+    get:
+      summary: Get valid replacement accounts
+      description: |
+        Returns accounts that can receive reassigned transactions.
+        Filters: same type, not the account being deleted.
+      operationId: getReplacementCandidates
+      tags: [accounts]
+      parameters:
+        - $ref: '#/components/parameters/ledgerId'
+        - $ref: '#/components/parameters/accountId'
+      responses:
+        '200':
+          description: Replacement candidates returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountListItem'
+        '404':
+          description: Account not found
+
+components:
+  parameters:
+    ledgerId:
+      name: ledger_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Ledger ID
+
+    accountId:
+      name: account_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Account ID
+
+  schemas:
+    AccountCreate:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Account name (unique within parent)
+        type:
+          $ref: '#/components/schemas/AccountType'
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Parent account ID (null for top-level)
+
+    AccountUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: New account name
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: New parent account ID
+
+    AccountRead:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AccountType'
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        depth:
+          type: integer
+          minimum: 1
+          maximum: 3
+        sort_order:
+          type: integer
+        balance:
+          type: string
+          description: Decimal balance as string
+        is_system:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AccountListItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/AccountType'
+        depth:
+          type: integer
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    AccountType:
+      type: string
+      enum: [ASSET, LIABILITY, INCOME, EXPENSE]
+
+    AccountReorderRequest:
+      type: object
+      required: [parent_id, account_ids]
+      properties:
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Parent ID for the accounts being reordered (null for type roots)
+        account_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Account IDs in desired order
+
+    ReassignRequest:
+      type: object
+      required: [replacement_account_id]
+      properties:
+        replacement_account_id:
+          type: string
+          format: uuid
+          description: Account to receive the transactions
+
+    ReassignResponse:
+      type: object
+      properties:
+        transactions_moved:
+          type: integer
+          description: Number of transactions reassigned
+        deleted_account_id:
+          type: string
+          format: uuid
+          description: ID of the deleted account
+
+    CanDeleteResponse:
+      type: object
+      properties:
+        can_delete:
+          type: boolean
+          description: True if account can be deleted directly
+        has_children:
+          type: boolean
+          description: True if account has child accounts
+        has_transactions:
+          type: boolean
+          description: True if account has transactions
+        transaction_count:
+          type: integer
+          description: Number of transactions if has_transactions is true
+        child_count:
+          type: integer
+          description: Number of children if has_children is true
+
+    DeleteBlockedError:
+      type: object
+      properties:
+        detail:
+          type: string
+        has_children:
+          type: boolean
+        has_transactions:
+          type: boolean
+        child_count:
+          type: integer
+        transaction_count:
+          type: integer
+
+    ValidationError:
+      type: object
+      properties:
+        detail:
+          type: string
+        field:
+          type: string
+          nullable: true
