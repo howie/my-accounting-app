@@ -1,7 +1,7 @@
 # Feature 002: UI Layout Dashboard - Session Memory
 
-**Last Updated**: 2026-01-06
-**Status**: In Progress - Tree Structure Implementation
+**Last Updated**: 2026-01-07
+**Status**: Complete - Tree Structure Implementation Done
 
 ## Context
 
@@ -27,9 +27,9 @@
 - **修復**: 在 `useEffect` 中加入 `router.push('/')`
 - **檔案**: `frontend/src/app/ledgers/[id]/page.tsx` (已修改)
 
-#### Issue 2: 側邊欄沒有樹狀結構 (IN PROGRESS)
+#### Issue 2: 側邊欄沒有樹狀結構 (FIXED)
 - **問題**: 側邊欄帳號顯示為平面列表，沒有顯示父子關係
-- **原因**: API 返回平面結構，前端沒有處理 children
+- **修復**: Backend 返回樹狀結構，Frontend 遞迴渲染並根據 depth 縮排
 
 ## Files Modified (Uncommitted)
 
@@ -52,68 +52,15 @@ modified:   frontend/src/types/dashboard.ts
 - [x] `AccountsByCategoryResponse` 已更新
 - [x] `transformAccount()` 遞迴轉換函數已加入
 
-### 3. Frontend Hook (TODO)
+### 3. Frontend Hook (DONE)
 `frontend/src/lib/hooks/useSidebarAccounts.ts`:
-- [ ] 更新 `transformResponse()` 使用新的樹狀結構
+- [x] 更新 `transformResponse()` 使用新的樹狀結構
+- [x] 新增 `transformAccount()` 遞迴轉換函數
 
-需要改成:
-```typescript
-function transformResponse(response: AccountsByCategoryResponse): SidebarCategory[] {
-  const categoryOrder: AccountType[] = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE']
-
-  return categoryOrder.map((type) => {
-    const category = response.categories.find((c) => c.type === type)
-    return {
-      type,
-      label: CATEGORY_CONFIG[type].label,
-      accounts: (category?.accounts ?? []).map((a) => transformAccount(a, type)),
-      isExpanded: false,
-    }
-  })
-}
-
-function transformAccount(account: any, type: AccountType): SidebarAccountItem {
-  return {
-    id: account.id,
-    name: account.name,
-    type,
-    balance: account.balance,
-    parent_id: account.parent_id,
-    depth: account.depth,
-    children: (account.children ?? []).map((child: any) => transformAccount(child, type)),
-  }
-}
-```
-
-### 4. Frontend SidebarItem (TODO)
+### 4. Frontend SidebarItem (DONE)
 `frontend/src/components/layout/SidebarItem.tsx`:
-- [ ] `AccountLink` 組件需要根據 `depth` 增加縮排
-- [ ] 遞迴渲染 `children`
-- [ ] 可選：子帳號展開/收合功能
-
-需要改的部分:
-```typescript
-function AccountLink({ account, isSelected }: AccountLinkProps) {
-  // 根據 depth 計算縮排
-  const paddingLeft = `${(account.depth - 1) * 12 + 12}px`
-
-  return (
-    <>
-      <Link
-        href={`/accounts/${account.id}`}
-        style={{ paddingLeft }}
-        className={cn(/* ... */)}
-      >
-        {/* ... */}
-      </Link>
-      {/* 遞迴渲染子帳號 */}
-      {account.children?.map((child) => (
-        <AccountLink key={child.id} account={child} isSelected={selectedAccountId === child.id} />
-      ))}
-    </>
-  )
-}
-```
+- [x] `AccountLink` 組件根據 `depth` 增加縮排
+- [x] 遞迴渲染 `children`
 
 ## API Response Example (After Fix)
 
@@ -146,13 +93,10 @@ function AccountLink({ account, isSelected }: AccountLinkProps) {
 }
 ```
 
-## How to Resume
+## Next Steps
 
-1. 讀取此文件了解進度
-2. 完成 `useSidebarAccounts.ts` 的 transform 函數更新
-3. 完成 `SidebarItem.tsx` 的遞迴渲染
-4. 測試樹狀結構顯示
-5. 提交所有修改
+1. 測試樹狀結構顯示
+2. 提交所有修改
 
 ## Commands to Test
 
