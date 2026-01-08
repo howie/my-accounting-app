@@ -59,6 +59,9 @@ select = [
 ignore = [
     "E501",   # line too long (handled by formatter)
     "B008",   # do not perform function calls in argument defaults
+    "B904",   # raise from within except (FastAPI HTTPException pattern)
+    "E402",   # module level import not at top (FastAPI app pattern)
+    "E741",   # ambiguous variable name (short names in list comprehensions)
 ]
 
 [tool.ruff.lint.isort]

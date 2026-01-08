@@ -21,7 +21,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     """Application lifespan events."""
     # Startup: create tables if needed (for development)
     if settings.is_development:
@@ -52,7 +52,7 @@ app.add_middleware(
 
 # Exception handlers
 @app.exception_handler(NotFoundError)
-async def not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
+async def not_found_handler(_request: Request, exc: NotFoundError) -> JSONResponse:
     """Handle not found errors."""
     return JSONResponse(
         status_code=status.HTTP_404_NOT_FOUND,
@@ -61,7 +61,7 @@ async def not_found_handler(request: Request, exc: NotFoundError) -> JSONRespons
 
 
 @app.exception_handler(ValidationError)
-async def validation_handler(request: Request, exc: ValidationError) -> JSONResponse:
+async def validation_handler(_request: Request, exc: ValidationError) -> JSONResponse:
     """Handle validation errors."""
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -72,7 +72,7 @@ async def validation_handler(request: Request, exc: ValidationError) -> JSONResp
 
 
 @app.exception_handler(ConflictError)
-async def conflict_handler(request: Request, exc: ConflictError) -> JSONResponse:
+async def conflict_handler(_request: Request, exc: ConflictError) -> JSONResponse:
     """Handle conflict errors."""
     return JSONResponse(
         status_code=status.HTTP_409_CONFLICT,
@@ -81,7 +81,7 @@ async def conflict_handler(request: Request, exc: ConflictError) -> JSONResponse
 
 
 @app.exception_handler(LedgerOneException)
-async def ledgerone_handler(request: Request, exc: LedgerOneException) -> JSONResponse:
+async def ledgerone_handler(_request: Request, exc: LedgerOneException) -> JSONResponse:
     """Handle generic LedgerOne errors."""
     return JSONResponse(
         status_code=status.HTTP_400_BAD_REQUEST,

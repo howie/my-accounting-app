@@ -52,7 +52,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
   const { data: accountsData } = useAccounts(ledgerId)
   const createTransaction = useCreateTransaction(ledgerId)
 
-  const accounts = accountsData || []
+  const accounts = useMemo(() => accountsData || [], [accountsData])
 
   const transactionTypes = transactionTypeKeys.map((value) => ({
     value,
