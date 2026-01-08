@@ -15,9 +15,7 @@ from src.services.user_account_service import UserService
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-def get_user_service(
-    session: Annotated[Session, Depends(get_session)]
-) -> UserService:
+def get_user_service(session: Annotated[Session, Depends(get_session)]) -> UserService:
     """Dependency to get UserService instance."""
     return UserService(session)
 

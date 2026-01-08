@@ -139,7 +139,7 @@ class TestDecimalPrecision:
                 ledger_id,
                 TransactionCreate(
                     date=date.today(),
-                    description=f"Small amount {i+1}",
+                    description=f"Small amount {i + 1}",
                     amount=Decimal("0.10"),
                     from_account_id=cash_id,
                     to_account_id=food_id,
@@ -171,7 +171,7 @@ class TestDecimalPrecision:
                 ledger_id,
                 TransactionCreate(
                     date=date.today(),
-                    description=f"Amount {i+1}",
+                    description=f"Amount {i + 1}",
                     amount=amount,
                     from_account_id=cash_id,
                     to_account_id=food_id,

@@ -15,9 +15,7 @@ class LedgerCreate(SQLModel):
     """Schema for creating a new ledger."""
 
     name: str = Field(min_length=1, max_length=100)
-    initial_balance: Decimal = Field(
-        default=Decimal("0"), ge=0, max_digits=15, decimal_places=2
-    )
+    initial_balance: Decimal = Field(default=Decimal("0"), ge=0, max_digits=15, decimal_places=2)
 
 
 class LedgerRead(SQLModel):

@@ -96,9 +96,7 @@ def accounts(session: Session, ledger: Ledger) -> dict[str, Account]:
 class TestGetDashboardSummary:
     """Tests for get_dashboard_summary method."""
 
-    def test_returns_zero_for_empty_ledger(
-        self, session: Session, ledger: Ledger
-    ):
+    def test_returns_zero_for_empty_ledger(self, session: Session, ledger: Ledger):
         """Dashboard should return zeros when ledger has no transactions."""
         service = DashboardService(session)
         result = service.get_dashboard_summary(ledger.id)
@@ -183,9 +181,7 @@ class TestGetDashboardSummary:
 class TestGetAccountsByCategory:
     """Tests for get_accounts_by_category method."""
 
-    def test_returns_empty_categories_for_new_ledger(
-        self, session: Session, ledger: Ledger
-    ):
+    def test_returns_empty_categories_for_new_ledger(self, session: Session, ledger: Ledger):
         """Should return all categories even when empty."""
         service = DashboardService(session)
         result = service.get_accounts_by_category(ledger.id)
@@ -204,15 +200,11 @@ class TestGetAccountsByCategory:
         result = service.get_accounts_by_category(ledger.id)
 
         # Find asset category
-        asset_category = next(
-            c for c in result["categories"] if c["type"] == "ASSET"
-        )
+        asset_category = next(c for c in result["categories"] if c["type"] == "ASSET")
         assert len(asset_category["accounts"]) == 2  # Cash, Bank Account
 
         # Find expense category
-        expense_category = next(
-            c for c in result["categories"] if c["type"] == "EXPENSE"
-        )
+        expense_category = next(c for c in result["categories"] if c["type"] == "EXPENSE")
         assert len(expense_category["accounts"]) == 1  # Food
 
     def test_includes_account_balances(
@@ -236,12 +228,8 @@ class TestGetAccountsByCategory:
         result = service.get_accounts_by_category(ledger.id)
 
         # Find cash account
-        asset_category = next(
-            c for c in result["categories"] if c["type"] == "ASSET"
-        )
-        cash_account = next(
-            a for a in asset_category["accounts"] if a["name"] == "Cash"
-        )
+        asset_category = next(c for c in result["categories"] if c["type"] == "ASSET")
+        cash_account = next(a for a in asset_category["accounts"] if a["name"] == "Cash")
         assert cash_account["balance"] == 1000.0
 
 
@@ -306,17 +294,13 @@ class TestGetAccountTransactions:
         service = DashboardService(session)
 
         # Get first page
-        result = service.get_account_transactions(
-            accounts["cash"].id, page=1, page_size=5
-        )
+        result = service.get_account_transactions(accounts["cash"].id, page=1, page_size=5)
         assert len(result["transactions"]) == 5
         assert result["total_count"] == 10
         assert result["has_more"] is True
 
         # Get second page
-        result = service.get_account_transactions(
-            accounts["cash"].id, page=2, page_size=5
-        )
+        result = service.get_account_transactions(accounts["cash"].id, page=2, page_size=5)
         assert len(result["transactions"]) == 5
         assert result["has_more"] is False
 
@@ -344,6 +328,4 @@ class TestGetAccountTransactions:
         service = DashboardService(session)
 
         with pytest.raises(ValueError, match="Page size"):
-            service.get_account_transactions(
-                accounts["cash"].id, page_size=101
-            )
+            service.get_account_transactions(accounts["cash"].id, page_size=101)

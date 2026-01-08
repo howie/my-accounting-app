@@ -366,13 +366,13 @@ class TransactionService:
                 )
             if to_account.type != AccountType.EXPENSE:
                 raise ValueError(
-                    f"EXPENSE transaction to_account must be Expense, " f"got {to_account.type}"
+                    f"EXPENSE transaction to_account must be Expense, got {to_account.type}"
                 )
 
         elif transaction_type == TransactionType.INCOME:
             if from_account.type != AccountType.INCOME:
                 raise ValueError(
-                    f"INCOME transaction from_account must be Income, " f"got {from_account.type}"
+                    f"INCOME transaction from_account must be Income, got {from_account.type}"
                 )
             if to_account.type not in asset_liability:
                 raise ValueError(

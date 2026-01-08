@@ -310,9 +310,7 @@ class AccountService:
         Returns details about what prevents deletion if any.
         """
         account = self.session.exec(
-            select(Account).where(
-                Account.id == account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
         ).first()
 
         if not account:
@@ -355,9 +353,7 @@ class AccountService:
         Returns accounts of the same type, excluding the account being deleted.
         """
         account = self.session.exec(
-            select(Account).where(
-                Account.id == account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
         ).first()
 
         if not account:
@@ -385,15 +381,11 @@ class AccountService:
         Raises ValueError if accounts are invalid or incompatible.
         """
         from_account = self.session.exec(
-            select(Account).where(
-                Account.id == from_account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == from_account_id, Account.ledger_id == ledger_id)
         ).first()
 
         to_account = self.session.exec(
-            select(Account).where(
-                Account.id == to_account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == to_account_id, Account.ledger_id == ledger_id)
         ).first()
 
         if not from_account:
@@ -417,9 +409,7 @@ class AccountService:
         ).one()
 
         # Update from_account_id references
-        self.session.exec(
-            select(Transaction).where(Transaction.from_account_id == from_account_id)
-        )
+        self.session.exec(select(Transaction).where(Transaction.from_account_id == from_account_id))
         for txn in self.session.exec(
             select(Transaction).where(Transaction.from_account_id == from_account_id)
         ).all():
@@ -483,6 +473,4 @@ class AccountService:
 
     def get_child_count(self, account_id: uuid.UUID) -> int:
         """Get the number of child accounts."""
-        return self.session.exec(
-            select(func.count()).where(Account.parent_id == account_id)
-        ).one()
+        return self.session.exec(select(func.count()).where(Account.parent_id == account_id)).one()

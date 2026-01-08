@@ -21,9 +21,7 @@ class TestAccountEndpointsContract:
 
     # --- POST /api/v1/ledgers/{ledger_id}/accounts ---
 
-    def test_create_account_returns_201(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_201(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns 201 Created on success."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -32,9 +30,7 @@ class TestAccountEndpointsContract:
 
         assert response.status_code == 201
 
-    def test_create_account_returns_account_data(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_account_data(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns the created account data."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -46,9 +42,7 @@ class TestAccountEndpointsContract:
         assert data["name"] == "Savings"
         assert data["type"] == "ASSET"
 
-    def test_create_account_returns_uuid_id(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_uuid_id(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns a valid UUID as id."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -58,9 +52,7 @@ class TestAccountEndpointsContract:
         data = response.json()
         uuid.UUID(data["id"])  # Should not raise
 
-    def test_create_account_returns_ledger_id(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_ledger_id(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns the ledger_id."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -70,9 +62,7 @@ class TestAccountEndpointsContract:
         data = response.json()
         assert data["ledger_id"] == ledger_id
 
-    def test_create_account_returns_zero_balance(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_zero_balance(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns balance of 0.00."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -94,9 +84,7 @@ class TestAccountEndpointsContract:
         data = response.json()
         assert data["is_system"] is False
 
-    def test_create_account_returns_timestamps(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_returns_timestamps(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts returns created_at and updated_at."""
         response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -107,9 +95,7 @@ class TestAccountEndpointsContract:
         assert "created_at" in data
         assert "updated_at" in data
 
-    def test_create_account_all_types(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_create_account_all_types(self, client: TestClient, ledger_id: str) -> None:
         """POST /accounts accepts all account types."""
         for account_type in ["ASSET", "LIABILITY", "INCOME", "EXPENSE"]:
             response = client.post(
@@ -141,9 +127,7 @@ class TestAccountEndpointsContract:
 
         assert response.status_code == 422
 
-    def test_create_account_nonexistent_ledger_returns_404(
-        self, client: TestClient
-    ) -> None:
+    def test_create_account_nonexistent_ledger_returns_404(self, client: TestClient) -> None:
         """POST /accounts returns 404 for non-existent ledger."""
         fake_id = str(uuid.uuid4())
 
@@ -172,17 +156,13 @@ class TestAccountEndpointsContract:
 
     # --- GET /api/v1/ledgers/{ledger_id}/accounts ---
 
-    def test_get_accounts_returns_200(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_accounts_returns_200(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts returns 200 OK."""
         response = client.get(f"/api/v1/ledgers/{ledger_id}/accounts")
 
         assert response.status_code == 200
 
-    def test_get_accounts_returns_data_list(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_accounts_returns_data_list(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts returns a data object with list."""
         response = client.get(f"/api/v1/ledgers/{ledger_id}/accounts")
 
@@ -213,9 +193,7 @@ class TestAccountEndpointsContract:
         assert cash["is_system"] is True
         assert equity["is_system"] is True
 
-    def test_get_accounts_includes_user_accounts(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_accounts_includes_user_accounts(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts returns user-created accounts."""
         client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -228,9 +206,7 @@ class TestAccountEndpointsContract:
         names = [a["name"] for a in data["data"]]
         assert "Food" in names
 
-    def test_get_accounts_filter_by_type(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_accounts_filter_by_type(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts?type=X filters by account type."""
         client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -259,9 +235,7 @@ class TestAccountEndpointsContract:
         assert "balance" in account
         assert "is_system" in account
 
-    def test_get_accounts_nonexistent_ledger_returns_404(
-        self, client: TestClient
-    ) -> None:
+    def test_get_accounts_nonexistent_ledger_returns_404(self, client: TestClient) -> None:
         """GET /accounts returns 404 for non-existent ledger."""
         fake_id = str(uuid.uuid4())
 
@@ -271,9 +245,7 @@ class TestAccountEndpointsContract:
 
     # --- GET /api/v1/ledgers/{ledger_id}/accounts/{account_id} ---
 
-    def test_get_account_by_id_returns_200(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_account_by_id_returns_200(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts/{id} returns 200 OK for existing account."""
         create_response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -324,9 +296,7 @@ class TestAccountEndpointsContract:
         assert "created_at" in data
         assert "updated_at" in data
 
-    def test_get_account_nonexistent_returns_404(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_get_account_nonexistent_returns_404(self, client: TestClient, ledger_id: str) -> None:
         """GET /accounts/{id} returns 404 for non-existent account."""
         fake_id = str(uuid.uuid4())
 
@@ -336,9 +306,7 @@ class TestAccountEndpointsContract:
 
     # --- PATCH /api/v1/ledgers/{ledger_id}/accounts/{account_id} ---
 
-    def test_update_account_returns_200(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_update_account_returns_200(self, client: TestClient, ledger_id: str) -> None:
         """PATCH /accounts/{id} returns 200 OK on success."""
         create_response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -353,9 +321,7 @@ class TestAccountEndpointsContract:
 
         assert response.status_code == 200
 
-    def test_update_account_changes_name(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_update_account_changes_name(self, client: TestClient, ledger_id: str) -> None:
         """PATCH /accounts/{id} updates the account name."""
         create_response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -371,9 +337,7 @@ class TestAccountEndpointsContract:
         data = response.json()
         assert data["name"] == "Updated Name"
 
-    def test_update_system_account_returns_400(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_update_system_account_returns_400(self, client: TestClient, ledger_id: str) -> None:
         """PATCH /accounts/{id} returns 400 for system accounts."""
         # Get Cash account ID
         accounts_response = client.get(f"/api/v1/ledgers/{ledger_id}/accounts")
@@ -422,9 +386,7 @@ class TestAccountEndpointsContract:
 
     # --- DELETE /api/v1/ledgers/{ledger_id}/accounts/{account_id} ---
 
-    def test_delete_account_returns_204(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_delete_account_returns_204(self, client: TestClient, ledger_id: str) -> None:
         """DELETE /accounts/{id} returns 204 No Content on success."""
         create_response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -436,9 +398,7 @@ class TestAccountEndpointsContract:
 
         assert response.status_code == 204
 
-    def test_delete_account_removes_from_list(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_delete_account_removes_from_list(self, client: TestClient, ledger_id: str) -> None:
         """DELETE /accounts/{id} removes the account from GET list."""
         create_response = client.post(
             f"/api/v1/ledgers/{ledger_id}/accounts",
@@ -452,9 +412,7 @@ class TestAccountEndpointsContract:
         names = [a["name"] for a in get_response.json()["data"]]
         assert "ToDelete" not in names
 
-    def test_delete_system_account_returns_400(
-        self, client: TestClient, ledger_id: str
-    ) -> None:
+    def test_delete_system_account_returns_400(self, client: TestClient, ledger_id: str) -> None:
         """DELETE /accounts/{id} returns 400 for system accounts (FR-004)."""
         accounts_response = client.get(f"/api/v1/ledgers/{ledger_id}/accounts")
         cash = next(a for a in accounts_response.json()["data"] if a["name"] == "Cash")
@@ -463,9 +421,7 @@ class TestAccountEndpointsContract:
 
         assert response.status_code == 400
 
-    def test_delete_account_with_transactions_returns_409(
-        self, client: TestClient
-    ) -> None:
+    def test_delete_account_with_transactions_returns_409(self, client: TestClient) -> None:
         """DELETE /accounts/{id} returns 409 if account has transactions."""
         # Create ledger with initial balance (creates transactions)
         ledger_response = client.post(

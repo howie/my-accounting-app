@@ -43,6 +43,7 @@ addopts = "-v --tb=short"
 target-version = "py312"
 line-length = 100
 src = ["src", "tests"]
+exclude = ["alembic/versions/*", "scripts/*"]
 
 [tool.ruff.lint]
 select = [
@@ -62,7 +63,11 @@ ignore = [
     "B904",   # raise from within except (FastAPI HTTPException pattern)
     "E402",   # module level import not at top (FastAPI app pattern)
     "E741",   # ambiguous variable name (short names in list comprehensions)
+    "ARG002", # unused method argument (pytest fixtures)
 ]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["F841"]  # unused variables in tests (often used for side effects)
 
 [tool.ruff.lint.isort]
 known-first-party = ["src"]

@@ -38,13 +38,9 @@ class AuditLog(SQLModel, table=True):
     old_value: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSONB)
     )  # Previous state
-    new_value: dict[str, Any] | None = Field(
-        default=None, sa_column=Column(JSONB)
-    )  # New state
+    new_value: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB))  # New state
     extra_data: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSONB)
     )  # Additional context (e.g., reassignment details)
-    timestamp: datetime = Field(
-        default_factory=lambda: datetime.now(UTC), index=True
-    )
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC), index=True)
     ledger_id: uuid.UUID = Field(foreign_key="ledgers.id", index=True)
