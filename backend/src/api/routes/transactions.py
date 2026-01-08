@@ -25,15 +25,13 @@ router = APIRouter(prefix="/ledgers/{ledger_id}/transactions", tags=["transactio
 
 
 def get_transaction_service(
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[Session, Depends(get_session)],
 ) -> TransactionService:
     """Dependency to get TransactionService instance."""
     return TransactionService(session)
 
 
-def get_ledger_service(
-    session: Annotated[Session, Depends(get_session)]
-) -> LedgerService:
+def get_ledger_service(session: Annotated[Session, Depends(get_session)]) -> LedgerService:
     """Dependency to get LedgerService instance."""
     return LedgerService(session)
 

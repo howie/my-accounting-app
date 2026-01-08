@@ -4,14 +4,13 @@
 import os
 import subprocess
 import sys
+
 from anthropic import Anthropic
 
 
 def run_command(cmd: str, cwd: str = None) -> tuple[str, int]:
     """Run a shell command and return output and exit code."""
-    result = subprocess.run(
-        cmd, shell=True, capture_output=True, text=True, cwd=cwd
-    )
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, cwd=cwd)
     return result.stdout + result.stderr, result.returncode
 
 
@@ -41,9 +40,7 @@ def main():
     print(fix_output)
 
     # Check if there are remaining errors
-    lint_output_after, lint_code_after = run_command(
-        "ruff check backend --output-format=text"
-    )
+    lint_output_after, lint_code_after = run_command("ruff check backend --output-format=text")
 
     if lint_code_after == 0:
         print("✓ All errors fixed by ruff --fix!")
@@ -135,16 +132,14 @@ Focus on the most common error patterns first. Keep your response concise and ac
             f.write(summary)
 
         print("\n✓ Summary saved to /tmp/auto-fix-summary.md")
-        print(
-            "\nℹ️  Some errors require manual review. Check Claude's recommendations above."
-        )
+        print("\nℹ️  Some errors require manual review. Check Claude's recommendations above.")
 
         # Exit with code 0 if we made progress, 1 if no changes
         if lint_code_after < lint_code:
             print(f"\n✓ Progress made: {lint_code} → {lint_code_after} errors")
             sys.exit(0)
         else:
-            print(f"\n⚠ No progress made, manual intervention needed")
+            print("\n⚠ No progress made, manual intervention needed")
             sys.exit(1)
 
     except Exception as e:

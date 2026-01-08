@@ -85,9 +85,7 @@ class LedgerService:
 
     def get_ledger(self, ledger_id: uuid.UUID, user_id: uuid.UUID) -> Ledger | None:
         """Get a single ledger, ensuring ownership."""
-        statement = select(Ledger).where(
-            Ledger.id == ledger_id, Ledger.user_id == user_id
-        )
+        statement = select(Ledger).where(Ledger.id == ledger_id, Ledger.user_id == user_id)
         result = self.session.exec(statement)
         return result.first()
 

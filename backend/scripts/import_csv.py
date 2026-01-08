@@ -50,6 +50,7 @@ from src.models.user import User
 @dataclass
 class AccountInfo:
     """Parsed account information."""
+
     code: str
     name: str
     type: AccountType
@@ -60,6 +61,7 @@ class AccountInfo:
 @dataclass
 class TransactionInfo:
     """Parsed transaction information."""
+
     date: datetime
     from_account_code: str
     to_account_code: str
@@ -107,12 +109,12 @@ def parse_accounts_from_csv(filepath: str) -> dict[str, AccountInfo]:
     """
     accounts: dict[str, AccountInfo] = {}
 
-    with open(filepath, encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Get both from and to account codes
-            from_code = row['分類'].strip()
-            to_code = row['科目'].strip()
+            from_code = row["分類"].strip()
+            to_code = row["科目"].strip()
 
             for code in [from_code, to_code]:
                 if not code:
@@ -170,15 +172,15 @@ def parse_transactions_from_csv(filepath: str) -> list[TransactionInfo]:
     """
     transactions: list[TransactionInfo] = []
 
-    with open(filepath, encoding='utf-8') as f:
+    with open(filepath, encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            date_str = row['日期'].strip()
-            category = row['分類'].strip()  # 分類欄位
-            account = row['科目'].strip()   # 科目欄位
-            amount_str = row['金額'].strip()
-            description = row['明細'].strip()
-            notes = row.get('備註', '').strip()
+            date_str = row["日期"].strip()
+            category = row["分類"].strip()  # 分類欄位
+            account = row["科目"].strip()  # 科目欄位
+            amount_str = row["金額"].strip()
+            description = row["明細"].strip()
+            notes = row.get("備註", "").strip()
 
             if not all([date_str, category, account, amount_str]):
                 continue
@@ -193,12 +195,12 @@ def parse_transactions_from_csv(filepath: str) -> list[TransactionInfo]:
             # Map from/to based on transaction type
             if category_type == AccountType.EXPENSE:
                 # Expense: money flows FROM account TO expense category
-                from_code = account   # A- or L- (payment source)
-                to_code = category    # E- (expense type)
+                from_code = account  # A- or L- (payment source)
+                to_code = category  # E- (expense type)
             elif category_type == AccountType.INCOME:
                 # Income: money flows FROM income source TO account
                 from_code = category  # I- (income source)
-                to_code = account     # A- or L- (receiving account)
+                to_code = account  # A- or L- (receiving account)
             else:
                 # Transfer (both are Asset/Liability)
                 # Convention: 分類=to (destination), 科目=from (source)
@@ -207,20 +209,22 @@ def parse_transactions_from_csv(filepath: str) -> list[TransactionInfo]:
 
             try:
                 # Parse date (YYYY/MM/DD format)
-                date = datetime.strptime(date_str, '%Y/%m/%d').date()
+                date = datetime.strptime(date_str, "%Y/%m/%d").date()
                 amount = Decimal(amount_str)
 
                 if amount <= 0:
                     continue
 
-                transactions.append(TransactionInfo(
-                    date=date,
-                    from_account_code=from_code,
-                    to_account_code=to_code,
-                    amount=amount,
-                    description=description,
-                    notes=notes,
-                ))
+                transactions.append(
+                    TransactionInfo(
+                        date=date,
+                        from_account_code=from_code,
+                        to_account_code=to_code,
+                        amount=amount,
+                        description=description,
+                        notes=notes,
+                    )
+                )
             except (ValueError, decimal.InvalidOperation) as e:
                 print(f"Warning: Skipping invalid row: {row} - {e}")
                 continue
@@ -284,9 +288,7 @@ def import_data(
 
     with Session(engine) as session:
         # Get or create user
-        user = session.exec(
-            select(User).where(User.email == user_email)
-        ).first()
+        user = session.exec(select(User).where(User.email == user_email)).first()
 
         if not user:
             raise ValueError(f"User with email '{user_email}' not found")

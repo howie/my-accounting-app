@@ -31,9 +31,7 @@ class TransactionService:
         """Initialize service with database session."""
         self.session = session
 
-    def create_transaction(
-        self, ledger_id: uuid.UUID, data: TransactionCreate
-    ) -> Transaction:
+    def create_transaction(self, ledger_id: uuid.UUID, data: TransactionCreate) -> Transaction:
         """Create a new transaction.
 
         Validates:
@@ -52,9 +50,7 @@ class TransactionService:
         to_account = self._get_account(data.to_account_id, ledger_id)
 
         # Validate account types for transaction type
-        self._validate_account_types(
-            data.transaction_type, from_account, to_account
-        )
+        self._validate_account_types(data.transaction_type, from_account, to_account)
 
         # Create transaction
         transaction = Transaction(
@@ -97,17 +93,12 @@ class TransactionService:
 
         Returns transactions in descending order by date, then created_at.
         """
-        statement = (
-            select(Transaction)
-            .where(Transaction.ledger_id == ledger_id)
-        )
+        statement = select(Transaction).where(Transaction.ledger_id == ledger_id)
 
         # Apply search filter (case-insensitive description search)
         if search and search.strip():
             search_term = f"%{search.strip().lower()}%"
-            statement = statement.where(
-                Transaction.description.ilike(search_term)
-            )
+            statement = statement.where(Transaction.description.ilike(search_term))
 
         # Apply date filters
         if from_date:
@@ -127,14 +118,10 @@ class TransactionService:
 
         # Apply transaction type filter
         if transaction_type:
-            statement = statement.where(
-                Transaction.transaction_type == transaction_type
-            )
+            statement = statement.where(Transaction.transaction_type == transaction_type)
 
         # Apply ordering
-        statement = statement.order_by(
-            Transaction.date.desc(), Transaction.created_at.desc()
-        )
+        statement = statement.order_by(Transaction.date.desc(), Transaction.created_at.desc())
 
         # Apply cursor for pagination
         if cursor:
@@ -229,12 +216,16 @@ class TransactionService:
                 id=from_account.id,
                 name=from_account.name,
                 type=from_account.type,
-            ) if from_account else None,
+            )
+            if from_account
+            else None,
             to_account=AccountSummary(
                 id=to_account.id,
                 name=to_account.name,
                 type=to_account.type,
-            ) if to_account else None,
+            )
+            if to_account
+            else None,
         )
 
     def update_transaction(
@@ -267,9 +258,7 @@ class TransactionService:
         to_account = self._get_account(data.to_account_id, ledger_id)
 
         # Validate account types
-        self._validate_account_types(
-            data.transaction_type, from_account, to_account
-        )
+        self._validate_account_types(data.transaction_type, from_account, to_account)
 
         # Update fields
         transaction.date = data.date
@@ -307,9 +296,7 @@ class TransactionService:
             ),
         )
 
-    def delete_transaction(
-        self, transaction_id: uuid.UUID, ledger_id: uuid.UUID
-    ) -> bool:
+    def delete_transaction(self, transaction_id: uuid.UUID, ledger_id: uuid.UUID) -> bool:
         """Delete a transaction.
 
         Returns True if deleted, False if not found.
@@ -342,12 +329,11 @@ class TransactionService:
             raise ValueError(f"Account {account_id} not found")
 
         if account.ledger_id != ledger_id:
-            raise ValueError(
-                f"Account {account_id} does not belong to ledger {ledger_id}"
-            )
+            raise ValueError(f"Account {account_id} does not belong to ledger {ledger_id}")
 
         # Check if account has children (only leaf accounts can have transactions)
         from src.services.account_service import AccountService
+
         account_service = AccountService(self.session)
         if account_service.has_children(account_id):
             raise ValueError(
@@ -380,15 +366,13 @@ class TransactionService:
                 )
             if to_account.type != AccountType.EXPENSE:
                 raise ValueError(
-                    f"EXPENSE transaction to_account must be Expense, "
-                    f"got {to_account.type}"
+                    f"EXPENSE transaction to_account must be Expense, " f"got {to_account.type}"
                 )
 
         elif transaction_type == TransactionType.INCOME:
             if from_account.type != AccountType.INCOME:
                 raise ValueError(
-                    f"INCOME transaction from_account must be Income, "
-                    f"got {from_account.type}"
+                    f"INCOME transaction from_account must be Income, " f"got {from_account.type}"
                 )
             if to_account.type not in asset_liability:
                 raise ValueError(

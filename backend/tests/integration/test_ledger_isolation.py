@@ -117,6 +117,7 @@ class TestLedgerDataIsolation:
 
         # User A tries to update User B's ledger
         from src.schemas.ledger import LedgerUpdate
+
         result = ledger_service.update_ledger(
             user_b_ledger.id,
             user_a.id,

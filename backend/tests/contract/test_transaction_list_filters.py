@@ -41,43 +41,33 @@ class TestTransactionListFilters:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         ledger = ledger_service.create_ledger(
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("10000.00"))
         )
         return ledger.id
 
     @pytest.fixture
-    def cash_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def cash_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         accounts = account_service.get_accounts(ledger_id)
         return next(a.id for a in accounts if a.name == "Cash")
 
     @pytest.fixture
-    def food_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def food_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
         )
         return account.id
 
     @pytest.fixture
-    def transport_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def transport_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Transport", type=AccountType.EXPENSE)
         )
         return account.id
 
     @pytest.fixture
-    def salary_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def salary_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Salary", type=AccountType.INCOME)
         )
@@ -314,9 +304,7 @@ class TestTransactionListFilters:
         sample_transactions: list,
     ) -> None:
         """Filter by transaction_type returns only matching types."""
-        result = service.get_transactions(
-            ledger_id, transaction_type=TransactionType.EXPENSE
-        )
+        result = service.get_transactions(ledger_id, transaction_type=TransactionType.EXPENSE)
 
         for tx in result.data:
             assert tx.transaction_type == TransactionType.EXPENSE
@@ -328,9 +316,7 @@ class TestTransactionListFilters:
         sample_transactions: list,
     ) -> None:
         """Filter by transaction_type income returns only income."""
-        result = service.get_transactions(
-            ledger_id, transaction_type=TransactionType.INCOME
-        )
+        result = service.get_transactions(ledger_id, transaction_type=TransactionType.INCOME)
 
         for tx in result.data:
             assert tx.transaction_type == TransactionType.INCOME
@@ -347,9 +333,7 @@ class TestTransactionListFilters:
         today = date.today()
         from_date = today - timedelta(days=6)
 
-        result = service.get_transactions(
-            ledger_id, search="grocery", from_date=from_date
-        )
+        result = service.get_transactions(ledger_id, search="grocery", from_date=from_date)
 
         for tx in result.data:
             assert "grocery" in tx.description.lower()

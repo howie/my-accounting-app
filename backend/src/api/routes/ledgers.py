@@ -17,9 +17,7 @@ from src.services.ledger_service import LedgerService
 router = APIRouter(prefix="/ledgers", tags=["ledgers"])
 
 
-def get_ledger_service(
-    session: Annotated[Session, Depends(get_session)]
-) -> LedgerService:
+def get_ledger_service(session: Annotated[Session, Depends(get_session)]) -> LedgerService:
     """Dependency to get LedgerService instance."""
     return LedgerService(session)
 

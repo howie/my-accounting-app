@@ -36,13 +36,9 @@ class TestAccountServiceContract:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         """Create a test ledger and return its ID."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test Ledger")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test Ledger"))
         return ledger.id
 
     # --- create_account ---
@@ -119,9 +115,7 @@ class TestAccountServiceContract:
         assert result.created_at is not None
         assert result.updated_at is not None
 
-    def test_create_account_all_types(
-        self, service: AccountService, ledger_id: uuid.UUID
-    ) -> None:
+    def test_create_account_all_types(self, service: AccountService, ledger_id: uuid.UUID) -> None:
         """Can create accounts of all four types."""
         for account_type in AccountType:
             data = AccountCreate(name=f"Test {account_type.value}", type=account_type)
@@ -140,9 +134,7 @@ class TestAccountServiceContract:
 
     # --- get_accounts ---
 
-    def test_get_accounts_returns_list(
-        self, service: AccountService, ledger_id: uuid.UUID
-    ) -> None:
+    def test_get_accounts_returns_list(self, service: AccountService, ledger_id: uuid.UUID) -> None:
         """get_accounts returns a list."""
         result = service.get_accounts(ledger_id)
 
@@ -162,9 +154,7 @@ class TestAccountServiceContract:
         self, service: AccountService, ledger_id: uuid.UUID
     ) -> None:
         """get_accounts returns user-created accounts."""
-        service.create_account(
-            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
-        )
+        service.create_account(ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE))
 
         result = service.get_accounts(ledger_id)
 
@@ -175,12 +165,8 @@ class TestAccountServiceContract:
         self, service: AccountService, ledger_id: uuid.UUID
     ) -> None:
         """get_accounts can filter by account type."""
-        service.create_account(
-            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
-        )
-        service.create_account(
-            ledger_id, AccountCreate(name="Salary", type=AccountType.INCOME)
-        )
+        service.create_account(ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE))
+        service.create_account(ledger_id, AccountCreate(name="Salary", type=AccountType.INCOME))
 
         result = service.get_accounts(ledger_id, type_filter=AccountType.EXPENSE)
 
@@ -195,9 +181,7 @@ class TestAccountServiceContract:
         user_id: uuid.UUID,
     ) -> None:
         """get_accounts only returns accounts for the specified ledger."""
-        other_ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Other Ledger")
-        )
+        other_ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Other Ledger"))
         service.create_account(
             other_ledger.id, AccountCreate(name="Other Account", type=AccountType.ASSET)
         )
@@ -239,9 +223,7 @@ class TestAccountServiceContract:
         user_id: uuid.UUID,
     ) -> None:
         """get_account returns None if account belongs to different ledger."""
-        other_ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Other Ledger")
-        )
+        other_ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Other Ledger"))
         created = service.create_account(
             other_ledger.id, AccountCreate(name="Other", type=AccountType.ASSET)
         )
@@ -254,9 +236,7 @@ class TestAccountServiceContract:
         self, service: AccountService, ledger_id: uuid.UUID
     ) -> None:
         """get_account returns account with calculated balance."""
-        result = service.get_account(
-            service.get_accounts(ledger_id)[0].id, ledger_id
-        )
+        result = service.get_account(service.get_accounts(ledger_id)[0].id, ledger_id)
 
         assert result is not None
         assert isinstance(result.balance, Decimal)
@@ -271,9 +251,7 @@ class TestAccountServiceContract:
             ledger_id, AccountCreate(name="Old Name", type=AccountType.ASSET)
         )
 
-        result = service.update_account(
-            created.id, ledger_id, AccountUpdate(name="New Name")
-        )
+        result = service.update_account(created.id, ledger_id, AccountUpdate(name="New Name"))
 
         assert result is not None
         assert result.name == "New Name"
@@ -282,9 +260,7 @@ class TestAccountServiceContract:
         self, service: AccountService, ledger_id: uuid.UUID
     ) -> None:
         """update_account returns None for non-existent account."""
-        result = service.update_account(
-            uuid.uuid4(), ledger_id, AccountUpdate(name="New Name")
-        )
+        result = service.update_account(uuid.uuid4(), ledger_id, AccountUpdate(name="New Name"))
 
         assert result is None
 
@@ -296,9 +272,7 @@ class TestAccountServiceContract:
             ledger_id, AccountCreate(name="Test", type=AccountType.ASSET)
         )
 
-        result = service.update_account(
-            created.id, ledger_id, AccountUpdate(name="Updated")
-        )
+        result = service.update_account(created.id, ledger_id, AccountUpdate(name="Updated"))
 
         assert result is not None
         assert result.type == AccountType.ASSET
@@ -311,25 +285,19 @@ class TestAccountServiceContract:
         cash_account = next(a for a in accounts if a.name == "Cash")
 
         with pytest.raises(ValueError, match="system account"):
-            service.update_account(
-                cash_account.id, ledger_id, AccountUpdate(name="Renamed Cash")
-            )
+            service.update_account(cash_account.id, ledger_id, AccountUpdate(name="Renamed Cash"))
 
     def test_update_account_duplicate_name_raises_error(
         self, service: AccountService, ledger_id: uuid.UUID
     ) -> None:
         """update_account raises error if new name already exists."""
-        service.create_account(
-            ledger_id, AccountCreate(name="Existing", type=AccountType.ASSET)
-        )
+        service.create_account(ledger_id, AccountCreate(name="Existing", type=AccountType.ASSET))
         to_update = service.create_account(
             ledger_id, AccountCreate(name="Original", type=AccountType.ASSET)
         )
 
         with pytest.raises(ValueError, match="already exists"):
-            service.update_account(
-                to_update.id, ledger_id, AccountUpdate(name="Existing")
-            )
+            service.update_account(to_update.id, ledger_id, AccountUpdate(name="Existing"))
 
     # --- delete_account ---
 

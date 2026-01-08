@@ -40,9 +40,7 @@ class TestLedgerServiceContract:
         assert result.id is not None
         assert isinstance(result.id, uuid.UUID)
 
-    def test_create_ledger_stores_user_id(
-        self, service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_create_ledger_stores_user_id(self, service: LedgerService, user_id: uuid.UUID) -> None:
         """Created ledger is associated with the provided user_id."""
         data = LedgerCreate(name="Test Ledger")
 
@@ -50,9 +48,7 @@ class TestLedgerServiceContract:
 
         assert result.user_id == user_id
 
-    def test_create_ledger_stores_name(
-        self, service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_create_ledger_stores_name(self, service: LedgerService, user_id: uuid.UUID) -> None:
         """Created ledger has the provided name."""
         data = LedgerCreate(name="My Personal Budget")
 
@@ -136,9 +132,7 @@ class TestLedgerServiceContract:
 
         result = service.create_ledger(user_id, data)
 
-        transactions = (
-            session.query(Transaction).filter(Transaction.ledger_id == result.id).all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == result.id).all()
 
         assert len(transactions) == 1
         assert transactions[0].amount == Decimal("1000.00")
@@ -153,17 +147,13 @@ class TestLedgerServiceContract:
 
         result = service.create_ledger(user_id, data)
 
-        transactions = (
-            session.query(Transaction).filter(Transaction.ledger_id == result.id).all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == result.id).all()
 
         assert len(transactions) == 0
 
     # --- get_ledgers ---
 
-    def test_get_ledgers_returns_list(
-        self, service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_get_ledgers_returns_list(self, service: LedgerService, user_id: uuid.UUID) -> None:
         """get_ledgers returns a list."""
         result = service.get_ledgers(user_id)
 
@@ -239,15 +229,11 @@ class TestLedgerServiceContract:
 
     # --- update_ledger ---
 
-    def test_update_ledger_changes_name(
-        self, service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_update_ledger_changes_name(self, service: LedgerService, user_id: uuid.UUID) -> None:
         """update_ledger changes the ledger name."""
         created = service.create_ledger(user_id, LedgerCreate(name="Old Name"))
 
-        result = service.update_ledger(
-            created.id, user_id, LedgerUpdate(name="New Name")
-        )
+        result = service.update_ledger(created.id, user_id, LedgerUpdate(name="New Name"))
 
         assert result is not None
         assert result.name == "New Name"
@@ -256,9 +242,7 @@ class TestLedgerServiceContract:
         self, service: LedgerService, user_id: uuid.UUID
     ) -> None:
         """update_ledger returns None for non-existent ledger."""
-        result = service.update_ledger(
-            uuid.uuid4(), user_id, LedgerUpdate(name="New Name")
-        )
+        result = service.update_ledger(uuid.uuid4(), user_id, LedgerUpdate(name="New Name"))
 
         assert result is None
 
@@ -269,9 +253,7 @@ class TestLedgerServiceContract:
         other_user_id = uuid.uuid4()
         created = service.create_ledger(other_user_id, LedgerCreate(name="Other"))
 
-        result = service.update_ledger(
-            created.id, user_id, LedgerUpdate(name="New Name")
-        )
+        result = service.update_ledger(created.id, user_id, LedgerUpdate(name="New Name"))
 
         assert result is None
 
@@ -283,9 +265,7 @@ class TestLedgerServiceContract:
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("1000.00"))
         )
 
-        result = service.update_ledger(
-            created.id, user_id, LedgerUpdate(name="Updated")
-        )
+        result = service.update_ledger(created.id, user_id, LedgerUpdate(name="Updated"))
 
         assert result is not None
         assert result.initial_balance == Decimal("1000.00")
@@ -302,9 +282,7 @@ class TestLedgerServiceContract:
 
         assert result is True
 
-    def test_delete_ledger_removes_ledger(
-        self, service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_delete_ledger_removes_ledger(self, service: LedgerService, user_id: uuid.UUID) -> None:
         """delete_ledger removes the ledger from the database."""
         created = service.create_ledger(user_id, LedgerCreate(name="Test"))
 
@@ -360,7 +338,5 @@ class TestLedgerServiceContract:
 
         service.delete_ledger(ledger_id, user_id)
 
-        transactions = (
-            session.query(Transaction).filter(Transaction.ledger_id == ledger_id).all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == ledger_id).all()
         assert len(transactions) == 0

@@ -30,9 +30,7 @@ class TestAccountHierarchy:
         assert child["parent_id"] == parent["id"]
         assert child["type"] == "EXPENSE"
 
-    def test_hir_002_create_grandchild_account_level_3(
-        self, setup_user_and_ledger: E2ETestHelper
-    ):
+    def test_hir_002_create_grandchild_account_level_3(self, setup_user_and_ledger: E2ETestHelper):
         """TC-HIR-002: Create grandchild account (level 3)."""
         helper = setup_user_and_ledger
 
@@ -209,7 +207,10 @@ class TestAccountHierarchy:
         )
 
         assert response.status_code == 400
-        assert "leaf" in response.json()["detail"].lower() or "child" in response.json()["detail"].lower()
+        assert (
+            "leaf" in response.json()["detail"].lower()
+            or "child" in response.json()["detail"].lower()
+        )
 
     def test_hir_009_parent_in_different_ledger_rejected(
         self, e2e_helper: E2ETestHelper, client: TestClient

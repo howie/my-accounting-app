@@ -41,52 +41,40 @@ class TestDoubleEntryValidation:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         ledger = ledger_service.create_ledger(
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("1000.00"))
         )
         return ledger.id
 
     @pytest.fixture
-    def cash_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def cash_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         accounts = account_service.get_accounts(ledger_id)
         return next(a.id for a in accounts if a.name == "Cash")
 
     @pytest.fixture
-    def bank_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def bank_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Bank", type=AccountType.ASSET)
         )
         return account.id
 
     @pytest.fixture
-    def credit_card_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def credit_card_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Credit Card", type=AccountType.LIABILITY)
         )
         return account.id
 
     @pytest.fixture
-    def salary_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def salary_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Salary", type=AccountType.INCOME)
         )
         return account.id
 
     @pytest.fixture
-    def rent_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def rent_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Rent", type=AccountType.EXPENSE)
         )
@@ -362,7 +350,9 @@ class TestDoubleEntryValidation:
         )
 
         # Liability increases when you spend on credit
-        assert account_service.calculate_balance(credit_card_id) == initial_card + Decimal("1000.00")
+        assert account_service.calculate_balance(credit_card_id) == initial_card + Decimal(
+            "1000.00"
+        )
         assert account_service.calculate_balance(rent_id) == initial_rent + Decimal("1000.00")
 
     def test_transfer_to_liability_decreases_liability(

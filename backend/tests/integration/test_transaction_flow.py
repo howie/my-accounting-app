@@ -41,9 +41,7 @@ class TestTransactionFlow:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         ledger = ledger_service.create_ledger(
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("1000.00"))
         )
