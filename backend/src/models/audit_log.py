@@ -34,9 +34,7 @@ class AuditLog(SQLModel, table=True):
     entity_type: str = Field(max_length=50, index=True)  # e.g., "Account"
     entity_id: uuid.UUID = Field(index=True)  # ID of the affected entity
     action: AuditAction = Field(sa_column=Column(Text))  # CREATE, UPDATE, DELETE, REASSIGN
-    old_value: dict[str, Any] | None = Field(
-        default=None, sa_column=Column(JSON)
-    )  # Previous state
+    old_value: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON))  # Previous state
     new_value: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON))  # New state
     extra_data: dict[str, Any] | None = Field(
         default=None, sa_column=Column(JSON)

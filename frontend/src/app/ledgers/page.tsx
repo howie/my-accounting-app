@@ -36,7 +36,9 @@ export default function LedgersPage() {
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <p className="text-destructive">{t('ledgers.errorLoading')}: {error.message}</p>
+        <p className="text-destructive">
+          {t('ledgers.errorLoading')}: {error.message}
+        </p>
       </div>
     )
   }
@@ -59,38 +61,35 @@ export default function LedgersPage() {
           <Button onClick={() => setShowForm(true)}>{t('ledgers.newLedger')}</Button>
         </div>
 
-      {showForm && (
-        <div className="mb-8">
-          <LedgerForm
-            onSuccess={() => setShowForm(false)}
-            onCancel={() => setShowForm(false)}
-          />
-        </div>
-      )}
+        {showForm && (
+          <div className="mb-8">
+            <LedgerForm onSuccess={() => setShowForm(false)} onCancel={() => setShowForm(false)} />
+          </div>
+        )}
 
-      {ledgers && ledgers.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center">
-          <p className="text-muted-foreground">{t('ledgers.noLedgers')}</p>
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {ledgers?.map((ledger) => (
-            <button
-              key={ledger.id}
-              onClick={() => handleSelectLedger(ledger)}
-              className="block rounded-lg border p-6 text-left transition-colors hover:bg-accent"
-            >
-              <h2 className="mb-2 text-xl font-semibold">{ledger.name}</h2>
-              <p className="text-sm text-muted-foreground">
-                {t('ledgers.initialBalance')}: ${formatAmount(ledger.initial_balance)}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {t('ledgers.created')}: {formatDate(ledger.created_at)}
-              </p>
-            </button>
-          ))}
-        </div>
-      )}
+        {ledgers && ledgers.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="text-muted-foreground">{t('ledgers.noLedgers')}</p>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {ledgers?.map((ledger) => (
+              <button
+                key={ledger.id}
+                onClick={() => handleSelectLedger(ledger)}
+                className="block rounded-lg border p-6 text-left transition-colors hover:bg-accent"
+              >
+                <h2 className="mb-2 text-xl font-semibold">{ledger.name}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {t('ledgers.initialBalance')}: ${formatAmount(ledger.initial_balance)}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t('ledgers.created')}: {formatDate(ledger.created_at)}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

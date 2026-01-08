@@ -32,10 +32,8 @@ export default function AccountManagementPage() {
 
   if (!currentLedger) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">
-          Select a ledger to manage accounts
-        </p>
+      <div className="flex h-64 items-center justify-center">
+        <p className="text-muted-foreground">Select a ledger to manage accounts</p>
       </div>
     )
   }
@@ -46,52 +44,40 @@ export default function AccountManagementPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">{t('title')}</h1>
         <Button onClick={() => setShowAddForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="mr-2 h-4 w-4" />
           {t('addAccount')}
         </Button>
       </div>
 
       {/* Instructions */}
       <div className="rounded-lg border bg-muted/30 px-4 py-3">
-        <p className="text-muted-foreground text-sm">
-          {t('dragToReorder')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('dragToReorder')}</p>
       </div>
 
       {/* Loading state */}
       {isLoading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
-          <span className="ml-3 text-muted-foreground">
-            {tAccounts('loadingAccounts')}
-          </span>
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <span className="ml-3 text-muted-foreground">{tAccounts('loadingAccounts')}</span>
         </div>
       )}
 
       {/* Error state */}
       {error && (
         <div className="rounded-lg border border-destructive/50 bg-destructive/10 px-4 py-3">
-          <p className="text-destructive text-sm">
-            Failed to load accounts. Please try again.
-          </p>
+          <p className="text-sm text-destructive">Failed to load accounts. Please try again.</p>
         </div>
       )}
 
       {/* Account tree */}
       {accounts && accounts.length > 0 && (
-        <AccountTree
-          accounts={accounts}
-          onEdit={setEditAccount}
-          onDelete={setDeleteAccount}
-        />
+        <AccountTree accounts={accounts} onEdit={setEditAccount} onDelete={setDeleteAccount} />
       )}
 
       {/* Empty state */}
       {accounts && accounts.length === 0 && !isLoading && (
         <div className="rounded-lg border bg-card p-8 text-center">
-          <p className="text-muted-foreground">
-            {tAccounts('noAccounts')}
-          </p>
+          <p className="text-muted-foreground">{tAccounts('noAccounts')}</p>
         </div>
       )}
 
@@ -103,11 +89,8 @@ export default function AccountManagementPage() {
             onClick={() => setShowAddForm(false)}
             aria-hidden="true"
           />
-          <div className="relative z-10 w-full max-w-lg mx-4 bg-background rounded-lg shadow-lg border p-6">
-            <AccountForm
-              ledgerId={ledgerId}
-              onSuccess={() => setShowAddForm(false)}
-            />
+          <div className="relative z-10 mx-4 w-full max-w-lg rounded-lg border bg-background p-6 shadow-lg">
+            <AccountForm ledgerId={ledgerId} onSuccess={() => setShowAddForm(false)} />
           </div>
         </div>
       )}

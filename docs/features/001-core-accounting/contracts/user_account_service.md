@@ -11,6 +11,7 @@ This service manages user accounts. For the MVP, authentication is simplified (s
 ## MVP Scope
 
 For the core accounting feature, user management is minimal:
+
 - Single default user created on first run
 - No password authentication (local/self-hosted deployment)
 - User context passed via header or session for API calls
@@ -24,6 +25,7 @@ Full authentication (login, registration, password management, OAuth) will be im
 Get the current user (default user for MVP).
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -33,6 +35,7 @@ Get the current user (default user for MVP).
 ```
 
 **Notes**:
+
 - In MVP, always returns the default user
 - In future, requires authentication token
 
@@ -43,6 +46,7 @@ Get the current user (default user for MVP).
 Initial setup endpoint (MVP only).
 
 **Request**:
+
 ```json
 {
   "email": "user@example.com"
@@ -50,6 +54,7 @@ Initial setup endpoint (MVP only).
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": "123e4567-e89b-12d3-a456-426614174000",
@@ -59,9 +64,11 @@ Initial setup endpoint (MVP only).
 ```
 
 **Errors**:
+
 - `409 Conflict`: User already exists (single-user mode)
 
 **Notes**:
+
 - Only callable once in MVP mode
 - Creates the default user for the installation
 
@@ -70,6 +77,7 @@ Initial setup endpoint (MVP only).
 ## Data Transfer Objects
 
 ### UserRead
+
 ```python
 class UserRead(SQLModel):
     id: uuid.UUID
@@ -78,6 +86,7 @@ class UserRead(SQLModel):
 ```
 
 ### UserSetup
+
 ```python
 class UserSetup(SQLModel):
     email: str = Field(max_length=255)

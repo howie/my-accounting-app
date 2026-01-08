@@ -2,10 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api'
-import type {
-  DashboardResponse,
-  DashboardSummary,
-} from '@/types/dashboard'
+import type { DashboardResponse, DashboardSummary } from '@/types/dashboard'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 
 /**
@@ -21,9 +18,7 @@ export function useDashboard() {
       if (!ledgerId) {
         throw new Error('No ledger selected')
       }
-      const response = await apiGet<DashboardResponse>(
-        `/ledgers/${ledgerId}/dashboard`
-      )
+      const response = await apiGet<DashboardResponse>(`/ledgers/${ledgerId}/dashboard`)
       return transformDashboardResponse(response)
     },
     enabled: !!ledgerId,

@@ -15,14 +15,16 @@ This service manages ledgers (account books) for users. Each ledger is an indepe
 Create a new ledger with initial Cash and Equity accounts.
 
 **Request**:
+
 ```json
 {
   "name": "2024 Personal",
-  "initial_balance": 10000.00
+  "initial_balance": 10000.0
 }
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -34,10 +36,12 @@ Create a new ledger with initial Cash and Equity accounts.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Invalid input (empty name, negative balance)
 - `401 Unauthorized`: Not authenticated
 
 **Business Rules**:
+
 - On creation, system automatically creates:
   - "Cash" account (ASSET, is_system=true) with initial_balance
   - "Equity" account (ASSET, is_system=true)
@@ -50,6 +54,7 @@ Create a new ledger with initial Cash and Equity accounts.
 List all ledgers for the authenticated user.
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -70,6 +75,7 @@ List all ledgers for the authenticated user.
 Retrieve a single ledger by ID.
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -81,6 +87,7 @@ Retrieve a single ledger by ID.
 ```
 
 **Errors**:
+
 - `404 Not Found`: Ledger does not exist or belongs to another user
 
 ---
@@ -90,6 +97,7 @@ Retrieve a single ledger by ID.
 Update ledger name.
 
 **Request**:
+
 ```json
 {
   "name": "2024 Personal Budget"
@@ -97,6 +105,7 @@ Update ledger name.
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -107,6 +116,7 @@ Update ledger name.
 ```
 
 **Business Rules**:
+
 - `initial_balance` cannot be modified after creation
 
 ---
@@ -118,9 +128,11 @@ Delete a ledger and all associated accounts/transactions.
 **Response** (204 No Content)
 
 **Errors**:
+
 - `404 Not Found`: Ledger does not exist
 
 **Business Rules**:
+
 - This is a destructive operation; frontend must show confirmation dialog (DI-004)
 - Deletes all associated accounts and transactions (cascade)
 
@@ -129,6 +141,7 @@ Delete a ledger and all associated accounts/transactions.
 ## Data Transfer Objects
 
 ### LedgerCreate
+
 ```python
 class LedgerCreate(SQLModel):
     name: str = Field(min_length=1, max_length=100)
@@ -136,6 +149,7 @@ class LedgerCreate(SQLModel):
 ```
 
 ### LedgerRead
+
 ```python
 class LedgerRead(SQLModel):
     id: uuid.UUID
@@ -146,6 +160,7 @@ class LedgerRead(SQLModel):
 ```
 
 ### LedgerUpdate
+
 ```python
 class LedgerUpdate(SQLModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)

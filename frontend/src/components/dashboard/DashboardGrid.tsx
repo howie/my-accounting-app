@@ -18,8 +18,8 @@ export function DashboardGrid() {
   // No ledger selected
   if (!currentLedger) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-        <AlertCircle className="h-12 w-12 mb-4 text-gray-400" />
+      <div className="flex h-64 flex-col items-center justify-center text-gray-500">
+        <AlertCircle className="mb-4 h-12 w-12 text-gray-400" />
         <h2 className="text-lg font-medium">No Ledger Selected</h2>
         <p className="text-sm">Please select or create a ledger to view your dashboard.</p>
       </div>
@@ -29,8 +29,8 @@ export function DashboardGrid() {
   // Error state
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 text-red-500">
-        <AlertCircle className="h-12 w-12 mb-4" />
+      <div className="flex h-64 flex-col items-center justify-center text-red-500">
+        <AlertCircle className="mb-4 h-12 w-12" />
         <h2 className="text-lg font-medium">Error Loading Dashboard</h2>
         <p className="text-sm">{error.message}</p>
       </div>
@@ -41,21 +41,16 @@ export function DashboardGrid() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Dashboard
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           Financial overview for {currentLedger.name}
         </p>
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Balance Card - Full width on mobile, half on desktop */}
-        <BalanceCard
-          totalAssets={data?.totalAssets ?? 0}
-          isLoading={isLoading}
-        />
+        <BalanceCard totalAssets={data?.totalAssets ?? 0} isLoading={isLoading} />
 
         {/* Income/Expense Chart */}
         <IncomeExpenseChart

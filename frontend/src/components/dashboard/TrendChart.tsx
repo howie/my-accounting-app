@@ -35,8 +35,8 @@ export function TrendChart({ trends, isLoading }: TrendChartProps) {
     return (
       <Card className="p-6">
         <div className="animate-pulse">
-          <div className="h-4 w-32 bg-gray-200 rounded mb-4" />
-          <div className="h-64 bg-gray-200 rounded" />
+          <div className="mb-4 h-4 w-32 rounded bg-gray-200" />
+          <div className="h-64 rounded bg-gray-200" />
         </div>
       </Card>
     )
@@ -44,7 +44,7 @@ export function TrendChart({ trends, isLoading }: TrendChartProps) {
 
   return (
     <Card className="p-6">
-      <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">
+      <h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
         Monthly Trends (Last 6 Months)
       </h3>
 
@@ -62,7 +62,7 @@ export function TrendChart({ trends, isLoading }: TrendChartProps) {
           yAxisWidth={60}
         />
       ) : (
-        <div className="h-64 flex items-center justify-center text-gray-400">
+        <div className="flex h-64 items-center justify-center text-gray-400">
           <p>Not enough data to show trends</p>
         </div>
       )}

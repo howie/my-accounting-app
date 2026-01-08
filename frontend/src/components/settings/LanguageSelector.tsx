@@ -30,7 +30,7 @@ export function LanguageSelector() {
   if (!isLoaded) {
     return (
       <div className="animate-pulse">
-        <div className="h-10 w-48 bg-muted rounded-md" />
+        <div className="h-10 w-48 rounded-md bg-muted" />
       </div>
     )
   }
@@ -44,10 +44,10 @@ export function LanguageSelector() {
             key={locale}
             type="button"
             onClick={() => handleLocaleChange(locale)}
-            className={`px-4 py-2 text-sm rounded-md border transition-colors ${
+            className={`rounded-md border px-4 py-2 text-sm transition-colors ${
               preferences.language === locale
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'bg-background border-border hover:bg-muted'
+                ? 'border-primary bg-primary text-primary-foreground'
+                : 'border-border bg-background hover:bg-muted'
             }`}
           >
             {localeNames[locale]}

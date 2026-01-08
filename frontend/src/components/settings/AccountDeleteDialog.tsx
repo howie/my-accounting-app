@@ -93,48 +93,42 @@ export function AccountDeleteDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
 
       {/* Dialog */}
-      <div className="relative z-10 w-full max-w-md mx-4 bg-background rounded-lg shadow-lg border">
+      <div className="relative z-10 mx-4 w-full max-w-md rounded-lg border bg-background shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold text-destructive flex items-center gap-2">
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <h2 className="flex items-center gap-2 text-lg font-semibold text-destructive">
             <AlertTriangle className="h-5 w-5" />
             {t('accountManagement.deleteAccount')}
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4">
+        <div className="space-y-4 p-6">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <div className="animate-spin h-8 w-8 border-2 border-primary border-t-transparent rounded-full" />
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
             </div>
           ) : (
             <>
               {/* Account info */}
-              <div className="bg-muted/50 rounded-lg p-4">
+              <div className="rounded-lg bg-muted/50 p-4">
                 <p className="font-medium">{account.name}</p>
-                <p className="text-sm text-muted-foreground">
-                  {t(`accountTypes.${account.type}`)}
-                </p>
+                <p className="text-sm text-muted-foreground">{t(`accountTypes.${account.type}`)}</p>
               </div>
 
               {/* System account warning */}
               {account.is_system && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4">
                   <p className="text-sm text-destructive">
                     {t('accountManagement.cannotDeleteSystem')}
                   </p>
@@ -143,11 +137,11 @@ export function AccountDeleteDialog({
 
               {/* Children warning */}
               {hasChildren && (
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-4">
                   <p className="text-sm text-destructive">
                     {t('accountManagement.hasChildren', { count: childCount })}
                   </p>
-                  <p className="text-sm text-destructive mt-1">
+                  <p className="mt-1 text-sm text-destructive">
                     {t('accountManagement.cannotDeleteChildren')}
                   </p>
                 </div>
@@ -156,7 +150,7 @@ export function AccountDeleteDialog({
               {/* Transaction reassignment */}
               {!cannotDelete && hasTransactions && (
                 <div className="space-y-3">
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+                  <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-4">
                     <p className="text-sm text-amber-700 dark:text-amber-400">
                       {t('accountManagement.hasTransactions', { count: transactionCount })}
                     </p>
@@ -171,7 +165,7 @@ export function AccountDeleteDialog({
                       value={selectedReplacementId}
                       onChange={(e) => setSelectedReplacementId(e.target.value)}
                       className={cn(
-                        'w-full h-10 px-3 rounded-md border border-input bg-background',
+                        'h-10 w-full rounded-md border border-input bg-background px-3',
                         'text-sm focus:outline-none focus:ring-2 focus:ring-ring'
                       )}
                     >
@@ -193,20 +187,13 @@ export function AccountDeleteDialog({
                 </p>
               )}
 
-              {error && (
-                <p className="text-sm text-destructive">{error}</p>
-              )}
+              {error && <p className="text-sm text-destructive">{error}</p>}
             </>
           )}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isPending}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isPending}>
               {t('common.cancel')}
             </Button>
             {!cannotDelete && (

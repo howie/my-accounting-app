@@ -5,19 +5,12 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ className }: SkeletonProps) {
-  return (
-    <div
-      className={cn(
-        'animate-pulse rounded-md bg-muted',
-        className
-      )}
-    />
-  )
+  return <div className={cn('animate-pulse rounded-md bg-muted', className)} />
 }
 
 export function SkeletonCard() {
   return (
-    <div className="rounded-lg border p-6 space-y-4">
+    <div className="space-y-4 rounded-lg border p-6">
       <Skeleton className="h-6 w-3/4" />
       <Skeleton className="h-4 w-1/2" />
       <Skeleton className="h-4 w-1/3" />
@@ -83,13 +76,9 @@ export function SkeletonLedgerList() {
 }
 
 export function SkeletonAccountList() {
-  return (
-    <SkeletonTable rows={4} />
-  )
+  return <SkeletonTable rows={4} />
 }
 
 export function SkeletonTransactionList() {
-  return (
-    <SkeletonTable rows={10} />
-  )
+  return <SkeletonTable rows={10} />
 }

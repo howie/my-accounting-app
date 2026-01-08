@@ -29,11 +29,12 @@
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 Verify compliance with all five core principles from `.specify/memory/constitution.md`:
 
 ### I. Data-First Design (NON-NEGOTIABLE)
+
 - [ ] Does this feature preserve financial accuracy (calculations correct to the cent)?
 - [ ] Are audit trails maintained (all modifications logged with timestamp/reason)?
 - [ ] Is data loss prevented (confirmations + backups for destructive operations)?
@@ -43,6 +44,7 @@ Verify compliance with all five core principles from `.specify/memory/constituti
 **Violations**: [List any violations with justification, or write "None"]
 
 ### II. Test-First Development (NON-NEGOTIABLE)
+
 - [ ] Will tests be written BEFORE implementation?
 - [ ] Will tests be reviewed/approved before coding?
 - [ ] Are contract tests planned for service boundaries?
@@ -52,6 +54,7 @@ Verify compliance with all five core principles from `.specify/memory/constituti
 **Violations**: [List any violations with justification, or write "None"]
 
 ### III. Financial Accuracy & Audit Trail
+
 - [ ] Does design maintain double-entry bookkeeping (debits = credits)?
 - [ ] Are transactions immutable once posted (void-and-reenter only)?
 - [ ] Are calculations traceable to source transactions?
@@ -61,6 +64,7 @@ Verify compliance with all five core principles from `.specify/memory/constituti
 **Violations**: [List any violations with justification, or write "None"]
 
 ### IV. Simplicity & Maintainability
+
 - [ ] Is this feature actually needed (not speculative)?
 - [ ] Is the design clear over clever (human-auditable)?
 - [ ] Are abstractions minimized (especially for financial calculations)?
@@ -69,6 +73,7 @@ Verify compliance with all five core principles from `.specify/memory/constituti
 **Violations**: [List any violations with justification, or write "None"]
 
 ### V. Cross-Platform Consistency
+
 - [ ] Will calculations produce identical results across platforms?
 - [ ] Is data format compatible between desktop and web?
 - [ ] Are platform-specific features clearly documented?
@@ -78,6 +83,7 @@ Verify compliance with all five core principles from `.specify/memory/constituti
 **Violations**: [List any violations with justification, or write "None"]
 
 **Overall Assessment**: [PASS / CONDITIONAL PASS / FAIL]
+
 - If CONDITIONAL PASS or FAIL, document required changes before proceeding
 
 ## Project Structure
@@ -97,6 +103,7 @@ docs/features/[###-feature]/
 ```
 
 ### Source Code (repository root)
+
 <!--
   ACTION REQUIRED: Replace the placeholder tree below with the concrete layout
   for this feature. Delete unused options and expand the chosen structure with
@@ -147,7 +154,7 @@ directories captured above]
 
 > **Fill ONLY if Constitution Check has violations that must be justified**
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| [e.g., 4th project] | [current need] | [why 3 projects insufficient] |
-| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient] |
+| Violation                  | Why Needed         | Simpler Alternative Rejected Because |
+| -------------------------- | ------------------ | ------------------------------------ |
+| [e.g., 4th project]        | [current need]     | [why 3 projects insufficient]        |
+| [e.g., Repository pattern] | [specific problem] | [why direct DB access insufficient]  |

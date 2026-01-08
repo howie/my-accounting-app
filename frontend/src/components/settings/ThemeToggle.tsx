@@ -22,10 +22,10 @@ function ThemeButton({ theme, currentTheme, onClick, icon, label }: ThemeButtonP
     <button
       type="button"
       onClick={onClick}
-      className={`flex items-center gap-2 px-4 py-2 text-sm rounded-md border transition-colors ${
+      className={`flex items-center gap-2 rounded-md border px-4 py-2 text-sm transition-colors ${
         isActive
-          ? 'bg-primary text-primary-foreground border-primary'
-          : 'bg-background border-border hover:bg-muted'
+          ? 'border-primary bg-primary text-primary-foreground'
+          : 'border-border bg-background hover:bg-muted'
       }`}
     >
       {icon}
@@ -51,7 +51,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <div className="animate-pulse">
-        <div className="h-10 w-64 bg-muted rounded-md" />
+        <div className="h-10 w-64 rounded-md bg-muted" />
       </div>
     )
   }

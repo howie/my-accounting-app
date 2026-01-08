@@ -31,17 +31,19 @@ Account
 
 **New Field Details**:
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
+| Field      | Type    | Constraints         | Description                                              |
+| ---------- | ------- | ------------------- | -------------------------------------------------------- |
 | sort_order | INTEGER | NOT NULL, DEFAULT 0 | Custom ordering within parent; lower values appear first |
 
 **Validation Rules**:
+
 - name: Required, 1-100 characters, unique within (ledger_id, parent_id)
 - parent_id: Must reference valid Account in same ledger
 - depth: Auto-calculated as parent.depth + 1; max 3
 - sort_order: Non-negative integer; gap strategy (multiples of 1000)
 
 **Business Rules**:
+
 - Cannot delete account with child accounts (must delete/move children first)
 - Cannot delete account with transactions (must reassign transactions first)
 - Cannot set parent_id to create cycle (ancestor check required)
@@ -66,19 +68,20 @@ AuditLog
 
 **Field Details**:
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| id | UUID | PK | Unique identifier |
-| entity_type | VARCHAR(50) | NOT NULL | Type of entity (e.g., "Account") |
-| entity_id | UUID | NOT NULL | ID of the affected entity |
-| action | VARCHAR(20) | NOT NULL | Type of action performed |
-| old_value | JSONB | NULLABLE | Previous state (for UPDATE/DELETE) |
-| new_value | JSONB | NULLABLE | New state (for CREATE/UPDATE) |
-| metadata | JSONB | NULLABLE | Additional context (e.g., reassigned_to_id) |
-| timestamp | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | When the action occurred |
-| ledger_id | UUID | FK, NOT NULL | Ledger context for filtering |
+| Field       | Type        | Constraints             | Description                                 |
+| ----------- | ----------- | ----------------------- | ------------------------------------------- |
+| id          | UUID        | PK                      | Unique identifier                           |
+| entity_type | VARCHAR(50) | NOT NULL                | Type of entity (e.g., "Account")            |
+| entity_id   | UUID        | NOT NULL                | ID of the affected entity                   |
+| action      | VARCHAR(20) | NOT NULL                | Type of action performed                    |
+| old_value   | JSONB       | NULLABLE                | Previous state (for UPDATE/DELETE)          |
+| new_value   | JSONB       | NULLABLE                | New state (for CREATE/UPDATE)               |
+| metadata    | JSONB       | NULLABLE                | Additional context (e.g., reassigned_to_id) |
+| timestamp   | TIMESTAMPTZ | NOT NULL, DEFAULT NOW() | When the action occurred                    |
+| ledger_id   | UUID        | FK, NOT NULL            | Ledger context for filtering                |
 
 **Indexes**:
+
 - `idx_audit_entity`: (entity_type, entity_id) - Query logs for specific entity
 - `idx_audit_timestamp`: (ledger_id, timestamp DESC) - Query recent logs
 - `idx_audit_action`: (ledger_id, action) - Query by action type
@@ -97,14 +100,16 @@ UserPreferences (localStorage)
 **Storage Key**: `myab_user_preferences`
 
 **Schema**:
+
 ```typescript
 interface UserPreferences {
-  language: 'zh-TW' | 'en';
-  theme: 'light' | 'dark' | 'system';
+  language: "zh-TW" | "en";
+  theme: "light" | "dark" | "system";
 }
 ```
 
 **Default Values**:
+
 - language: Browser's navigator.language or 'zh-TW'
 - theme: 'system' (respects OS preference)
 
@@ -173,14 +178,14 @@ interface UserPreferences {
 
 ### Audit Actions
 
-| Action | Trigger | old_value | new_value | metadata |
-|--------|---------|-----------|-----------|----------|
-| CREATE | Account created | null | Full account JSON | null |
-| UPDATE | Name changed | { name: old } | { name: new } | null |
-| UPDATE | Parent changed | { parent_id: old } | { parent_id: new } | null |
-| UPDATE | Reordered | { sort_order: old } | { sort_order: new } | null |
-| REASSIGN | Txns moved | null | null | { from_account_id, to_account_id, transaction_count } |
-| DELETE | Account deleted | Full account JSON | null | null |
+| Action   | Trigger         | old_value           | new_value           | metadata                                              |
+| -------- | --------------- | ------------------- | ------------------- | ----------------------------------------------------- |
+| CREATE   | Account created | null                | Full account JSON   | null                                                  |
+| UPDATE   | Name changed    | { name: old }       | { name: new }       | null                                                  |
+| UPDATE   | Parent changed  | { parent_id: old }  | { parent_id: new }  | null                                                  |
+| UPDATE   | Reordered       | { sort_order: old } | { sort_order: new } | null                                                  |
+| REASSIGN | Txns moved      | null                | null                | { from_account_id, to_account_id, transaction_count } |
+| DELETE   | Account deleted | Full account JSON   | null                | null                                                  |
 
 ## Database Migration
 
@@ -231,12 +236,12 @@ DROP TABLE audit_logs;
 
 ## Constraints Summary
 
-| Constraint | Table | Type | Definition |
-|------------|-------|------|------------|
-| uk_account_name | accounts | UNIQUE | (ledger_id, parent_id, name) |
-| chk_account_depth | accounts | CHECK | depth BETWEEN 1 AND 3 |
-| chk_sort_order | accounts | CHECK | sort_order >= 0 |
-| fk_audit_ledger | audit_logs | FK | ledger_id → ledgers(id) |
+| Constraint        | Table      | Type   | Definition                   |
+| ----------------- | ---------- | ------ | ---------------------------- |
+| uk_account_name   | accounts   | UNIQUE | (ledger_id, parent_id, name) |
+| chk_account_depth | accounts   | CHECK  | depth BETWEEN 1 AND 3        |
+| chk_sort_order    | accounts   | CHECK  | sort_order >= 0              |
+| fk_audit_ledger   | audit_logs | FK     | ledger_id → ledgers(id)      |
 
 ## Query Patterns
 

@@ -15,6 +15,7 @@ This service manages accounts (categories) within a specific ledger. Accounts ar
 Create a new account in the ledger.
 
 **Request**:
+
 ```json
 {
   "name": "Bank Account",
@@ -23,6 +24,7 @@ Create a new account in the ledger.
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
@@ -37,6 +39,7 @@ Create a new account in the ledger.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Invalid input (empty name, invalid type)
 - `404 Not Found`: Ledger does not exist
 - `409 Conflict`: Account with same name already exists in ledger
@@ -48,9 +51,11 @@ Create a new account in the ledger.
 List all accounts for a ledger with calculated balances.
 
 **Query Parameters**:
+
 - `type` (optional): Filter by account type (ASSET, LIABILITY, INCOME, EXPENSE)
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -86,6 +91,7 @@ List all accounts for a ledger with calculated balances.
 Retrieve a single account with balance.
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
@@ -100,6 +106,7 @@ Retrieve a single account with balance.
 ```
 
 **Errors**:
+
 - `404 Not Found`: Account does not exist
 
 ---
@@ -109,6 +116,7 @@ Retrieve a single account with balance.
 Update account name.
 
 **Request**:
+
 ```json
 {
   "name": "Savings Account"
@@ -116,6 +124,7 @@ Update account name.
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "660e8400-e29b-41d4-a716-446655440001",
@@ -127,10 +136,12 @@ Update account name.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Cannot rename system accounts (Cash, Equity)
 - `409 Conflict`: Account with new name already exists
 
 **Business Rules**:
+
 - Account `type` cannot be changed after creation
 - System accounts (is_system=true) cannot be renamed
 
@@ -143,11 +154,13 @@ Delete an account.
 **Response** (204 No Content)
 
 **Errors**:
+
 - `400 Bad Request`: Cannot delete system accounts
 - `409 Conflict`: Account has associated transactions
 - `404 Not Found`: Account does not exist
 
 **Business Rules**:
+
 - System accounts (Cash, Equity) cannot be deleted (FR-004)
 - Accounts with transactions cannot be deleted; delete transactions first
 
@@ -156,6 +169,7 @@ Delete an account.
 ## Data Transfer Objects
 
 ### AccountCreate
+
 ```python
 class AccountCreate(SQLModel):
     name: str = Field(min_length=1, max_length=100)
@@ -163,6 +177,7 @@ class AccountCreate(SQLModel):
 ```
 
 ### AccountRead
+
 ```python
 class AccountRead(SQLModel):
     id: uuid.UUID
@@ -176,6 +191,7 @@ class AccountRead(SQLModel):
 ```
 
 ### AccountListItem
+
 ```python
 class AccountListItem(SQLModel):
     id: uuid.UUID
@@ -186,6 +202,7 @@ class AccountListItem(SQLModel):
 ```
 
 ### AccountUpdate
+
 ```python
 class AccountUpdate(SQLModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
@@ -264,12 +281,12 @@ class AccountService:
 
 ## Balance Calculation Rules
 
-| Account Type | Balance Formula |
-|--------------|-----------------|
-| ASSET | SUM(to_account) - SUM(from_account) |
-| LIABILITY | SUM(to_account) - SUM(from_account) |
-| INCOME | SUM(from_account) |
-| EXPENSE | SUM(to_account) |
+| Account Type | Balance Formula                     |
+| ------------ | ----------------------------------- |
+| ASSET        | SUM(to_account) - SUM(from_account) |
+| LIABILITY    | SUM(to_account) - SUM(from_account) |
+| INCOME       | SUM(from_account)                   |
+| EXPENSE      | SUM(to_account)                     |
 
 - Positive balance for ASSET = money you have
 - Negative balance for ASSET = overdraft (show warning)

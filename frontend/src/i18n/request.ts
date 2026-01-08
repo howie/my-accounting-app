@@ -10,9 +10,7 @@ export default getRequestConfig(async () => {
   const cookieLocale = cookieStore.get(LOCALE_COOKIE)?.value as Locale | undefined
 
   // Validate the locale
-  const locale = cookieLocale && locales.includes(cookieLocale)
-    ? cookieLocale
-    : defaultLocale
+  const locale = cookieLocale && locales.includes(cookieLocale) ? cookieLocale : defaultLocale
 
   return {
     locale,

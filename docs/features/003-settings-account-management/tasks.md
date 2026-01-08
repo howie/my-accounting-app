@@ -370,6 +370,7 @@
 **Within Foundational**: T005, T006, T007, T009, T010, T011, T012 can run in parallel
 
 **User Stories in Parallel**:
+
 - After US5: US1 and US2 can run in parallel
 - After US6: US3, US4, and US6a can run in parallel
 - US7 and US8 can run in parallel anytime after Foundational

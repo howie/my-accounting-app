@@ -11,21 +11,23 @@
 
 **Language/Version**: Python 3.12 (Backend), TypeScript 5.x (Frontend)
 **Primary Dependencies**:
+
 - Backend: FastAPI 0.109+, SQLModel 0.0.14+ (existing)
 - Frontend: Next.js 15, React 19, Tailwind CSS 3.4+, ShadcnUI, Tremor (charts)
-**Storage**: PostgreSQL 16 (existing data model from 001-core-accounting)
-**Testing**: pytest (Backend), Vitest + Testing Library (Frontend)
-**Target Platform**: Web browser (primary), macOS desktop via Tauri (future)
-**Project Type**: Web application (frontend + backend separation)
-**Performance Goals**: Dashboard load < 2s, Account selection < 1s, API response < 200ms
-**Constraints**: Read-only data display (no CRUD in this feature), responsive 320px-2560px
-**Scale/Scope**: Personal use, 6-month trend data, existing account/transaction data
+  **Storage**: PostgreSQL 16 (existing data model from 001-core-accounting)
+  **Testing**: pytest (Backend), Vitest + Testing Library (Frontend)
+  **Target Platform**: Web browser (primary), macOS desktop via Tauri (future)
+  **Project Type**: Web application (frontend + backend separation)
+  **Performance Goals**: Dashboard load < 2s, Account selection < 1s, API response < 200ms
+  **Constraints**: Read-only data display (no CRUD in this feature), responsive 320px-2560px
+  **Scale/Scope**: Personal use, 6-month trend data, existing account/transaction data
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### I. Data-First Design (NON-NEGOTIABLE)
+
 - [x] Does this feature preserve financial accuracy (calculations correct to the cent)?
   - Read-only display; uses existing calculated balances from 001-core-accounting
 - [x] Are audit trails maintained (all modifications logged with timestamp/reason)?
@@ -40,6 +42,7 @@
 **Violations**: None (read-only UI feature)
 
 ### II. Test-First Development (NON-NEGOTIABLE)
+
 - [x] Will tests be written BEFORE implementation?
   - Component tests for sidebar, dashboard, transaction list
 - [x] Will tests be reviewed/approved before coding?
@@ -54,6 +57,7 @@
 **Violations**: None
 
 ### III. Financial Accuracy & Audit Trail
+
 - [x] Does design maintain double-entry bookkeeping (debits = credits)?
   - N/A - Display only, uses existing transaction data
 - [x] Are transactions immutable once posted (void-and-reenter only)?
@@ -68,6 +72,7 @@
 **Violations**: None (read-only UI feature)
 
 ### IV. Simplicity & Maintainability
+
 - [x] Is this feature actually needed (not speculative)?
   - Core navigation and dashboard for usability; directly requested
 - [x] Is the design clear over clever (human-auditable)?
@@ -80,6 +85,7 @@
 **Violations**: None
 
 ### V. Cross-Platform Consistency
+
 - [x] Will calculations produce identical results across platforms?
   - All calculations in Python backend; frontend displays only
 - [x] Is data format compatible between desktop and web?
@@ -94,6 +100,7 @@
 **Violations**: None
 
 **Overall Assessment**: PASS
+
 - Read-only UI feature with no data modifications
 - Reuses existing data model and calculation logic from 001-core-accounting
 
@@ -168,5 +175,5 @@ frontend/
 > No violations requiring justification.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| N/A | N/A | N/A |
+| --------- | ---------- | ------------------------------------ |
+| N/A       | N/A        | N/A                                  |

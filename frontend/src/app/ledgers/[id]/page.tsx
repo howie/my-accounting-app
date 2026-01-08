@@ -37,7 +37,7 @@ export default function LedgerDetailPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-destructive mb-4">
+          <p className="mb-4 text-destructive">
             {t('common.error')}: {error.message}
           </p>
           <Link href="/ledgers" className="text-primary hover:underline">

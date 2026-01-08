@@ -63,10 +63,7 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>
 }
 
-async function fetchWithErrorHandling(
-  url: string,
-  options: RequestInit
-): Promise<Response> {
+async function fetchWithErrorHandling(url: string, options: RequestInit): Promise<Response> {
   try {
     return await fetch(url, options)
   } catch (error) {

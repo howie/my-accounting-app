@@ -11,6 +11,7 @@ Before implementing this feature, ensure:
 1. **001-core-accounting** is complete (Account model, CRUD APIs)
 2. **002-ui-layout-dashboard** is complete (Sidebar, i18n infrastructure)
 3. Development environment is running:
+
    ```bash
    # Terminal 1: Backend
    cd backend && uvicorn src.main:app --reload --port 8000
@@ -24,6 +25,7 @@ Before implementing this feature, ensure:
 ### Phase 1: Backend Foundation
 
 1. **Database Migration** - Add sort_order to accounts, create audit_logs table
+
    ```bash
    cd backend
    alembic revision --autogenerate -m "Add sort_order and audit_logs"
@@ -51,10 +53,11 @@ Before implementing this feature, ensure:
 ### Phase 2: Frontend Settings Infrastructure
 
 5. **User Preferences Hook** - Create `frontend/src/lib/hooks/useUserPreferences.ts`
+
    ```typescript
    interface UserPreferences {
-     language: 'zh-TW' | 'en';
-     theme: 'light' | 'dark' | 'system';
+     language: "zh-TW" | "en";
+     theme: "light" | "dark" | "system";
    }
 
    export function useUserPreferences() {
@@ -63,13 +66,16 @@ Before implementing this feature, ensure:
    ```
 
 6. **Theme Context** - Create `frontend/src/lib/context/ThemeContext.tsx`
+
    ```bash
    npm install next-themes
    ```
+
    - Wrap app with ThemeProvider
    - Integrate with useUserPreferences
 
 7. **Settings Page Structure** - Create routes
+
    ```
    frontend/src/app/settings/
    ├── page.tsx          # Main settings with language/theme
@@ -82,6 +88,7 @@ Before implementing this feature, ensure:
 ### Phase 3: Account Management UI
 
 9. **Drag-and-Drop Setup**
+
    ```bash
    cd frontend
    npm install @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities
@@ -134,24 +141,25 @@ Before implementing this feature, ensure:
 
 ## Key Files Reference
 
-| Component | Location |
-|-----------|----------|
-| Account Model | `backend/src/models/account.py` |
-| Account Service | `backend/src/services/account_service.py` |
-| Audit Service | `backend/src/services/audit_service.py` (NEW) |
-| Account Routes | `backend/src/api/routes/accounts.py` |
-| Settings Page | `frontend/src/app/settings/page.tsx` (NEW) |
-| Account Management | `frontend/src/app/settings/accounts/page.tsx` (NEW) |
-| AccountTree | `frontend/src/components/accounts/AccountTree.tsx` (NEW) |
-| UserPreferences Hook | `frontend/src/lib/hooks/useUserPreferences.ts` (NEW) |
-| Theme Context | `frontend/src/lib/context/ThemeContext.tsx` (NEW) |
-| Sidebar | `frontend/src/components/layout/Sidebar.tsx` |
+| Component            | Location                                                 |
+| -------------------- | -------------------------------------------------------- |
+| Account Model        | `backend/src/models/account.py`                          |
+| Account Service      | `backend/src/services/account_service.py`                |
+| Audit Service        | `backend/src/services/audit_service.py` (NEW)            |
+| Account Routes       | `backend/src/api/routes/accounts.py`                     |
+| Settings Page        | `frontend/src/app/settings/page.tsx` (NEW)               |
+| Account Management   | `frontend/src/app/settings/accounts/page.tsx` (NEW)      |
+| AccountTree          | `frontend/src/components/accounts/AccountTree.tsx` (NEW) |
+| UserPreferences Hook | `frontend/src/lib/hooks/useUserPreferences.ts` (NEW)     |
+| Theme Context        | `frontend/src/lib/context/ThemeContext.tsx` (NEW)        |
+| Sidebar              | `frontend/src/components/layout/Sidebar.tsx`             |
 
 ## Testing Checkpoints
 
 After each phase, verify:
 
 ### Backend Tests
+
 ```bash
 cd backend
 pytest tests/unit/test_account_service.py -v
@@ -161,6 +169,7 @@ pytest tests/contract/test_account_api.py -v
 ```
 
 ### Frontend Tests
+
 ```bash
 cd frontend
 npm run test -- --run tests/hooks/useUserPreferences.test.ts
@@ -168,6 +177,7 @@ npm run test -- --run tests/components/settings/
 ```
 
 ### Manual Verification
+
 1. Settings accessible from sidebar
 2. Can create account at each depth level
 3. Cannot create account at depth 4

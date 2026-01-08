@@ -72,9 +72,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
       <h2 className="mb-4 text-xl font-semibold">{t('accountForm.title')}</h2>
 
       {error && (
-        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
-        </div>
+        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="mb-4">
@@ -100,9 +98,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
               type="button"
               onClick={() => handleTypeChange(accountType.value)}
               className={`rounded-lg border p-3 text-left transition-colors ${
-                type === accountType.value
-                  ? 'border-primary bg-primary/10'
-                  : 'hover:bg-accent'
+                type === accountType.value ? 'border-primary bg-primary/10' : 'hover:bg-accent'
               }`}
             >
               <div className="font-medium">{accountType.label}</div>
@@ -131,9 +127,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
             </option>
           ))}
         </select>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {t('accountForm.parentNote')}
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">{t('accountForm.parentNote')}</p>
       </div>
 
       <div className="flex gap-2">

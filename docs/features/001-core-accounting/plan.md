@@ -11,21 +11,23 @@
 
 **Language/Version**: Python 3.12 (Backend), TypeScript 5.x (Frontend)
 **Primary Dependencies**:
+
 - Backend: FastAPI 0.109+, SQLModel 0.0.14+, uvicorn, alembic
 - Frontend: Next.js 15, React 19, Tailwind CSS 3.4+, ShadcnUI, Tremor
-**Storage**: PostgreSQL 16 (via Docker or Supabase)
-**Testing**: pytest (Backend), Vitest + Testing Library (Frontend)
-**Target Platform**: macOS (Tauri desktop wrapper - separate feature), Web browser
-**Project Type**: Web application (frontend + backend separation)
-**Performance Goals**: API response < 200ms, UI interactions < 100ms
-**Constraints**: Single currency per ledger, single-user mode, 2 decimal precision
-**Scale/Scope**: Personal use, thousands of transactions per ledger
+  **Storage**: PostgreSQL 16 (via Docker or Supabase)
+  **Testing**: pytest (Backend), Vitest + Testing Library (Frontend)
+  **Target Platform**: macOS (Tauri desktop wrapper - separate feature), Web browser
+  **Project Type**: Web application (frontend + backend separation)
+  **Performance Goals**: API response < 200ms, UI interactions < 100ms
+  **Constraints**: Single currency per ledger, single-user mode, 2 decimal precision
+  **Scale/Scope**: Personal use, thousands of transactions per ledger
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### I. Data-First Design (NON-NEGOTIABLE)
+
 - [x] Does this feature preserve financial accuracy (calculations correct to the cent)?
   - Decimal(15,2) for all amounts, banker's rounding enforced
 - [x] Are audit trails maintained (all modifications logged with timestamp/reason)?
@@ -40,6 +42,7 @@
 **Violations**: None
 
 ### II. Test-First Development (NON-NEGOTIABLE)
+
 - [x] Will tests be written BEFORE implementation?
   - TDD workflow: tests → red → green → refactor
 - [x] Will tests be reviewed/approved before coding?
@@ -54,6 +57,7 @@
 **Violations**: None
 
 ### III. Financial Accuracy & Audit Trail
+
 - [x] Does design maintain double-entry bookkeeping (debits = credits)?
   - FR-002, FR-006: Every transaction has from_account and to_account with equal amounts
 - [x] Are transactions immutable once posted (void-and-reenter only)?
@@ -67,11 +71,13 @@
   - Partial: timestamps logged; full audit log deferred to future feature
 
 **Violations**:
+
 - CONDITIONAL: Full immutable transaction history (void-and-reenter) deferred
   - Justification: Core MVP allows edit/delete with timestamps; full audit log in future feature
   - Mitigation: All changes tracked via updated_at timestamp
 
 ### IV. Simplicity & Maintainability
+
 - [x] Is this feature actually needed (not speculative)?
   - Core accounting is foundational; no speculative features included
 - [x] Is the design clear over clever (human-auditable)?
@@ -84,6 +90,7 @@
 **Violations**: None
 
 ### V. Cross-Platform Consistency
+
 - [x] Will calculations produce identical results across platforms?
   - All calculations in Python backend; frontend displays only
 - [x] Is data format compatible between desktop and web?
@@ -98,6 +105,7 @@
 **Violations**: None
 
 **Overall Assessment**: CONDITIONAL PASS
+
 - Condition: Full immutable audit log (void-and-reenter pattern) tracked as future enhancement
 - Proceed with current design; timestamps provide sufficient audit trail for MVP
 
@@ -193,6 +201,6 @@ docker-compose.yml               # PostgreSQL + backend + frontend
 
 ## Complexity Tracking
 
-| Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
+| Violation                            | Why Needed                       | Simpler Alternative Rejected Because                                     |
+| ------------------------------------ | -------------------------------- | ------------------------------------------------------------------------ |
 | Conditional: Full audit log deferred | MVP needs edit/delete capability | Void-and-reenter adds complexity; timestamps sufficient for personal use |

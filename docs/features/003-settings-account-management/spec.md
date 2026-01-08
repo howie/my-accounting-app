@@ -14,7 +14,7 @@
 - Q: Where should user preferences (language, theme) be stored? → A: Browser local storage only (per-device, no sync)
 - Q: What should happen when deleting an account that has transactions? → A: Offer to reassign all transactions to a selected replacement account before deletion
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - Add New Account to Ledger (Priority: P1)
 
@@ -170,7 +170,7 @@ As a user, I want to switch between dark and light display modes so I can choose
 - How does the system handle circular parent-child references (should be prevented)?
 - What happens when language is changed while a form has unsaved data?
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -214,7 +214,7 @@ As a user, I want to switch between dark and light display modes so I can choose
 - **User Preference**: Stores user-specific settings including language preference and theme selection. Persisted in browser local storage (per-device, no cross-device sync).
 - **Account Hierarchy**: The tree structure of parent-child relationships between accounts, limited to 3 levels.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

@@ -25,8 +25,8 @@ export default function AccountPage({ params }: AccountPageProps) {
   if (isLoading) {
     return (
       <div className="p-6 lg:p-8">
-        <div className="h-8 w-48 bg-muted animate-pulse rounded mb-4" />
-        <div className="h-64 bg-muted/50 animate-pulse rounded" />
+        <div className="mb-4 h-8 w-48 animate-pulse rounded bg-muted" />
+        <div className="h-64 animate-pulse rounded bg-muted/50" />
       </div>
     )
   }
@@ -39,11 +39,7 @@ export default function AccountPage({ params }: AccountPageProps) {
           <p className="text-muted-foreground">
             Please select a ledger to view account transactions.
           </p>
-          <Button
-            variant="outline"
-            onClick={() => router.push('/ledgers')}
-            className="mt-4"
-          >
+          <Button variant="outline" onClick={() => router.push('/ledgers')} className="mt-4">
             Select Ledger
           </Button>
         </div>
@@ -54,13 +50,8 @@ export default function AccountPage({ params }: AccountPageProps) {
   return (
     <div className="p-6 lg:p-8">
       {/* Back button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => router.push('/')}
-        className="mb-4 -ml-2"
-      >
-        <ArrowLeft className="h-4 w-4 mr-1" />
+      <Button variant="ghost" size="sm" onClick={() => router.push('/')} className="-ml-2 mb-4">
+        <ArrowLeft className="mr-1 h-4 w-4" />
         Back to Dashboard
       </Button>
 

@@ -15,7 +15,7 @@ export function MainContent({ children, className }: MainContentProps) {
   return (
     <main
       className={cn(
-        'flex-1 min-h-screen',
+        'min-h-screen flex-1',
         'bg-background',
         // On mobile, add top padding for hamburger menu
         'pt-16 lg:pt-0',

@@ -3,12 +3,14 @@
 ## Completed Features
 
 ### 001-core-accounting (DONE)
+
 - Ledger CRUD
 - Account CRUD with 4 types (Asset, Liability, Income, Expense)
 - Transaction CRUD (Expense, Income, Transfer)
 - Double-entry bookkeeping
 
 ### 002-ui-layout-dashboard (DONE)
+
 - Sidebar navigation with hierarchical account tree
 - Dashboard with total assets card
 - Income vs Expenses chart
@@ -22,11 +24,13 @@
 ## Planned Features
 
 ### 003-settings-account-management
+
 **Priority: High**
 
 Settings 頁面與科目管理功能。
 
 **Scope:**
+
 - [ ] Settings 入口（Sidebar menu 增加 Settings）
 - [ ] 科目管理頁面
   - [ ] 新增科目（支援父子關係）
@@ -44,11 +48,13 @@ Settings 頁面與科目管理功能。
 ---
 
 ### 004-transaction-entry
+
 **Priority: High**
 
 科目頁面新增交易功能。
 
 **Scope:**
+
 - [ ] 科目頁面增加「新增交易」按鈕
 - [ ] 交易表單（From/To 帳戶選擇）
 - [ ] 日期選擇器
@@ -63,11 +69,13 @@ Settings 頁面與科目管理功能。
 ---
 
 ### 005-ui-navigation-v2
+
 **Priority: High**
 
 UI 導航改進。
 
 **Scope:**
+
 - [ ] Sidebar menu 調整
   - [ ] 「回到帳本清單」移到最上方
   - [ ] 新增 Settings 入口
@@ -83,11 +91,13 @@ UI 導航改進。
 ---
 
 ### 006-data-import
+
 **Priority: Medium**
 
 資料匯入功能。
 
 **Scope:**
+
 - [ ] 批次匯入入口（Menu）
 - [ ] MyAB CSV 匯入
   - [ ] 解析 MyAB 匯出格式
@@ -106,11 +116,13 @@ UI 導航改進。
 ---
 
 ### 007-data-export
+
 **Priority: Medium**
 
 資料匯出功能。
 
 **Scope:**
+
 - [ ] 匯出入口
 - [ ] CSV 匯出（完整格式，可再匯入）
 - [ ] HTML 匯出（列印用）
@@ -122,11 +134,13 @@ UI 導航改進。
 ---
 
 ### 008-reports
+
 **Priority: Medium**
 
 報表與分析功能。
 
 **Scope:**
+
 - [ ] 資產負債表 (Balance Sheet)
   - [ ] 資產小計
   - [ ] 負債小計
@@ -143,11 +157,13 @@ UI 導航改進。
 ---
 
 ### 009-advanced-transactions
+
 **Priority: Low**
 
 進階交易功能。
 
 **Scope:**
+
 - [ ] 分期付款記錄
   - [ ] 輸入單期金額 + 期數
   - [ ] 一次產生多筆交易
@@ -164,11 +180,13 @@ UI 導航改進。
 ---
 
 ### 010-budget
+
 **Priority: Low**
 
 預算功能。
 
 **Scope:**
+
 - [ ] 預算設定頁面
 - [ ] 按科目設定預算
 - [ ] 月度/年度預算
@@ -180,11 +198,13 @@ UI 導航改進。
 ---
 
 ### 011-backup-sync
+
 **Priority: Low**
 
 備份與同步功能。
 
 **Scope:**
+
 - [ ] 手動備份/還原
 - [ ] 自動備份設定
 - [ ] 雲端同步（未來）
@@ -213,16 +233,11 @@ UI 導航改進。
 ## Suggested Implementation Order
 
 **Phase 1 - Core Enhancements (High Priority)**
+
 1. 003-settings-account-management
 2. 004-transaction-entry
 3. 005-ui-navigation-v2
 
-**Phase 2 - Data Management (Medium Priority)**
-4. 006-data-import
-5. 007-data-export
-6. 008-reports
+**Phase 2 - Data Management (Medium Priority)** 4. 006-data-import 5. 007-data-export 6. 008-reports
 
-**Phase 3 - Advanced Features (Low Priority)**
-7. 009-advanced-transactions
-8. 010-budget
-9. 011-backup-sync
+**Phase 3 - Advanced Features (Low Priority)** 7. 009-advanced-transactions 8. 010-budget 9. 011-backup-sync

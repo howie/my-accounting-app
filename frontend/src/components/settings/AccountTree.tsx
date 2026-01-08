@@ -63,14 +63,7 @@ function SortableAccountNode({
   const isExpanded = expandedIds.has(account.id)
   const indentPx = depth * 24
 
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: account.id,
     disabled: account.is_system,
   })
@@ -85,24 +78,24 @@ function SortableAccountNode({
     <div ref={setNodeRef} style={style} className="group">
       <div
         className={cn(
-          'flex items-center justify-between px-3 py-2.5 border-b',
-          'hover:bg-muted/50 transition-colors',
+          'flex items-center justify-between border-b px-3 py-2.5',
+          'transition-colors hover:bg-muted/50',
           isDragging && 'bg-muted/70 shadow-md'
         )}
       >
         <div
-          className="flex items-center gap-2 flex-1 min-w-0"
+          className="flex min-w-0 flex-1 items-center gap-2"
           style={{ paddingLeft: `${indentPx}px` }}
         >
           {/* Drag handle */}
           {!account.is_system ? (
             <button
               type="button"
-              className="touch-none cursor-grab active:cursor-grabbing"
+              className="cursor-grab touch-none active:cursor-grabbing"
               {...attributes}
               {...listeners}
             >
-              <GripVertical className="h-4 w-4 text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0" />
+              <GripVertical className="h-4 w-4 flex-shrink-0 text-muted-foreground/50 hover:text-muted-foreground" />
             </button>
           ) : (
             <span className="w-4 flex-shrink-0" />
@@ -113,7 +106,7 @@ function SortableAccountNode({
             <button
               type="button"
               onClick={() => toggleExpand(account.id)}
-              className="flex h-6 w-6 items-center justify-center rounded hover:bg-accent flex-shrink-0"
+              className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded hover:bg-accent"
               aria-label={isExpanded ? t('accounts.collapse') : t('accounts.expand')}
             >
               {isExpanded ? (
@@ -127,17 +120,17 @@ function SortableAccountNode({
           )}
 
           {/* Account name */}
-          <span className="font-medium truncate">{account.name}</span>
+          <span className="truncate font-medium">{account.name}</span>
 
           {/* System badge */}
           {account.is_system && (
-            <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground flex-shrink-0">
+            <span className="flex-shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
               {t('common.system')}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-3">
           {/* Balance */}
           <span
             className={cn(
@@ -147,15 +140,13 @@ function SortableAccountNode({
           >
             ${formatAmount(account.balance)}
             {hasChildren && (
-              <span className="text-xs text-muted-foreground ml-1">
-                {t('accounts.total')}
-              </span>
+              <span className="ml-1 text-xs text-muted-foreground">{t('accounts.total')}</span>
             )}
           </span>
 
           {/* Actions */}
           {!account.is_system && (
-            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               <Button
                 variant="ghost"
                 size="icon"
@@ -256,11 +247,7 @@ function SortableAccountList({
   const accountIds = localAccounts.map((a) => a.id)
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCenter}
-      onDragEnd={handleDragEnd}
-    >
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={accountIds} strategy={verticalListSortingStrategy}>
         <div>
           {localAccounts.map((account) => (
@@ -333,13 +320,13 @@ export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
             <div key={type} className="rounded-lg border">
               <div
                 className={cn(
-                  'px-4 py-2 rounded-t-lg',
-                  accountTypeColors[type].replace('text-', 'border-l-4 border-')
+                  'rounded-t-lg px-4 py-2',
+                  accountTypeColors[type].replace('text-', 'border- border-l-4')
                 )}
               >
                 <h3 className="font-semibold">{t(`accountTypes.${type}`)}</h3>
               </div>
-              <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+              <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 {t('accountManagement.noAccounts')}
               </div>
             </div>
@@ -347,11 +334,11 @@ export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
         }
 
         return (
-          <div key={type} className="rounded-lg border overflow-hidden">
+          <div key={type} className="overflow-hidden rounded-lg border">
             <div
               className={cn(
-                'px-4 py-2 border-b',
-                accountTypeColors[type].replace('text-', 'border-l-4 border-')
+                'border-b px-4 py-2',
+                accountTypeColors[type].replace('text-', 'border- border-l-4')
               )}
             >
               <h3 className="font-semibold">{t(`accountTypes.${type}`)}</h3>

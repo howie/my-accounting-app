@@ -14,7 +14,7 @@ export default function SettingsPage() {
     <div className="space-y-8">
       <h1 className="text-2xl font-semibold">{t('title')}</h1>
 
-      <div className="space-y-6 max-w-md">
+      <div className="max-w-md space-y-6">
         <LanguageSelector />
         <ThemeToggle />
       </div>

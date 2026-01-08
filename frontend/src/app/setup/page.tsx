@@ -37,9 +37,7 @@ export default function SetupPage() {
       <div className="w-full max-w-md space-y-8 p-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold">{t('setup.title')}</h1>
-          <p className="mt-2 text-muted-foreground">
-            {t('setup.subtitle')}
-          </p>
+          <p className="mt-2 text-muted-foreground">{t('setup.subtitle')}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-6">
@@ -58,22 +56,14 @@ export default function SetupPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={setupUser.isPending}
-          >
+          <Button type="submit" className="w-full" disabled={setupUser.isPending}>
             {setupUser.isPending ? t('setup.settingUp') : t('home.getStarted')}
           </Button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          {t('setup.singleUserNote')}
-        </p>
+        <p className="text-center text-sm text-muted-foreground">{t('setup.singleUserNote')}</p>
       </div>
     </div>
   )

@@ -38,8 +38,8 @@ export function SidebarItem({
       <button
         onClick={onToggle}
         className={cn(
-          'flex w-full items-center justify-between px-3 py-2 text-sm font-medium rounded-md',
-          'text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/10',
+          'flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium',
+          'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground',
           'transition-colors duration-150'
         )}
         aria-expanded={isExpanded}
@@ -69,7 +69,7 @@ export function SidebarItem({
       {isExpanded && category.accounts.length > 0 && (
         <div
           id={`category-${category.type}`}
-          className="mt-1 ml-4 space-y-0.5"
+          className="ml-4 mt-1 space-y-0.5"
           role="group"
           aria-label={`${category.label} accounts`}
         >
@@ -78,8 +78,7 @@ export function SidebarItem({
               key={account.id}
               account={account}
               isSelected={
-                selectedAccountId === account.id ||
-                pathname === `/accounts/${account.id}`
+                selectedAccountId === account.id || pathname === `/accounts/${account.id}`
               }
               selectedAccountId={selectedAccountId}
               pathname={pathname}
@@ -90,9 +89,7 @@ export function SidebarItem({
 
       {/* Empty state */}
       {isExpanded && category.accounts.length === 0 && (
-        <div className="mt-1 ml-6 py-2 text-xs text-sidebar-foreground/40">
-          No accounts
-        </div>
+        <div className="ml-6 mt-1 py-2 text-xs text-sidebar-foreground/40">No accounts</div>
       )}
     </div>
   )
@@ -115,16 +112,16 @@ function AccountLink({ account, isSelected, selectedAccountId, pathname }: Accou
         href={`/accounts/${account.id}`}
         style={{ paddingLeft }}
         className={cn(
-          'flex items-center justify-between pr-3 py-1.5 text-sm rounded-md',
+          'flex items-center justify-between rounded-md py-1.5 pr-3 text-sm',
           'transition-colors duration-150',
           isSelected
-            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-            : 'text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/10'
+            ? 'bg-sidebar-accent font-medium text-sidebar-accent-foreground'
+            : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
         )}
         title={account.name}
       >
-        <span className="truncate max-w-[140px]">{account.name}</span>
-        <span className="text-xs text-sidebar-foreground/50 ml-2">
+        <span className="max-w-[140px] truncate">{account.name}</span>
+        <span className="ml-2 text-xs text-sidebar-foreground/50">
           {formatBalance(account.balance)}
         </span>
       </Link>

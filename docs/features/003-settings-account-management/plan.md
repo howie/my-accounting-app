@@ -12,21 +12,23 @@ Implement a Settings page accessible from the sidebar with Account Management fu
 
 **Language/Version**: Python 3.12 (Backend), TypeScript 5.x (Frontend)
 **Primary Dependencies**:
+
 - Backend: FastAPI 0.109, SQLModel 0.0.14, Alembic 1.13
 - Frontend: Next.js 15.0, React 19.0, TanStack React Query 5.17, next-intl 4.7, Tailwind CSS 3.4
-**Storage**: PostgreSQL 16 (accounts, transactions), Browser localStorage (user preferences)
-**Testing**: pytest 8.0 + pytest-asyncio (backend), Vitest 1.2 + Testing Library (frontend)
-**Target Platform**: Web application (desktop/mobile responsive)
-**Project Type**: Web application (frontend + backend)
-**Performance Goals**: < 100ms response time for account operations, < 1 second for theme/language changes
-**Constraints**: Offline-capable for preference changes (localStorage), 3-level max account hierarchy
-**Scale/Scope**: Single user per ledger, up to 30,000 transactions per database
+  **Storage**: PostgreSQL 16 (accounts, transactions), Browser localStorage (user preferences)
+  **Testing**: pytest 8.0 + pytest-asyncio (backend), Vitest 1.2 + Testing Library (frontend)
+  **Target Platform**: Web application (desktop/mobile responsive)
+  **Project Type**: Web application (frontend + backend)
+  **Performance Goals**: < 100ms response time for account operations, < 1 second for theme/language changes
+  **Constraints**: Offline-capable for preference changes (localStorage), 3-level max account hierarchy
+  **Scale/Scope**: Single user per ledger, up to 30,000 transactions per database
 
 ## Constitution Check
 
-*GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
 ### I. Data-First Design (NON-NEGOTIABLE)
+
 - [x] Does this feature preserve financial accuracy (calculations correct to the cent)?
   - Account management does not modify transaction amounts, only categorization
 - [x] Are audit trails maintained (all modifications logged with timestamp/reason)?
@@ -41,6 +43,7 @@ Implement a Settings page accessible from the sidebar with Account Management fu
 **Violations**: None
 
 ### II. Test-First Development (NON-NEGOTIABLE)
+
 - [x] Will tests be written BEFORE implementation?
   - Tasks will include test-first workflow per constitution
 - [x] Will tests be reviewed/approved before coding?
@@ -55,6 +58,7 @@ Implement a Settings page accessible from the sidebar with Account Management fu
 **Violations**: None
 
 ### III. Financial Accuracy & Audit Trail
+
 - [x] Does design maintain double-entry bookkeeping (debits = credits)?
   - Not directly affected; transaction reassignment maintains existing entries
 - [x] Are transactions immutable once posted (void-and-reenter only)?
@@ -69,6 +73,7 @@ Implement a Settings page accessible from the sidebar with Account Management fu
 **Violations**: None
 
 ### IV. Simplicity & Maintainability
+
 - [x] Is this feature actually needed (not speculative)?
   - Required per ROADMAP.md, high priority feature
 - [x] Is the design clear over clever (human-auditable)?
@@ -81,6 +86,7 @@ Implement a Settings page accessible from the sidebar with Account Management fu
 **Violations**: None
 
 ### V. Cross-Platform Consistency
+
 - [x] Will calculations produce identical results across platforms?
   - Backend handles all calculations; frontend display only
 - [x] Is data format compatible between desktop and web?
@@ -178,5 +184,5 @@ frontend/
 > No constitution violations requiring justification.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
-|-----------|------------|-------------------------------------|
-| N/A | - | - |
+| --------- | ---------- | ------------------------------------ |
+| N/A       | -          | -                                    |

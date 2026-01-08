@@ -120,9 +120,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
       <h2 className="mb-4 text-xl font-semibold">{t('transactionForm.title')}</h2>
 
       {error && (
-        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
-        </div>
+        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       {/* Transaction Type */}
@@ -135,9 +133,7 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
               type="button"
               onClick={() => handleTypeChange(type.value)}
               className={`rounded-lg border p-3 text-left transition-colors ${
-                transactionType === type.value
-                  ? 'border-primary bg-primary/10'
-                  : 'hover:bg-accent'
+                transactionType === type.value ? 'border-primary bg-primary/10' : 'hover:bg-accent'
               }`}
             >
               <div className="font-medium">{type.label}</div>
@@ -237,7 +233,9 @@ export function TransactionForm({ ledgerId, onSuccess, onCancel }: TransactionFo
 
       <div className="flex gap-2">
         <Button type="submit" disabled={createTransaction.isPending}>
-          {createTransaction.isPending ? t('transactionForm.saving') : t('transactionForm.saveTransaction')}
+          {createTransaction.isPending
+            ? t('transactionForm.saving')
+            : t('transactionForm.saveTransaction')}
         </Button>
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel}>

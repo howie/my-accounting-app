@@ -31,9 +31,7 @@ export function useAccounts(ledgerId: string, typeFilter?: AccountType) {
     queryKey: [...ACCOUNTS_KEY(ledgerId), { type: typeFilter }],
     queryFn: async () => {
       const params = typeFilter ? `?type=${typeFilter}` : ''
-      const response = await apiGet<AccountListResponse>(
-        `/ledgers/${ledgerId}/accounts${params}`
-      )
+      const response = await apiGet<AccountListResponse>(`/ledgers/${ledgerId}/accounts${params}`)
       return response.data
     },
     enabled: !!ledgerId,
@@ -112,10 +110,7 @@ export function useReorderAccounts(ledgerId: string) {
 
   return useMutation({
     mutationFn: async (data: AccountReorderRequest) => {
-      return apiPatch<{ updated_count: number }>(
-        `/ledgers/${ledgerId}/accounts/reorder`,
-        data
-      )
+      return apiPatch<{ updated_count: number }>(`/ledgers/${ledgerId}/accounts/reorder`, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })
@@ -131,9 +126,7 @@ export function useCanDeleteAccount(ledgerId: string, accountId: string) {
   return useQuery({
     queryKey: [...ACCOUNTS_KEY(ledgerId), accountId, 'can-delete'],
     queryFn: async () => {
-      return apiGet<CanDeleteResponse>(
-        `/ledgers/${ledgerId}/accounts/${accountId}/can-delete`
-      )
+      return apiGet<CanDeleteResponse>(`/ledgers/${ledgerId}/accounts/${accountId}/can-delete`)
     },
     enabled: !!ledgerId && !!accountId,
   })
@@ -169,10 +162,9 @@ export function useReassignAndDelete(ledgerId: string) {
       accountId: string
       replacementAccountId: string
     }) => {
-      return apiPost<ReassignResponse>(
-        `/ledgers/${ledgerId}/accounts/${accountId}/reassign`,
-        { replacement_account_id: replacementAccountId }
-      )
+      return apiPost<ReassignResponse>(`/ledgers/${ledgerId}/accounts/${accountId}/reassign`, {
+        replacement_account_id: replacementAccountId,
+      })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })

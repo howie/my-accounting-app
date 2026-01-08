@@ -16,12 +16,7 @@ interface AccountEditDialogProps {
   onClose: () => void
 }
 
-export function AccountEditDialog({
-  account,
-  ledgerId,
-  isOpen,
-  onClose,
-}: AccountEditDialogProps) {
+export function AccountEditDialog({ account, ledgerId, isOpen, onClose }: AccountEditDialogProps) {
   const t = useTranslations()
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -63,30 +58,24 @@ export function AccountEditDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} aria-hidden="true" />
 
       {/* Dialog */}
-      <div className="relative z-10 w-full max-w-md mx-4 bg-background rounded-lg shadow-lg border">
+      <div className="relative z-10 mx-4 w-full max-w-md rounded-lg border bg-background shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b">
-          <h2 className="text-lg font-semibold">
-            {t('accountManagement.editAccount')}
-          </h2>
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <h2 className="text-lg font-semibold">{t('accountManagement.editAccount')}</h2>
           <button
             type="button"
             onClick={onClose}
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 p-6">
           <div className="space-y-2">
             <label htmlFor="account-name" className="text-sm font-medium">
               {t('accountForm.nameLabel')}
@@ -100,9 +89,7 @@ export function AccountEditDialog({
             />
           </div>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
+          {error && <p className="text-sm text-destructive">{error}</p>}
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
@@ -114,10 +101,7 @@ export function AccountEditDialog({
             >
               {t('common.cancel')}
             </Button>
-            <Button
-              type="submit"
-              disabled={updateAccount.isPending || !name.trim()}
-            >
+            <Button type="submit" disabled={updateAccount.isPending || !name.trim()}>
               {updateAccount.isPending ? t('common.loading') : t('common.save')}
             </Button>
           </div>

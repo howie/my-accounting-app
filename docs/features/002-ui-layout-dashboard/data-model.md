@@ -25,10 +25,10 @@ Represents an account in the sidebar navigation.
 
 ```typescript
 interface SidebarAccountItem {
-  id: string;           // UUID
-  name: string;         // Account name (truncated to 20 chars in UI)
-  type: AccountType;    // ASSET | LIABILITY | INCOME | EXPENSE
-  balance: number;      // Cached balance for display
+  id: string; // UUID
+  name: string; // Account name (truncated to 20 chars in UI)
+  type: AccountType; // ASSET | LIABILITY | INCOME | EXPENSE
+  balance: number; // Cached balance for display
 }
 ```
 
@@ -39,10 +39,10 @@ Groups accounts by type for sidebar display.
 ```typescript
 interface SidebarCategory {
   type: AccountType;
-  label: string;        // Display name (Assets, Loans, Income, Expenses)
-  icon: string;         // Icon identifier
+  label: string; // Display name (Assets, Loans, Income, Expenses)
+  icon: string; // Icon identifier
   accounts: SidebarAccountItem[];
-  isExpanded: boolean;  // UI state
+  isExpanded: boolean; // UI state
 }
 ```
 
@@ -52,13 +52,13 @@ Main dashboard data structure.
 
 ```typescript
 interface DashboardSummary {
-  totalAssets: number;          // Sum of all ASSET account balances
+  totalAssets: number; // Sum of all ASSET account balances
   currentMonth: {
-    income: number;             // Sum of INCOME transactions this month
-    expenses: number;           // Sum of EXPENSE transactions this month
-    netCashFlow: number;        // income - expenses
+    income: number; // Sum of INCOME transactions this month
+    expenses: number; // Sum of EXPENSE transactions this month
+    netCashFlow: number; // income - expenses
   };
-  trends: MonthlyTrend[];       // Last 6 months
+  trends: MonthlyTrend[]; // Last 6 months
 }
 ```
 
@@ -68,10 +68,10 @@ Single month's income/expense data for trend charts.
 
 ```typescript
 interface MonthlyTrend {
-  month: string;        // Format: "Jan", "Feb", etc.
-  year: number;         // 4-digit year
-  income: number;       // Total income for month
-  expenses: number;     // Total expenses for month
+  month: string; // Format: "Jan", "Feb", etc.
+  year: number; // 4-digit year
+  income: number; // Total income for month
+  expenses: number; // Total expenses for month
 }
 ```
 
@@ -82,7 +82,7 @@ Simplified transaction for list display.
 ```typescript
 interface TransactionListItem {
   id: string;
-  date: string;         // ISO date string
+  date: string; // ISO date string
   description: string;
   amount: number;
   type: TransactionType; // EXPENSE | INCOME | TRANSFER
