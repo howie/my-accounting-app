@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Home, Menu, X, BookOpen, Settings } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
@@ -18,6 +19,7 @@ export function Sidebar() {
   const pathname = usePathname()
   const { currentLedger } = useLedgerContext()
   const { data: categories, isLoading, error } = useSidebarAccounts()
+  const t = useTranslations('sidebar')
   const {
     isCollapsed,
     toggleCollapsed,
@@ -87,7 +89,7 @@ export function Sidebar() {
         {currentLedger && (
           <div className="px-4 py-3 border-b border-sidebar-border">
             <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider">
-              Current Ledger
+              {t('currentLedger')}
             </p>
             <p className="text-sm font-medium text-sidebar-foreground truncate">
               {currentLedger.name}
@@ -109,13 +111,13 @@ export function Sidebar() {
             )}
           >
             <Home className="h-4 w-4" />
-            <span>Dashboard</span>
+            <span>{t('dashboard')}</span>
           </Link>
 
           {/* Category Divider */}
           <div className="px-3 mb-2">
             <p className="text-xs text-sidebar-foreground/50 uppercase tracking-wider">
-              Accounts
+              {t('accounts')}
             </p>
           </div>
 
@@ -133,7 +135,7 @@ export function Sidebar() {
           {/* Error State */}
           {error && (
             <div className="px-3 py-4 text-sm text-red-400">
-              Failed to load accounts
+              {t('failedToLoad')}
             </div>
           )}
 
@@ -150,7 +152,7 @@ export function Sidebar() {
           {/* No Ledger State */}
           {!currentLedger && !isLoading && (
             <div className="px-3 py-4 text-sm text-sidebar-foreground/50">
-              Select a ledger to view accounts
+              {t('selectLedgerToView')}
             </div>
           )}
         </nav>
@@ -168,7 +170,7 @@ export function Sidebar() {
             )}
           >
             <Settings className="h-4 w-4" />
-            <span>Settings</span>
+            <span>{t('settings')}</span>
           </Link>
         </div>
 
@@ -178,7 +180,7 @@ export function Sidebar() {
             href="/ledgers"
             className="text-xs text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors"
           >
-            Switch Ledger
+            {t('switchLedger')}
           </Link>
         </div>
       </aside>

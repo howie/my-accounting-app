@@ -1,12 +1,31 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { ChevronDown, ChevronRight, Pencil, Trash2, GripVertical } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatAmount } from '@/lib/utils'
+import { useLedgerContext } from '@/lib/context/LedgerContext'
+import { useReorderAccounts } from '@/lib/hooks/useAccounts'
 import type { AccountTreeNode, AccountType } from '@/types'
 
 interface AccountTreeProps {
@@ -22,7 +41,7 @@ const accountTypeColors: Record<AccountType, string> = {
   EXPENSE: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
 }
 
-interface AccountNodeProps {
+interface SortableAccountNodeProps {
   account: AccountTreeNode
   depth: number
   expandedIds: Set<string>
@@ -31,36 +50,63 @@ interface AccountNodeProps {
   onDelete: (account: AccountTreeNode) => void
 }
 
-function AccountNode({
+function SortableAccountNode({
   account,
   depth,
   expandedIds,
   toggleExpand,
   onEdit,
   onDelete,
-}: AccountNodeProps) {
+}: SortableAccountNodeProps) {
   const t = useTranslations()
   const hasChildren = account.children && account.children.length > 0
   const isExpanded = expandedIds.has(account.id)
   const indentPx = depth * 24
 
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({
+    id: account.id,
+    disabled: account.is_system,
+  })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  }
+
   return (
-    <div className="group">
+    <div ref={setNodeRef} style={style} className="group">
       <div
         className={cn(
           'flex items-center justify-between px-3 py-2.5 border-b',
-          'hover:bg-muted/50 transition-colors'
+          'hover:bg-muted/50 transition-colors',
+          isDragging && 'bg-muted/70 shadow-md'
         )}
       >
         <div
           className="flex items-center gap-2 flex-1 min-w-0"
           style={{ paddingLeft: `${indentPx}px` }}
         >
-          {/* Drag handle (for future drag-and-drop) */}
-          {!account.is_system && (
-            <GripVertical className="h-4 w-4 text-muted-foreground/50 cursor-grab flex-shrink-0" />
+          {/* Drag handle */}
+          {!account.is_system ? (
+            <button
+              type="button"
+              className="touch-none cursor-grab active:cursor-grabbing"
+              {...attributes}
+              {...listeners}
+            >
+              <GripVertical className="h-4 w-4 text-muted-foreground/50 hover:text-muted-foreground flex-shrink-0" />
+            </button>
+          ) : (
+            <span className="w-4 flex-shrink-0" />
           )}
-          {account.is_system && <span className="w-4 flex-shrink-0" />}
 
           {/* Expand/collapse button */}
           {hasChildren ? (
@@ -135,12 +181,93 @@ function AccountNode({
 
       {/* Render children if expanded */}
       {hasChildren && isExpanded && (
+        <SortableAccountList
+          accounts={account.children}
+          parentId={account.id}
+          depth={depth + 1}
+          expandedIds={expandedIds}
+          toggleExpand={toggleExpand}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      )}
+    </div>
+  )
+}
+
+interface SortableAccountListProps {
+  accounts: AccountTreeNode[]
+  parentId: string | null
+  depth: number
+  expandedIds: Set<string>
+  toggleExpand: (id: string) => void
+  onEdit: (account: AccountTreeNode) => void
+  onDelete: (account: AccountTreeNode) => void
+}
+
+function SortableAccountList({
+  accounts,
+  parentId,
+  depth,
+  expandedIds,
+  toggleExpand,
+  onEdit,
+  onDelete,
+}: SortableAccountListProps) {
+  const { currentLedger } = useLedgerContext()
+  const reorderMutation = useReorderAccounts(currentLedger?.id || '')
+
+  const [localAccounts, setLocalAccounts] = useState(accounts)
+
+  // Sync local state when accounts prop changes
+  useEffect(() => {
+    setLocalAccounts(accounts)
+  }, [accounts])
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+
+    if (over && active.id !== over.id) {
+      const oldIndex = localAccounts.findIndex((a) => a.id === active.id)
+      const newIndex = localAccounts.findIndex((a) => a.id === over.id)
+
+      const newOrder = arrayMove(localAccounts, oldIndex, newIndex)
+      setLocalAccounts(newOrder)
+
+      // Send reorder request to backend
+      reorderMutation.mutate({
+        parent_id: parentId,
+        account_ids: newOrder.map((a) => a.id),
+      })
+    }
+  }
+
+  const accountIds = localAccounts.map((a) => a.id)
+
+  return (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={closestCenter}
+      onDragEnd={handleDragEnd}
+    >
+      <SortableContext items={accountIds} strategy={verticalListSortingStrategy}>
         <div>
-          {account.children.map((child) => (
-            <AccountNode
-              key={child.id}
-              account={child}
-              depth={depth + 1}
+          {localAccounts.map((account) => (
+            <SortableAccountNode
+              key={account.id}
+              account={account}
+              depth={depth}
               expandedIds={expandedIds}
               toggleExpand={toggleExpand}
               onEdit={onEdit}
@@ -148,8 +275,8 @@ function AccountNode({
             />
           ))}
         </div>
-      )}
-    </div>
+      </SortableContext>
+    </DndContext>
   )
 }
 
@@ -229,19 +356,15 @@ export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
             >
               <h3 className="font-semibold">{t(`accountTypes.${type}`)}</h3>
             </div>
-            <div>
-              {typeAccounts.map((account) => (
-                <AccountNode
-                  key={account.id}
-                  account={account}
-                  depth={0}
-                  expandedIds={expandedIds}
-                  toggleExpand={toggleExpand}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                />
-              ))}
-            </div>
+            <SortableAccountList
+              accounts={typeAccounts}
+              parentId={null}
+              depth={0}
+              expandedIds={expandedIds}
+              toggleExpand={toggleExpand}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           </div>
         )
       })}

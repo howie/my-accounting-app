@@ -148,6 +148,15 @@
     "noLedgers": "尚無帳本",
     "manageLedgers": "管理帳本"
   },
+  "sidebar": {
+    "dashboard": "儀表板",
+    "accounts": "科目",
+    "settings": "設定",
+    "switchLedger": "切換帳本",
+    "currentLedger": "目前帳本",
+    "selectLedgerToView": "選擇帳本以查看科目",
+    "failedToLoad": "載入科目失敗"
+  },
   "settings": {
     "title": "設定",
     "preferences": "偏好設定",

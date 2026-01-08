@@ -8,8 +8,7 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import Column, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import JSON, Column, Text
 from sqlmodel import Field, SQLModel
 
 
@@ -36,11 +35,11 @@ class AuditLog(SQLModel, table=True):
     entity_id: uuid.UUID = Field(index=True)  # ID of the affected entity
     action: AuditAction = Field(sa_column=Column(Text))  # CREATE, UPDATE, DELETE, REASSIGN
     old_value: dict[str, Any] | None = Field(
-        default=None, sa_column=Column(JSONB)
+        default=None, sa_column=Column(JSON)
     )  # Previous state
-    new_value: dict[str, Any] | None = Field(default=None, sa_column=Column(JSONB))  # New state
+    new_value: dict[str, Any] | None = Field(default=None, sa_column=Column(JSON))  # New state
     extra_data: dict[str, Any] | None = Field(
-        default=None, sa_column=Column(JSONB)
+        default=None, sa_column=Column(JSON)
     )  # Additional context (e.g., reassignment details)
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC), index=True)
     ledger_id: uuid.UUID = Field(foreign_key="ledgers.id", index=True)

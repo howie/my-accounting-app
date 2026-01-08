@@ -148,6 +148,15 @@
     "noLedgers": "No ledgers yet",
     "manageLedgers": "Manage Ledgers"
   },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "settings": "Settings",
+    "switchLedger": "Switch Ledger",
+    "currentLedger": "Current Ledger",
+    "selectLedgerToView": "Select a ledger to view accounts",
+    "failedToLoad": "Failed to load accounts"
+  },
   "settings": {
     "title": "Settings",
     "preferences": "Preferences",
