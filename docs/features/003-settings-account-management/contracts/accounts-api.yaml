@@ -15,27 +15,27 @@ paths:
       operationId: createAccount
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
+        - $ref: "#/components/parameters/ledgerId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountCreate'
+              $ref: "#/components/schemas/AccountCreate"
       responses:
-        '201':
+        "201":
           description: Account created successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountRead'
-        '400':
+                $ref: "#/components/schemas/AccountRead"
+        "400":
           description: Validation error (duplicate name, depth exceeded)
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ValidationError'
-        '404':
+                $ref: "#/components/schemas/ValidationError"
+        "404":
           description: Ledger or parent account not found
 
   /ledgers/{ledger_id}/accounts/{account_id}:
@@ -48,24 +48,24 @@ paths:
       operationId: updateAccount
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
-        - $ref: '#/components/parameters/accountId'
+        - $ref: "#/components/parameters/ledgerId"
+        - $ref: "#/components/parameters/accountId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountUpdate'
+              $ref: "#/components/schemas/AccountUpdate"
       responses:
-        '200':
+        "200":
           description: Account updated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AccountRead'
-        '400':
+                $ref: "#/components/schemas/AccountRead"
+        "400":
           description: Validation error (duplicate name, circular ref, depth exceeded)
-        '404':
+        "404":
           description: Account not found
 
     delete:
@@ -77,18 +77,18 @@ paths:
       operationId: deleteAccount
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
-        - $ref: '#/components/parameters/accountId'
+        - $ref: "#/components/parameters/ledgerId"
+        - $ref: "#/components/parameters/accountId"
       responses:
-        '204':
+        "204":
           description: Account deleted successfully
-        '400':
+        "400":
           description: Cannot delete - has children or transactions
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/DeleteBlockedError'
-        '404':
+                $ref: "#/components/schemas/DeleteBlockedError"
+        "404":
           description: Account not found
 
   /ledgers/{ledger_id}/accounts/reorder:
@@ -101,15 +101,15 @@ paths:
       operationId: reorderAccounts
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
+        - $ref: "#/components/parameters/ledgerId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountReorderRequest'
+              $ref: "#/components/schemas/AccountReorderRequest"
       responses:
-        '200':
+        "200":
           description: Accounts reordered successfully
           content:
             application/json:
@@ -119,9 +119,9 @@ paths:
                   updated_count:
                     type: integer
                     description: Number of accounts with updated sort_order
-        '400':
+        "400":
           description: Invalid account IDs or not all siblings
-        '404':
+        "404":
           description: Ledger not found
 
   /ledgers/{ledger_id}/accounts/{account_id}/reassign:
@@ -135,24 +135,24 @@ paths:
       operationId: reassignAndDelete
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
-        - $ref: '#/components/parameters/accountId'
+        - $ref: "#/components/parameters/ledgerId"
+        - $ref: "#/components/parameters/accountId"
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReassignRequest'
+              $ref: "#/components/schemas/ReassignRequest"
       responses:
-        '200':
+        "200":
           description: Transactions reassigned and account deleted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReassignResponse'
-        '400':
+                $ref: "#/components/schemas/ReassignResponse"
+        "400":
           description: Invalid replacement account (wrong type, same account, etc.)
-        '404':
+        "404":
           description: Account or replacement not found
 
   /ledgers/{ledger_id}/accounts/{account_id}/can-delete:
@@ -164,16 +164,16 @@ paths:
       operationId: canDeleteAccount
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
-        - $ref: '#/components/parameters/accountId'
+        - $ref: "#/components/parameters/ledgerId"
+        - $ref: "#/components/parameters/accountId"
       responses:
-        '200':
+        "200":
           description: Deletion status returned
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CanDeleteResponse'
-        '404':
+                $ref: "#/components/schemas/CanDeleteResponse"
+        "404":
           description: Account not found
 
   /ledgers/{ledger_id}/accounts/{account_id}/replacement-candidates:
@@ -185,18 +185,18 @@ paths:
       operationId: getReplacementCandidates
       tags: [accounts]
       parameters:
-        - $ref: '#/components/parameters/ledgerId'
-        - $ref: '#/components/parameters/accountId'
+        - $ref: "#/components/parameters/ledgerId"
+        - $ref: "#/components/parameters/accountId"
       responses:
-        '200':
+        "200":
           description: Replacement candidates returned
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/AccountListItem'
-        '404':
+                  $ref: "#/components/schemas/AccountListItem"
+        "404":
           description: Account not found
 
 components:
@@ -230,7 +230,7 @@ components:
           maxLength: 100
           description: Account name (unique within parent)
         type:
-          $ref: '#/components/schemas/AccountType'
+          $ref: "#/components/schemas/AccountType"
         parent_id:
           type: string
           format: uuid
@@ -260,7 +260,7 @@ components:
         name:
           type: string
         type:
-          $ref: '#/components/schemas/AccountType'
+          $ref: "#/components/schemas/AccountType"
         parent_id:
           type: string
           format: uuid
@@ -292,7 +292,7 @@ components:
         name:
           type: string
         type:
-          $ref: '#/components/schemas/AccountType'
+          $ref: "#/components/schemas/AccountType"
         depth:
           type: integer
         parent_id:
