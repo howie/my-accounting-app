@@ -4,7 +4,7 @@ Based on data-model.md
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
@@ -27,12 +27,8 @@ class Ledger(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="users.id", index=True)
     name: str = Field(max_length=100)
-    initial_balance: Decimal = Field(
-        default=Decimal("0"), max_digits=15, decimal_places=2
-    )
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    initial_balance: Decimal = Field(default=Decimal("0"), max_digits=15, decimal_places=2)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
     accounts: list["Account"] = Relationship(

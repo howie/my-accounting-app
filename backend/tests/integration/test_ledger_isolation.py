@@ -4,22 +4,20 @@ Verifies that ledger data is properly isolated between users.
 User A cannot see or access User B's ledgers, accounts, or transactions.
 """
 
-import uuid
 from decimal import Decimal
 
 import pytest
 from sqlmodel import Session
 
+from src.models.account import AccountType
+from src.models.transaction import TransactionType
 from src.models.user import User
-from src.models.ledger import Ledger
-from src.models.account import Account, AccountType
-from src.models.transaction import Transaction, TransactionType
-from src.services.ledger_service import LedgerService
-from src.services.account_service import AccountService
-from src.services.transaction_service import TransactionService
-from src.schemas.ledger import LedgerCreate
 from src.schemas.account import AccountCreate
+from src.schemas.ledger import LedgerCreate
 from src.schemas.transaction import TransactionCreate
+from src.services.account_service import AccountService
+from src.services.ledger_service import LedgerService
+from src.services.transaction_service import TransactionService
 
 
 class TestLedgerDataIsolation:
@@ -119,6 +117,7 @@ class TestLedgerDataIsolation:
 
         # User A tries to update User B's ledger
         from src.schemas.ledger import LedgerUpdate
+
         result = ledger_service.update_ledger(
             user_b_ledger.id,
             user_a.id,

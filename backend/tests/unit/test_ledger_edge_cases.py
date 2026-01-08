@@ -12,11 +12,11 @@ from decimal import Decimal
 import pytest
 from sqlmodel import Session
 
-from src.services.ledger_service import LedgerService
-from src.services.account_service import AccountService
-from src.schemas.ledger import LedgerCreate, LedgerUpdate
-from src.schemas.account import AccountCreate, AccountUpdate
 from src.models.account import AccountType
+from src.schemas.account import AccountCreate, AccountUpdate
+from src.schemas.ledger import LedgerCreate
+from src.services.account_service import AccountService
+from src.services.ledger_service import LedgerService
 
 
 class TestSystemAccountProtection:
@@ -38,13 +38,9 @@ class TestSystemAccountProtection:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         """Create a test ledger and return its ID."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test Ledger")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test Ledger"))
         return ledger.id
 
     def test_cannot_delete_cash_account(
@@ -75,9 +71,7 @@ class TestSystemAccountProtection:
         cash = next(a for a in accounts if a.name == "Cash")
 
         with pytest.raises(ValueError, match="system account"):
-            account_service.update_account(
-                cash.id, ledger_id, AccountUpdate(name="My Cash")
-            )
+            account_service.update_account(cash.id, ledger_id, AccountUpdate(name="My Cash"))
 
     def test_cannot_rename_equity_account(
         self, account_service: AccountService, ledger_id: uuid.UUID
@@ -87,9 +81,7 @@ class TestSystemAccountProtection:
         equity = next(a for a in accounts if a.name == "Equity")
 
         with pytest.raises(ValueError, match="system account"):
-            account_service.update_account(
-                equity.id, ledger_id, AccountUpdate(name="My Equity")
-            )
+            account_service.update_account(equity.id, ledger_id, AccountUpdate(name="My Equity"))
 
     def test_system_accounts_always_exist_after_creation(
         self, account_service: AccountService, ledger_id: uuid.UUID
@@ -150,13 +142,9 @@ class TestDuplicateNameHandling:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         """Create a test ledger and return its ID."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test Ledger")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test Ledger"))
         return ledger.id
 
     def test_cannot_create_account_with_same_name(
@@ -201,12 +189,8 @@ class TestDuplicateNameHandling:
         user_id: uuid.UUID,
     ) -> None:
         """Same account name is allowed in different ledgers."""
-        ledger1 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Personal")
-        )
-        ledger2 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Business")
-        )
+        ledger1 = ledger_service.create_ledger(user_id, LedgerCreate(name="Personal"))
+        ledger2 = ledger_service.create_ledger(user_id, LedgerCreate(name="Business"))
 
         # Both should succeed
         account1 = account_service.create_account(
@@ -232,9 +216,7 @@ class TestDuplicateNameHandling:
         )
 
         with pytest.raises(ValueError, match="already exists"):
-            account_service.update_account(
-                travel.id, ledger_id, AccountUpdate(name="Food")
-            )
+            account_service.update_account(travel.id, ledger_id, AccountUpdate(name="Food"))
 
     def test_cannot_rename_to_system_account_name(
         self, account_service: AccountService, ledger_id: uuid.UUID
@@ -245,9 +227,7 @@ class TestDuplicateNameHandling:
         )
 
         with pytest.raises(ValueError, match="already exists"):
-            account_service.update_account(
-                food.id, ledger_id, AccountUpdate(name="Cash")
-            )
+            account_service.update_account(food.id, ledger_id, AccountUpdate(name="Cash"))
 
     def test_can_rename_to_same_name(
         self, account_service: AccountService, ledger_id: uuid.UUID
@@ -258,9 +238,7 @@ class TestDuplicateNameHandling:
         )
 
         # Should not raise
-        result = account_service.update_account(
-            food.id, ledger_id, AccountUpdate(name="Food")
-        )
+        result = account_service.update_account(food.id, ledger_id, AccountUpdate(name="Food"))
 
         assert result is not None
         assert result.name == "Food"
@@ -290,9 +268,7 @@ class TestBoundaryConditions:
         """Ledger name at maximum length (100 chars) is accepted."""
         long_name = "A" * 100
 
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name=long_name)
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name=long_name))
 
         assert ledger.name == long_name
 
@@ -303,9 +279,7 @@ class TestBoundaryConditions:
         user_id: uuid.UUID,
     ) -> None:
         """Account name at maximum length (100 chars) is accepted."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
         long_name = "B" * 100
 
         account = account_service.create_account(
@@ -324,9 +298,7 @@ class TestBoundaryConditions:
 
         assert ledger.initial_balance == Decimal("1234.56")
 
-    def test_large_initial_balance(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_large_initial_balance(self, ledger_service: LedgerService, user_id: uuid.UUID) -> None:
         """Large initial balance within NUMERIC(15,2) is accepted."""
         # Max value for NUMERIC(15,2) is 9999999999999.99
         large_balance = Decimal("1000000000.00")  # 1 billion
@@ -344,9 +316,7 @@ class TestBoundaryConditions:
         user_id: uuid.UUID,
     ) -> None:
         """Ledger can contain many accounts."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         for i in range(50):
             account_service.create_account(
@@ -358,14 +328,10 @@ class TestBoundaryConditions:
         # 50 user accounts + 2 system accounts
         assert len(accounts) == 52
 
-    def test_many_ledgers_per_user(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> None:
+    def test_many_ledgers_per_user(self, ledger_service: LedgerService, user_id: uuid.UUID) -> None:
         """User can have many ledgers."""
         for i in range(20):
-            ledger_service.create_ledger(
-                user_id, LedgerCreate(name=f"Ledger {i}")
-            )
+            ledger_service.create_ledger(user_id, LedgerCreate(name=f"Ledger {i}"))
 
         ledgers = ledger_service.get_ledgers(user_id)
         assert len(ledgers) == 20
@@ -432,7 +398,8 @@ class TestAccountWithTransactionsProtection:
     ) -> None:
         """has_transactions returns False for accounts without transactions."""
         ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")  # No initial balance = no transactions
+            user_id,
+            LedgerCreate(name="Test"),  # No initial balance = no transactions
         )
 
         food = account_service.create_account(
@@ -448,9 +415,7 @@ class TestAccountWithTransactionsProtection:
         user_id: uuid.UUID,
     ) -> None:
         """User account without transactions can be deleted."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         food = account_service.create_account(
             ledger.id, AccountCreate(name="Food", type=AccountType.EXPENSE)

@@ -10,30 +10,28 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from src.api.deps import get_session, get_current_user_id
+from src.api.deps import get_current_user_id, get_session
 from src.models.transaction import TransactionType
+from src.schemas.transaction import (
+    PaginatedTransactions,
+    TransactionCreate,
+    TransactionRead,
+    TransactionUpdate,
+)
 from src.services.ledger_service import LedgerService
 from src.services.transaction_service import TransactionService
-from src.schemas.transaction import (
-    TransactionCreate,
-    TransactionUpdate,
-    TransactionRead,
-    PaginatedTransactions,
-)
 
 router = APIRouter(prefix="/ledgers/{ledger_id}/transactions", tags=["transactions"])
 
 
 def get_transaction_service(
-    session: Annotated[Session, Depends(get_session)]
+    session: Annotated[Session, Depends(get_session)],
 ) -> TransactionService:
     """Dependency to get TransactionService instance."""
     return TransactionService(session)
 
 
-def get_ledger_service(
-    session: Annotated[Session, Depends(get_session)]
-) -> LedgerService:
+def get_ledger_service(session: Annotated[Session, Depends(get_session)]) -> LedgerService:
     """Dependency to get LedgerService instance."""
     return LedgerService(session)
 

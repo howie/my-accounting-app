@@ -12,12 +12,12 @@ from sqlmodel import Session
 
 from src.models.account import AccountType
 from src.models.transaction import TransactionType
-from src.services.transaction_service import TransactionService
-from src.services.ledger_service import LedgerService
-from src.services.account_service import AccountService
-from src.schemas.transaction import TransactionCreate
-from src.schemas.ledger import LedgerCreate
 from src.schemas.account import AccountCreate
+from src.schemas.ledger import LedgerCreate
+from src.schemas.transaction import TransactionCreate
+from src.services.account_service import AccountService
+from src.services.ledger_service import LedgerService
+from src.services.transaction_service import TransactionService
 
 
 class TestTransactionSearchIntegration:
@@ -40,18 +40,14 @@ class TestTransactionSearchIntegration:
         return uuid.uuid4()
 
     @pytest.fixture
-    def ledger_id(
-        self, ledger_service: LedgerService, user_id: uuid.UUID
-    ) -> uuid.UUID:
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
         ledger = ledger_service.create_ledger(
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("10000.00"))
         )
         return ledger.id
 
     @pytest.fixture
-    def setup_accounts(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> dict:
+    def setup_accounts(self, account_service: AccountService, ledger_id: uuid.UUID) -> dict:
         """Create a set of accounts for testing."""
         accounts = account_service.get_accounts(ledger_id)
         cash = next(a for a in accounts if a.name == "Cash")
@@ -221,7 +217,9 @@ class TestTransactionSearchIntegration:
         result = service.get_transactions(ledger_id, account_id=food_id)
 
         # All food-related transactions
-        assert len(result.data) >= 4  # Grocery store, Restaurant, Grocery shopping, Fast food, Coffee
+        assert (
+            len(result.data) >= 4
+        )  # Grocery store, Restaurant, Grocery shopping, Fast food, Coffee
         for tx in result.data:
             assert tx.from_account.id == food_id or tx.to_account.id == food_id
 
@@ -248,9 +246,7 @@ class TestTransactionSearchIntegration:
         create_transactions: list,
     ) -> None:
         """Filter returns only expense transactions."""
-        result = service.get_transactions(
-            ledger_id, transaction_type=TransactionType.EXPENSE
-        )
+        result = service.get_transactions(ledger_id, transaction_type=TransactionType.EXPENSE)
 
         for tx in result.data:
             assert tx.transaction_type == TransactionType.EXPENSE
@@ -262,9 +258,7 @@ class TestTransactionSearchIntegration:
         create_transactions: list,
     ) -> None:
         """Filter returns only income transactions."""
-        result = service.get_transactions(
-            ledger_id, transaction_type=TransactionType.INCOME
-        )
+        result = service.get_transactions(ledger_id, transaction_type=TransactionType.INCOME)
 
         # Should find: Monthly salary, Quarterly bonus
         assert len(result.data) == 2
@@ -278,9 +272,7 @@ class TestTransactionSearchIntegration:
         create_transactions: list,
     ) -> None:
         """Filter returns only transfer transactions."""
-        result = service.get_transactions(
-            ledger_id, transaction_type=TransactionType.TRANSFER
-        )
+        result = service.get_transactions(ledger_id, transaction_type=TransactionType.TRANSFER)
 
         # 2 transfers: Initial balance + Transfer to savings
         assert len(result.data) == 2

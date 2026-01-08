@@ -7,7 +7,6 @@ Provides read-only aggregation endpoints for dashboard and sidebar.
 import uuid
 from datetime import date, timedelta
 from decimal import Decimal
-from typing import Optional
 
 from sqlmodel import Session, func, select
 
@@ -26,9 +25,7 @@ class DashboardService:
         """Initialize service with database session."""
         self.session = session
 
-    def get_dashboard_summary(
-        self, ledger_id: uuid.UUID
-    ) -> dict:
+    def get_dashboard_summary(self, ledger_id: uuid.UUID) -> dict:
         """Get aggregated dashboard data.
 
         Returns:
@@ -57,9 +54,7 @@ class DashboardService:
             "trends": trends,
         }
 
-    def get_accounts_by_category(
-        self, ledger_id: uuid.UUID
-    ) -> dict:
+    def get_accounts_by_category(self, ledger_id: uuid.UUID) -> dict:
         """Get all accounts grouped by category type with tree structure.
 
         Returns:
@@ -94,10 +89,12 @@ class DashboardService:
             # Build tree structure
             account_tree = self._build_account_tree(accounts)
 
-            categories.append({
-                "type": account_type.value,
-                "accounts": account_tree,
-            })
+            categories.append(
+                {
+                    "type": account_type.value,
+                    "accounts": account_tree,
+                }
+            )
 
         return {"categories": categories}
 
@@ -190,14 +187,16 @@ class DashboardService:
             else:
                 other_account = self.session.get(Account, txn.from_account_id)
 
-            transaction_list.append({
-                "id": str(txn.id),
-                "date": txn.date.isoformat(),
-                "description": txn.description,
-                "amount": float(txn.amount),
-                "type": txn.transaction_type.value,
-                "other_account_name": other_account.name if other_account else "Unknown",
-            })
+            transaction_list.append(
+                {
+                    "id": str(txn.id),
+                    "date": txn.date.isoformat(),
+                    "description": txn.description,
+                    "amount": float(txn.amount),
+                    "type": txn.transaction_type.value,
+                    "other_account_name": other_account.name if other_account else "Unknown",
+                }
+            )
 
         has_more = (offset + len(transactions)) < total_count
 
@@ -236,15 +235,17 @@ class DashboardService:
         """
         # Get incoming sum (to this account)
         incoming_result = self.session.exec(
-            select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
-            .where(Transaction.to_account_id == account.id)
+            select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
+                Transaction.to_account_id == account.id
+            )
         ).one()
         incoming = Decimal(str(incoming_result)) if incoming_result else Decimal("0")
 
         # Get outgoing sum (from this account)
         outgoing_result = self.session.exec(
-            select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
-            .where(Transaction.from_account_id == account.id)
+            select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
+                Transaction.from_account_id == account.id
+            )
         ).one()
         outgoing = Decimal(str(outgoing_result)) if outgoing_result else Decimal("0")
 
@@ -335,11 +336,13 @@ class DashboardService:
             # Month name abbreviation
             month_name = first_day.strftime("%b")
 
-            trends.append({
-                "month": month_name,
-                "year": year,
-                "income": float(income),
-                "expenses": float(expenses),
-            })
+            trends.append(
+                {
+                    "month": month_name,
+                    "year": year,
+                    "income": float(income),
+                    "expenses": float(expenses),
+                }
+            )
 
         return trends

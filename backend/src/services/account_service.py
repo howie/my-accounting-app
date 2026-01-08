@@ -7,11 +7,11 @@ Supports hierarchical account structure (up to 3 levels deep).
 import uuid
 from decimal import Decimal
 
-from sqlmodel import Session, select, func
+from sqlmodel import Session, func, select
 
 from src.models.account import Account, AccountType
 from src.models.transaction import Transaction
-from src.schemas.account import AccountCreate, AccountUpdate, AccountTreeNode
+from src.schemas.account import AccountCreate, AccountTreeNode, AccountUpdate
 
 MAX_DEPTH = 3  # Maximum hierarchy depth
 
@@ -43,9 +43,7 @@ class AccountService:
         """
         # Check for duplicate name
         existing = self.session.exec(
-            select(Account).where(
-                Account.ledger_id == ledger_id, Account.name == data.name
-            )
+            select(Account).where(Account.ledger_id == ledger_id, Account.name == data.name)
         ).first()
 
         if existing:
@@ -56,9 +54,7 @@ class AccountService:
         parent_id = data.parent_id
 
         if parent_id is not None:
-            parent = self.session.exec(
-                select(Account).where(Account.id == parent_id)
-            ).first()
+            parent = self.session.exec(select(Account).where(Account.id == parent_id)).first()
 
             if not parent:
                 raise ValueError("Parent account not found")
@@ -67,15 +63,11 @@ class AccountService:
                 raise ValueError("Parent account belongs to a different ledger")
 
             if parent.type != data.type:
-                raise ValueError(
-                    f"Child account type must match parent type ({parent.type.value})"
-                )
+                raise ValueError(f"Child account type must match parent type ({parent.type.value})")
 
             depth = parent.depth + 1
             if depth > MAX_DEPTH:
-                raise ValueError(
-                    f"Maximum hierarchy depth ({MAX_DEPTH}) exceeded"
-                )
+                raise ValueError(f"Maximum hierarchy depth ({MAX_DEPTH}) exceeded")
 
         account = Account(
             ledger_id=ledger_id,
@@ -105,13 +97,9 @@ class AccountService:
         result = self.session.exec(statement)
         return list(result.all())
 
-    def get_account(
-        self, account_id: uuid.UUID, ledger_id: uuid.UUID
-    ) -> Account | None:
+    def get_account(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> Account | None:
         """Get a single account with calculated balance."""
-        statement = select(Account).where(
-            Account.id == account_id, Account.ledger_id == ledger_id
-        )
+        statement = select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
         result = self.session.exec(statement)
         account = result.first()
 
@@ -129,9 +117,7 @@ class AccountService:
         Raises ValueError for system accounts or duplicate names.
         """
         account = self.session.exec(
-            select(Account).where(
-                Account.id == account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
         ).first()
 
         if not account:
@@ -169,9 +155,7 @@ class AccountService:
         Returns True if deleted, False if not found.
         """
         account = self.session.exec(
-            select(Account).where(
-                Account.id == account_id, Account.ledger_id == ledger_id
-            )
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
         ).first()
 
         if not account:
@@ -249,9 +233,7 @@ class AccountService:
 
     def has_children(self, account_id: uuid.UUID) -> bool:
         """Check if account has any child accounts."""
-        count = self.session.exec(
-            select(func.count()).where(Account.parent_id == account_id)
-        ).one()
+        count = self.session.exec(select(func.count()).where(Account.parent_id == account_id)).one()
         return count > 0
 
     def can_have_transactions(self, account_id: uuid.UUID) -> bool:

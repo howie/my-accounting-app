@@ -6,7 +6,6 @@ Tests basic account CRUD operations.
 import uuid
 from decimal import Decimal
 
-import pytest
 from fastapi.testclient import TestClient
 
 from tests.e2e.conftest import E2ETestHelper

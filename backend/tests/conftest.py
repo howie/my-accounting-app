@@ -5,19 +5,19 @@ import os
 # Set test environment BEFORE any imports that read settings
 os.environ["ENVIRONMENT"] = "test"
 
-import pytest
 from collections.abc import Generator
 from typing import Any
 
+import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session, SQLModel, create_engine
 from sqlmodel.pool import StaticPool
 
-from src.api.main import app
 from src.api.deps import get_session
+from src.api.main import app
 
 # Import all models to register them with SQLModel metadata
-from src.models import User, Ledger, Account, Transaction  # noqa: F401
+from src.models import Account, Ledger, Transaction, User  # noqa: F401
 
 
 @pytest.fixture(name="engine")

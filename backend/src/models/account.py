@@ -5,7 +5,7 @@ Supports hierarchical account structure (up to 3 levels deep).
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Optional
@@ -49,17 +49,11 @@ class Account(SQLModel, table=True):
     is_system: bool = Field(default=False)
 
     # Hierarchy fields
-    parent_id: Optional[uuid.UUID] = Field(
-        default=None, foreign_key="accounts.id", index=True
-    )
+    parent_id: uuid.UUID | None = Field(default=None, foreign_key="accounts.id", index=True)
     depth: int = Field(default=1, ge=1, le=3)  # 1=root, 2=child, 3=grandchild
 
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
     ledger: "Ledger" = Relationship(back_populates="accounts")

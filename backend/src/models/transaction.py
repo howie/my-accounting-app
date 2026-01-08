@@ -4,8 +4,8 @@ Based on data-model.md
 """
 
 import uuid
+from datetime import UTC, datetime
 from datetime import date as date_type
-from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -47,15 +47,9 @@ class Transaction(SQLModel, table=True):
     amount: Decimal = Field(max_digits=15, decimal_places=2)
     from_account_id: uuid.UUID = Field(foreign_key="accounts.id", index=True)
     to_account_id: uuid.UUID = Field(foreign_key="accounts.id", index=True)
-    transaction_type: TransactionType = Field(
-        sa_column=Column(SAEnum(TransactionType))
-    )
-    created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
-    updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
-    )
+    transaction_type: TransactionType = Field(sa_column=Column(SAEnum(TransactionType)))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
     ledger: "Ledger" = Relationship(back_populates="transactions")

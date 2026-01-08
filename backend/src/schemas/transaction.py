@@ -6,13 +6,12 @@ Based on contracts/transaction_service.md
 import uuid
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
 
 from pydantic import Field, field_validator
 from sqlmodel import SQLModel
 
-from src.models.transaction import TransactionType
 from src.models.account import AccountType
+from src.models.transaction import TransactionType
 
 
 class TransactionCreate(SQLModel):
@@ -74,8 +73,8 @@ class TransactionRead(SQLModel):
     transaction_type: TransactionType
     created_at: datetime
     updated_at: datetime
-    from_account: Optional[AccountSummary] = None
-    to_account: Optional[AccountSummary] = None
+    from_account: AccountSummary | None = None
+    to_account: AccountSummary | None = None
 
 
 class TransactionListItem(SQLModel):
@@ -94,5 +93,5 @@ class PaginatedTransactions(SQLModel):
     """Paginated list of transactions."""
 
     data: list[TransactionListItem]
-    cursor: Optional[str] = None
+    cursor: str | None = None
     has_more: bool = False
