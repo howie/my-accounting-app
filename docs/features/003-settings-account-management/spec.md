@@ -2,9 +2,9 @@
 
 **Feature Branch**: `003-settings-account-management`
 **Created**: 2026-01-07
-**Status**: Implemented
-**Version**: 1.0.0
-**Completed**: 2026-01-07
+**Status**: In Progress (v1.1.0 - Collapsible Account Tree)
+**Version**: 1.1.0
+**Completed**: 2026-01-07 (v1.0.0)
 **Input**: Settings page and account (科目) management functionality as defined in ROADMAP.md
 
 ## Clarifications
@@ -111,6 +111,26 @@ As a user, I want to create accounts up to 3 levels deep (e.g., Deposits > LineB
 
 ---
 
+### User Story 6a - Collapsible Account Tree with Aggregated Balances (Priority: P1)
+
+As a user, I want parent accounts in the sidebar to show aggregated balances of their children, and I want to be able to collapse/expand parent accounts so I can get a quick overview without seeing all details.
+
+**Why this priority**: Essential for usability with hierarchical accounts - users need to see totals at a glance and drill down only when needed.
+
+**Independent Test**: Can be fully tested by checking that a parent account shows the sum of all child balances, and verifying the collapse/expand functionality hides/shows children.
+
+**Acceptance Scenarios**:
+
+1. **Given** I am viewing the sidebar with accounts, **When** a parent account has children, **Then** the parent displays an aggregated balance that is the sum of all its descendants' balances.
+2. **Given** I am viewing the sidebar, **When** I first load the page, **Then** all parent accounts are collapsed by default, showing only root-level accounts with their aggregated totals.
+3. **Given** a parent account is collapsed, **When** I click the expand icon (chevron), **Then** the child accounts are revealed below the parent with appropriate indentation.
+4. **Given** a parent account is expanded, **When** I click the collapse icon, **Then** the child accounts are hidden and only the parent with aggregated total remains visible.
+5. **Given** I have expanded some accounts, **When** I navigate away and return to the sidebar, **Then** my expand/collapse state is preserved (per session).
+6. **Given** a 3-level hierarchy (grandparent > parent > child), **When** I view the grandparent collapsed, **Then** it shows the sum of all descendants (parent + grandchildren balances).
+7. **Given** child balances change (e.g., new transaction), **When** I view the parent account, **Then** the aggregated balance is updated to reflect the new totals.
+
+---
+
 ### User Story 7 - Switch Application Language (Priority: P3)
 
 As a user, I want to switch between languages (zh-TW, en) in the Settings so I can use the application in my preferred language.
@@ -169,6 +189,11 @@ As a user, I want to switch between dark and light display modes so I can choose
 - **FR-012**: System MUST persist account order and reflect it in the sidebar.
 - **FR-013**: System MUST support up to 3 levels of account hierarchy.
 - **FR-014**: System MUST prevent creation of accounts deeper than 3 levels.
+- **FR-021**: Parent accounts in sidebar MUST display aggregated balances (sum of all descendant balances).
+- **FR-022**: Parent accounts in sidebar MUST be collapsible/expandable via chevron icon.
+- **FR-023**: Sidebar MUST default to collapsed state (only root accounts visible) on initial load.
+- **FR-024**: Sidebar expand/collapse state MUST be preserved within the user's session.
+- **FR-025**: Aggregated balances MUST be calculated recursively (grandparent includes parent + grandchildren).
 - **FR-015**: Users MUST be able to switch the application language between zh-TW and en.
 - **FR-016**: System MUST persist the user's language preference.
 - **FR-017**: Users MUST be able to toggle between dark and light display modes.

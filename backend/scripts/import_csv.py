@@ -13,16 +13,16 @@ CSV Format:
 - 發票: Invoice (optional)
 
 Account Code Format:
-- A- prefix: Asset
-- L- prefix: Liability
-- E- prefix: Expense
-- I- prefix: Income
+- A- prefix: Asset (mapped to ASSET type, then stripped)
+- L- prefix: Loans/借款 (mapped to LIABILITY type, then stripped)
+- E- prefix: Expenses/支出 (mapped to EXPENSE type, then stripped)
+- I- prefix: Income/收入 (mapped to INCOME type, then stripped)
 - Equity: Special system account for initial balances
 
-Hierarchy is indicated by '.' separator:
-- A-存款 (depth=1, root)
-- A-存款.國泰世華存款 (depth=2, child)
-- A-存款.國泰世華存款.主帳戶 (depth=3, grandchild)
+Hierarchy is indicated by '.' separator (after the type prefix):
+- A-股票帳戶 → name="股票帳戶", type=ASSET, depth=1, parent=None
+- A-股票帳戶.FirstTrade → name="FirstTrade", type=ASSET, depth=2, parent="A-股票帳戶"
+- A-存款.國泰世華.主帳戶 → name="主帳戶", type=ASSET, depth=3, parent="A-存款.國泰世華"
 """
 
 import csv
@@ -86,10 +86,34 @@ def parse_account_type(code: str) -> AccountType:
         raise ValueError(f"Unknown account type prefix: {code}")
 
 
+def strip_type_prefix(code: str) -> str:
+    """Strip the type prefix (A-, L-, E-, I-) from account code.
+
+    Examples:
+        A-股票帳戶.FirstTrade -> 股票帳戶.FirstTrade
+        E-生活開銷.餐飲 -> 生活開銷.餐飲
+        Equity -> Equity (no prefix)
+    """
+    prefixes = ["A-", "L-", "E-", "I-"]
+    for prefix in prefixes:
+        if code.startswith(prefix):
+            return code[len(prefix):]
+    return code
+
+
 def get_account_name(code: str) -> str:
-    """Get the display name from account code (last segment)."""
-    parts = code.split(".")
-    return parts[-1] if parts else code
+    """Get the display name from account code (last segment after stripping prefix).
+
+    Examples:
+        A-股票帳戶.FirstTrade -> FirstTrade
+        A-股票帳戶 -> 股票帳戶
+        E-生活開銷.餐飲 -> 餐飲
+    """
+    # First strip the type prefix
+    name_part = strip_type_prefix(code)
+    # Then get the last segment
+    parts = name_part.split(".")
+    return parts[-1] if parts else name_part
 
 
 def get_parent_code(code: str) -> Optional[str]:
@@ -98,6 +122,21 @@ def get_parent_code(code: str) -> Optional[str]:
     if len(parts) <= 1:
         return None
     return ".".join(parts[:-1])
+
+
+def get_account_depth(code: str) -> int:
+    """Calculate account depth from code.
+
+    The depth is based on the hierarchy after stripping the type prefix.
+    Examples:
+        A-股票帳戶 -> depth 1 (root level)
+        A-股票帳戶.FirstTrade -> depth 2 (child)
+        A-股票帳戶.FirstTrade.子帳戶 -> depth 3 (grandchild)
+        Equity -> depth 1 (root level, no prefix)
+    """
+    # Strip prefix and count hierarchy levels
+    name_part = strip_type_prefix(code)
+    return len(name_part.split("."))
 
 
 def parse_accounts_from_csv(filepath: str) -> dict[str, AccountInfo]:
@@ -124,7 +163,7 @@ def parse_accounts_from_csv(filepath: str) -> dict[str, AccountInfo]:
                     try:
                         account_type = parse_account_type(code)
                         parent_code = get_parent_code(code)
-                        depth = len(code.split("."))
+                        depth = get_account_depth(code)
 
                         accounts[code] = AccountInfo(
                             code=code,
@@ -145,7 +184,7 @@ def parse_accounts_from_csv(filepath: str) -> dict[str, AccountInfo]:
                         try:
                             parent_type = parse_account_type(parent_code)
                             grandparent_code = get_parent_code(parent_code)
-                            parent_depth = len(parent_code.split("."))
+                            parent_depth = get_account_depth(parent_code)
 
                             accounts[parent_code] = AccountInfo(
                                 code=parent_code,
@@ -317,9 +356,11 @@ def import_data(
                 parent_id = account_map[acc_info.parent_code]
 
             # Create account
+            # Use display name (last segment) for the account name
+            # The hierarchy is maintained through parent_id relationships
             account = Account(
                 ledger_id=ledger.id,
-                name=acc_info.code,  # Use full code as name for uniqueness
+                name=acc_info.name,  # Use display name (last segment)
                 type=acc_info.type,
                 is_system=(acc_info.code == "Equity"),
                 parent_id=parent_id,

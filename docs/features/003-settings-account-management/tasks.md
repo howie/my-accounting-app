@@ -2,7 +2,8 @@
 
 **Input**: Design documents from `/docs/features/003-settings-account-management/`
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
-**Status**: Implemented | **Version**: 1.0.0 | **Completed**: 2026-01-07
+**Status**: In Progress | **Version**: 1.1.0 | **Updated**: 2026-01-07 (v1.1.0 adds User Story 6a)
+**v1.0.0 Completed**: 2026-01-07
 
 **Tests**: Per MyAB Constitution Principle II (Test-First Development), tests are MANDATORY and MUST be written BEFORE implementation. Tests must be reviewed/approved before coding begins.
 
@@ -286,7 +287,42 @@
 
 ---
 
-## Phase 11: Polish & Cross-Cutting Concerns ✅
+## Phase 11: User Story 6a - Collapsible Account Tree with Aggregated Balances (Priority: P1)
+
+**Goal**: Parent accounts in sidebar show aggregated balances of children; users can collapse/expand to drill down
+
+**Independent Test**: Check parent shows sum of child balances; verify collapse hides children and expand reveals them
+
+**Requirements Covered**: FR-021, FR-022, FR-023, FR-024, FR-025
+
+### Tests for User Story 6a (MANDATORY - TDD Required)
+
+- [ ] T128 [P] [US6a] Unit test for aggregateBalance calculation (recursive sum) in frontend/tests/lib/utils/aggregateBalance.test.ts
+- [ ] T129 [P] [US6a] Component test for collapsible sidebar accounts in frontend/tests/components/layout/Sidebar.test.tsx
+- [ ] T130 [P] [US6a] Test for default collapsed state on initial load in frontend/tests/components/layout/Sidebar.test.tsx
+- [ ] T131 [P] [US6a] Test for expand/collapse state preservation in sessionStorage in frontend/tests/lib/hooks/useExpandedAccounts.test.ts
+- [ ] T132 [P] [US6a] Integration test for aggregated balance display with hierarchical accounts in frontend/tests/integration/sidebar-aggregation.test.tsx
+- [ ] T133 **GATE**: Get test approval from stakeholder before proceeding
+- [ ] T134 **GATE**: Verify all US6a tests FAIL (proving they test missing feature)
+
+### Implementation for User Story 6a
+
+- [ ] T135 [P] [US6a] Create aggregateBalance utility function in frontend/src/lib/utils/aggregateBalance.ts
+- [ ] T136 [P] [US6a] Create useExpandedAccounts hook with sessionStorage in frontend/src/lib/hooks/useExpandedAccounts.ts
+- [ ] T137 [US6a] Update Sidebar to calculate and display aggregated balances in frontend/src/components/layout/Sidebar.tsx
+- [ ] T138 [US6a] Add chevron expand/collapse icons to parent accounts in frontend/src/components/layout/Sidebar.tsx
+- [ ] T139 [US6a] Implement default collapsed state (only root accounts visible) in frontend/src/components/layout/Sidebar.tsx
+- [ ] T140 [US6a] Wire up expand/collapse state with useExpandedAccounts hook in frontend/src/components/layout/Sidebar.tsx
+- [ ] T141 [US6a] Style child accounts with appropriate indentation when expanded in frontend/src/components/layout/Sidebar.tsx
+- [ ] T142 [US6a] Ensure aggregated balances update when child balances change (react-query invalidation) in frontend/src/components/layout/Sidebar.tsx
+- [ ] T143 [US6a] Verify all US6a tests PASS
+- [ ] T144 [US6a] Refactor while keeping tests green
+
+**Checkpoint**: Sidebar shows collapsible account tree with aggregated balances
+
+---
+
+## Phase 12: Polish & Cross-Cutting Concerns ✅
 
 **Purpose**: Improvements that affect multiple user stories
 
@@ -323,6 +359,7 @@
 - **US6 (3-Level Hierarchy)**: After US1 - extends create with depth
 - **US3 (Delete Account)**: After US6 - needs hierarchy for reassignment
 - **US4 (Drag-and-Drop)**: After US6 - needs hierarchy for reparenting
+- **US6a (Collapsible Tree)**: After US6 - needs hierarchy for aggregation display
 - **US7 (Language)**: After Foundational - independent
 - **US8 (Theme)**: After Foundational - independent
 
@@ -334,8 +371,10 @@
 
 **User Stories in Parallel**:
 - After US5: US1 and US2 can run in parallel
-- After US6: US3 and US4 can run in parallel
+- After US6: US3, US4, and US6a can run in parallel
 - US7 and US8 can run in parallel anytime after Foundational
+
+**Within US6a**: T128-T132 (tests) can run in parallel; T135-T136 (utilities/hooks) can run in parallel
 
 ---
 
