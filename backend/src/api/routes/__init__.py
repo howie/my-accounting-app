@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from src.api.routes import ledgers, accounts, transactions, users, dashboard
+from src.api.routes import accounts, dashboard, ledgers, transactions, users
 
 api_router = APIRouter()
 

@@ -7,7 +7,7 @@ Provides read-only endpoints for dashboard and sidebar data.
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import SessionDep
 from src.services.dashboard_service import DashboardService

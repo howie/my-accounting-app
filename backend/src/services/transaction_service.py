@@ -4,20 +4,19 @@ Based on contracts/transaction_service.md
 """
 
 import uuid
-from datetime import date, datetime, timezone
-from decimal import Decimal
+from datetime import UTC, date, datetime
 
-from sqlmodel import Session, select, or_
+from sqlmodel import Session, or_, select
 
 from src.models.account import Account, AccountType
 from src.models.transaction import Transaction, TransactionType
 from src.schemas.transaction import (
-    TransactionCreate,
-    TransactionUpdate,
-    TransactionRead,
-    TransactionListItem,
-    PaginatedTransactions,
     AccountSummary,
+    PaginatedTransactions,
+    TransactionCreate,
+    TransactionListItem,
+    TransactionRead,
+    TransactionUpdate,
 )
 
 
@@ -279,7 +278,7 @@ class TransactionService:
         transaction.from_account_id = data.from_account_id
         transaction.to_account_id = data.to_account_id
         transaction.transaction_type = data.transaction_type
-        transaction.updated_at = datetime.now(timezone.utc)
+        transaction.updated_at = datetime.now(UTC)
 
         self.session.add(transaction)
         self.session.commit()

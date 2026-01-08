@@ -10,17 +10,16 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session
 
-from src.api.deps import get_session, get_current_user_id
+from src.api.deps import get_current_user_id, get_session
 from src.models.account import AccountType
-from src.services.ledger_service import LedgerService
-from src.services.account_service import AccountService
 from src.schemas.account import (
     AccountCreate,
-    AccountRead,
     AccountListItem,
+    AccountRead,
     AccountUpdate,
-    AccountTreeNode,
 )
+from src.services.account_service import AccountService
+from src.services.ledger_service import LedgerService
 
 router = APIRouter(prefix="/ledgers/{ledger_id}/accounts", tags=["accounts"])
 

@@ -1,7 +1,6 @@
 """E2E test fixtures and helpers."""
 
 import uuid
-from decimal import Decimal
 from typing import Any
 
 import pytest

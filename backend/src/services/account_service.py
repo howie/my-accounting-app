@@ -7,11 +7,11 @@ Supports hierarchical account structure (up to 3 levels deep).
 import uuid
 from decimal import Decimal
 
-from sqlmodel import Session, select, func
+from sqlmodel import Session, func, select
 
 from src.models.account import Account, AccountType
 from src.models.transaction import Transaction
-from src.schemas.account import AccountCreate, AccountUpdate, AccountTreeNode
+from src.schemas.account import AccountCreate, AccountTreeNode, AccountUpdate
 
 MAX_DEPTH = 3  # Maximum hierarchy depth
 

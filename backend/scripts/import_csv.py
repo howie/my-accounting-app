@@ -29,18 +29,17 @@ import csv
 import decimal
 import sys
 import uuid
-from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Optional
 
 # Add project root to path for imports
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 from sqlmodel import Session, select
+
 from src.db.session import engine
 from src.models.account import Account, AccountType
 from src.models.ledger import Ledger
@@ -54,7 +53,7 @@ class AccountInfo:
     code: str
     name: str
     type: AccountType
-    parent_code: Optional[str]
+    parent_code: str | None
     depth: int
 
 
@@ -92,7 +91,7 @@ def get_account_name(code: str) -> str:
     return parts[-1] if parts else code
 
 
-def get_parent_code(code: str) -> Optional[str]:
+def get_parent_code(code: str) -> str | None:
     """Get parent account code from hierarchical code."""
     parts = code.split(".")
     if len(parts) <= 1:
@@ -108,7 +107,7 @@ def parse_accounts_from_csv(filepath: str) -> dict[str, AccountInfo]:
     """
     accounts: dict[str, AccountInfo] = {}
 
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Get both from and to account codes
@@ -171,7 +170,7 @@ def parse_transactions_from_csv(filepath: str) -> list[TransactionInfo]:
     """
     transactions: list[TransactionInfo] = []
 
-    with open(filepath, 'r', encoding='utf-8') as f:
+    with open(filepath, encoding='utf-8') as f:
         reader = csv.DictReader(f)
         for row in reader:
             date_str = row['日期'].strip()

@@ -4,8 +4,8 @@ Based on data-model.md
 """
 
 import uuid
+from datetime import UTC, datetime
 from datetime import date as date_type
-from datetime import datetime, timezone
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -51,10 +51,10 @@ class Transaction(SQLModel, table=True):
         sa_column=Column(SAEnum(TransactionType))
     )
     created_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
     updated_at: datetime = Field(
-        default_factory=lambda: datetime.now(timezone.utc)
+        default_factory=lambda: datetime.now(UTC)
     )
 
     # Relationships
