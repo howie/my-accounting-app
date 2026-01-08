@@ -95,6 +95,7 @@ TDD is mandatory for all feature development. The workflow MUST be:
 5. **Refactor** - Improve code while maintaining green tests
 
 **Special Requirements for Financial Features**:
+
 - Contract tests for all API/service boundaries
 - Integration tests for multi-account transactions
 - Edge case tests for rounding, currency conversion, date boundaries

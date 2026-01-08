@@ -11,9 +11,10 @@ from sqlmodel import Session, func, select
 
 from src.models.account import Account, AccountType
 from src.models.transaction import Transaction
-from src.schemas.account import AccountCreate, AccountTreeNode, AccountUpdate
+from src.schemas.account import AccountCreate, AccountTreeNode, AccountUpdate, CanDeleteResponse
 
 MAX_DEPTH = 3  # Maximum hierarchy depth
+SORT_ORDER_GAP = 1000  # Gap between sort_order values for easier insertions
 
 
 class AccountService:
@@ -273,8 +274,7 @@ class AccountService:
 
         accounts = list(self.session.exec(statement).all())
 
-        # Build account lookup and children map
-        account_map: dict[uuid.UUID, Account] = {a.id: a for a in accounts}
+        # Build children map
         children_map: dict[uuid.UUID | None, list[Account]] = {}
 
         for account in accounts:
@@ -296,9 +296,181 @@ class AccountService:
                 is_system=account.is_system,
                 parent_id=account.parent_id,
                 depth=account.depth,
+                sort_order=account.sort_order,
                 children=child_nodes,
             )
 
         # Build tree starting from root accounts (parent_id is None)
         root_accounts = children_map.get(None, [])
         return [build_tree_node(root) for root in root_accounts]
+
+    def can_delete(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> CanDeleteResponse:
+        """Check if account can be deleted and return blocking info.
+
+        Returns details about what prevents deletion if any.
+        """
+        account = self.session.exec(
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
+        ).first()
+
+        if not account:
+            raise ValueError("Account not found")
+
+        has_children = self.has_children(account_id)
+        has_transactions = self.has_transactions(account_id)
+
+        child_count = 0
+        transaction_count = 0
+
+        if has_children:
+            child_count = self.session.exec(
+                select(func.count()).where(Account.parent_id == account_id)
+            ).one()
+
+        if has_transactions:
+            transaction_count = self.session.exec(
+                select(func.count()).where(
+                    (Transaction.from_account_id == account_id)
+                    | (Transaction.to_account_id == account_id)
+                )
+            ).one()
+
+        can_delete = not has_children and not has_transactions and not account.is_system
+
+        return CanDeleteResponse(
+            can_delete=can_delete,
+            has_children=has_children,
+            has_transactions=has_transactions,
+            transaction_count=transaction_count,
+            child_count=child_count,
+        )
+
+    def get_replacement_candidates(
+        self, account_id: uuid.UUID, ledger_id: uuid.UUID
+    ) -> list[Account]:
+        """Get accounts that can receive reassigned transactions.
+
+        Returns accounts of the same type, excluding the account being deleted.
+        """
+        account = self.session.exec(
+            select(Account).where(Account.id == account_id, Account.ledger_id == ledger_id)
+        ).first()
+
+        if not account:
+            raise ValueError("Account not found")
+
+        # Get all accounts of the same type that are not the current account
+        candidates = self.session.exec(
+            select(Account)
+            .where(
+                Account.ledger_id == ledger_id,
+                Account.type == account.type,
+                Account.id != account_id,
+            )
+            .order_by(Account.sort_order, Account.name)
+        ).all()
+
+        return list(candidates)
+
+    def reassign_transactions(
+        self, from_account_id: uuid.UUID, to_account_id: uuid.UUID, ledger_id: uuid.UUID
+    ) -> int:
+        """Reassign all transactions from one account to another.
+
+        Returns the number of transactions moved.
+        Raises ValueError if accounts are invalid or incompatible.
+        """
+        from_account = self.session.exec(
+            select(Account).where(Account.id == from_account_id, Account.ledger_id == ledger_id)
+        ).first()
+
+        to_account = self.session.exec(
+            select(Account).where(Account.id == to_account_id, Account.ledger_id == ledger_id)
+        ).first()
+
+        if not from_account:
+            raise ValueError("Source account not found")
+
+        if not to_account:
+            raise ValueError("Target account not found")
+
+        if from_account.type != to_account.type:
+            raise ValueError("Cannot reassign to account of different type")
+
+        if from_account_id == to_account_id:
+            raise ValueError("Cannot reassign to the same account")
+
+        # Count transactions before update
+        count = self.session.exec(
+            select(func.count()).where(
+                (Transaction.from_account_id == from_account_id)
+                | (Transaction.to_account_id == from_account_id)
+            )
+        ).one()
+
+        # Update from_account_id references
+        self.session.exec(select(Transaction).where(Transaction.from_account_id == from_account_id))
+        for txn in self.session.exec(
+            select(Transaction).where(Transaction.from_account_id == from_account_id)
+        ).all():
+            txn.from_account_id = to_account_id
+            self.session.add(txn)
+
+        # Update to_account_id references
+        for txn in self.session.exec(
+            select(Transaction).where(Transaction.to_account_id == from_account_id)
+        ).all():
+            txn.to_account_id = to_account_id
+            self.session.add(txn)
+
+        self.session.commit()
+        return count
+
+    def reorder_accounts(
+        self, ledger_id: uuid.UUID, parent_id: uuid.UUID | None, account_ids: list[uuid.UUID]
+    ) -> int:
+        """Reorder accounts within a parent.
+
+        Updates sort_order for accounts in the given order.
+        Returns the number of accounts updated.
+        """
+        # Verify all accounts exist and belong to the same parent
+        accounts = self.session.exec(
+            select(Account).where(
+                Account.ledger_id == ledger_id,
+                Account.parent_id == parent_id,
+                Account.id.in_(account_ids),
+            )
+        ).all()
+
+        account_map = {a.id: a for a in accounts}
+
+        if len(account_map) != len(account_ids):
+            raise ValueError("Some accounts not found or don't belong to the specified parent")
+
+        # Update sort_order based on position in the list
+        updated = 0
+        for idx, account_id in enumerate(account_ids):
+            account = account_map.get(account_id)
+            if account:
+                new_order = (idx + 1) * SORT_ORDER_GAP
+                if account.sort_order != new_order:
+                    account.sort_order = new_order
+                    self.session.add(account)
+                    updated += 1
+
+        self.session.commit()
+        return updated
+
+    def get_transaction_count(self, account_id: uuid.UUID) -> int:
+        """Get the number of transactions for an account."""
+        return self.session.exec(
+            select(func.count()).where(
+                (Transaction.from_account_id == account_id)
+                | (Transaction.to_account_id == account_id)
+            )
+        ).one()
+
+    def get_child_count(self, account_id: uuid.UUID) -> int:
+        """Get the number of child accounts."""
+        return self.session.exec(select(func.count()).where(Account.parent_id == account_id)).one()

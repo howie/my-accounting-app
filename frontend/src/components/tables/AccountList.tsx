@@ -50,7 +50,7 @@ function AccountRow({
 
   return (
     <>
-      <div className="flex items-center justify-between px-4 py-3 border-b last:border-b-0">
+      <div className="flex items-center justify-between border-b px-4 py-3 last:border-b-0">
         <div className="flex items-center gap-3" style={{ paddingLeft: `${indentPx}px` }}>
           {/* Expand/collapse button */}
           {hasChildren ? (
@@ -89,12 +89,10 @@ function AccountRow({
               parseFloat(account.balance) < 0 ? 'text-destructive' : ''
             }`}
           >
-            {parseFloat(account.balance) < 0 && (
-              <span title="Negative balance">⚠️</span>
-            )}
-            ${formatAmount(account.balance)}
+            {parseFloat(account.balance) < 0 && <span title="Negative balance">⚠️</span>}$
+            {formatAmount(account.balance)}
             {hasChildren && (
-              <span className="text-xs text-muted-foreground ml-1">{t('accounts.total')}</span>
+              <span className="ml-1 text-xs text-muted-foreground">{t('accounts.total')}</span>
             )}
           </span>
           {!account.is_system && !hasChildren && (
@@ -109,48 +107,40 @@ function AccountRow({
                   >
                     {t('common.confirm')}
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setDeletingId(null)}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => setDeletingId(null)}>
                     {t('common.cancel')}
                   </Button>
                 </div>
               ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeletingId(account.id)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setDeletingId(account.id)}>
                   {t('common.delete')}
                 </Button>
               )}
             </>
           )}
           {hasChildren && (
-            <span className="text-xs text-muted-foreground">
-              {t('accounts.hasChildren')}
-            </span>
+            <span className="text-xs text-muted-foreground">{t('accounts.hasChildren')}</span>
           )}
         </div>
       </div>
 
       {/* Render children if expanded */}
-      {hasChildren && isExpanded && account.children.map((child) => (
-        <AccountRow
-          key={child.id}
-          account={child}
-          ledgerId={ledgerId}
-          depth={depth + 1}
-          expandedIds={expandedIds}
-          toggleExpand={toggleExpand}
-          deletingId={deletingId}
-          setDeletingId={setDeletingId}
-          onDelete={onDelete}
-          isDeleting={isDeleting}
-        />
-      ))}
+      {hasChildren &&
+        isExpanded &&
+        account.children.map((child) => (
+          <AccountRow
+            key={child.id}
+            account={child}
+            ledgerId={ledgerId}
+            depth={depth + 1}
+            expandedIds={expandedIds}
+            toggleExpand={toggleExpand}
+            deletingId={deletingId}
+            setDeletingId={setDeletingId}
+            onDelete={onDelete}
+            isDeleting={isDeleting}
+          />
+        ))}
     </>
   )
 }

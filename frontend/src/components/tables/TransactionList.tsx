@@ -4,7 +4,11 @@ import { useState } from 'react'
 import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
-import { useTransactions, useDeleteTransaction, type TransactionFilters } from '@/lib/hooks/useTransactions'
+import {
+  useTransactions,
+  useDeleteTransaction,
+  type TransactionFilters,
+} from '@/lib/hooks/useTransactions'
 import { formatAmount } from '@/lib/utils'
 import type { TransactionType } from '@/types'
 
@@ -36,7 +40,11 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
   }
 
   if (isLoading) {
-    return <div className="text-center text-muted-foreground">{t('transactions.loadingTransactions')}</div>
+    return (
+      <div className="text-center text-muted-foreground">
+        {t('transactions.loadingTransactions')}
+      </div>
+    )
   }
 
   if (error) {
@@ -61,7 +69,9 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
             <thead className="border-b bg-muted/50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-medium">{t('table.date')}</th>
-                <th className="px-4 py-3 text-left text-sm font-medium">{t('table.description')}</th>
+                <th className="px-4 py-3 text-left text-sm font-medium">
+                  {t('table.description')}
+                </th>
                 <th className="px-4 py-3 text-left text-sm font-medium">{t('table.type')}</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">{t('table.from')}</th>
                 <th className="px-4 py-3 text-left text-sm font-medium">{t('table.to')}</th>
@@ -99,20 +109,12 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
                         >
                           {t('common.confirm')}
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setDeletingId(null)}
-                        >
+                        <Button variant="outline" size="sm" onClick={() => setDeletingId(null)}>
                           {t('common.cancel')}
                         </Button>
                       </div>
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setDeletingId(tx.id)}
-                      >
+                      <Button variant="ghost" size="sm" onClick={() => setDeletingId(tx.id)}>
                         {t('common.delete')}
                       </Button>
                     )}
@@ -126,11 +128,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
 
       {hasNextPage && (
         <div className="text-center">
-          <Button
-            variant="outline"
-            onClick={() => fetchNextPage()}
-            disabled={isFetchingNextPage}
-          >
+          <Button variant="outline" onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
             {isFetchingNextPage ? t('common.loading') : t('common.loadMore')}
           </Button>
         </div>

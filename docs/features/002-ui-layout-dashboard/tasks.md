@@ -54,7 +54,7 @@
 - [x] T011 Implement get_accounts_by_category() in backend/src/services/dashboard_service.py
 - [x] T012 Implement get_account_transactions() with pagination in backend/src/services/dashboard_service.py
 - [x] T013 Create API routes in backend/src/api/routes/dashboard.py (GET /ledgers/{id}/dashboard, /accounts/by-category, /accounts/{id}/transactions)
-- [x] T014 Register dashboard routes in backend/src/api/routes/__init__.py
+- [x] T014 Register dashboard routes in backend/src/api/routes/**init**.py
 - [x] T015 Ensure all foundational tests PASS
 - [x] T016 Refactor while keeping tests green
 
@@ -289,6 +289,7 @@ Task: "Create IncomeExpenseChart component in frontend/src/components/dashboard/
 **MVP = Setup + Foundational + User Story 1**
 
 This delivers:
+
 - Dashboard homepage with total assets card
 - Income/expense donut chart for current month
 - Backend APIs ready for future stories

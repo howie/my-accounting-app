@@ -18,6 +18,7 @@ This feature redesigns the application's user interface to provide a more intuit
 ### Design Reference
 
 The dashboard follows the Mirauve Financial Management Dashboard style (Dribbble shot 23051720):
+
 - **Dark sidebar** with branding and navigation menu
 - **Card-based main content** with rounded corners and subtle shadows
 - **Balance overview card** displaying total assets prominently with large typography
@@ -25,7 +26,7 @@ The dashboard follows the Mirauve Financial Management Dashboard style (Dribbble
 - **Bar charts** for monthly trends (income and expenses over 6 months)
 - **Clean color scheme**: Dark sidebar, light content area, green for income/positive, purple/pink for expenses
 
-## User Scenarios & Testing *(mandatory)*
+## User Scenarios & Testing _(mandatory)_
 
 ### User Story 1 - View Financial Dashboard (Priority: P1)
 
@@ -102,7 +103,7 @@ As a user, I want to see monthly expense and income trends on the dashboard so I
 - What happens when a user has hundreds of accounts in a single category? Enable scrolling within the category expansion in the sidebar
 - How does the layout behave on different screen sizes? Responsive design with collapsible sidebar on mobile
 
-## Requirements *(mandatory)*
+## Requirements _(mandatory)_
 
 ### Functional Requirements
 
@@ -123,7 +124,7 @@ As a user, I want to see monthly expense and income trends on the dashboard so I
 
 ### Data Integrity Requirements
 
-*N/A - This feature focuses on UI layout and data display. It does not create, modify, or delete financial transactions. All displayed values are read-only views of existing data.*
+_N/A - This feature focuses on UI layout and data display. It does not create, modify, or delete financial transactions. All displayed values are read-only views of existing data._
 
 ### Key Entities
 
@@ -132,7 +133,7 @@ As a user, I want to see monthly expense and income trends on the dashboard so I
 - **Transaction**: Financial record associated with an account. Displayed in main content area with date, description, amount.
 - **Dashboard Summary**: Aggregated financial metrics including total assets, monthly expenses, monthly income, and trend data.
 
-## Success Criteria *(mandatory)*
+## Success Criteria _(mandatory)_
 
 ### Measurable Outcomes
 

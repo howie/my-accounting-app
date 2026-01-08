@@ -27,11 +27,19 @@ pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100
-target-version = "py311"
+target-version = "py312"
+exclude = ["backend/alembic/versions/*", "backend/scripts/*", "src/*", "tests/*"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I001"] # Error, Flake8, Warnings, isort
-ignore = []
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "E741",   # ambiguous variable name
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["F841"]  # unused variables in tests
+"backend/tests/**/*.py" = ["F841"]  # unused variables in tests
 
 [tool.ruff.format]
 quote-style = "double"

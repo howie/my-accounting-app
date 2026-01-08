@@ -3,12 +3,14 @@
 A local-first, double-entry personal finance accounting system.
 
 ## Features
+
 - Multiple Users & Ledgers
 - Double-entry bookkeeping (Asset, Liability, Income, Expense)
 - Transaction recording with strict validation
 - Search and Filter history
 
 ## Setup
+
 1. Install Python 3.11+
 2. Install dependencies:
    ```bash
@@ -24,6 +26,7 @@ A local-first, double-entry personal finance accounting system.
    ```
 
 ## Project Structure
+
 - `src/myab`: Source code
 - `tests/`: Tests
 - `docs/`: Documentation

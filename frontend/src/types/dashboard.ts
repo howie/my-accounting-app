@@ -128,10 +128,7 @@ export interface AccountTransactionsResponse {
 /**
  * Category display configuration.
  */
-export const CATEGORY_CONFIG: Record<
-  AccountType,
-  { label: string; icon: string }
-> = {
+export const CATEGORY_CONFIG: Record<AccountType, { label: string; icon: string }> = {
   ASSET: { label: 'Assets', icon: 'Wallet' },
   LIABILITY: { label: 'Loans', icon: 'CreditCard' },
   INCOME: { label: 'Income', icon: 'TrendingUp' },
@@ -141,9 +138,7 @@ export const CATEGORY_CONFIG: Record<
 /**
  * Transform API response to frontend DashboardSummary.
  */
-export function transformDashboardResponse(
-  response: DashboardResponse
-): DashboardSummary {
+export function transformDashboardResponse(response: DashboardResponse): DashboardSummary {
   return {
     totalAssets: response.total_assets,
     currentMonth: {

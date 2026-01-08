@@ -16,6 +16,7 @@
 ## Path Conventions
 
 This is a **web application** with frontend/backend separation:
+
 - **Backend**: `backend/src/`, `backend/tests/`
 - **Frontend**: `frontend/src/`, `frontend/tests/`
 
@@ -47,14 +48,14 @@ This is a **web application** with frontend/backend separation:
 
 - [x] T010 Create backend/src/core/config.py with environment configuration (DATABASE_URL, etc.)
 - [x] T011 Create backend/src/core/exceptions.py with custom exception classes
-- [x] T012 Create backend/src/db/__init__.py and backend/src/db/session.py with database session management
+- [x] T012 Create backend/src/db/**init**.py and backend/src/db/session.py with database session management
 - [x] T013 Setup Alembic for migrations in backend/ (alembic.ini, alembic/env.py)
-- [x] T014 Create backend/src/api/__init__.py and backend/src/api/main.py with FastAPI app entry
+- [x] T014 Create backend/src/api/**init**.py and backend/src/api/main.py with FastAPI app entry
 - [x] T015 Create backend/src/api/deps.py with dependency injection (get_db, get_current_user)
-- [x] T016 [P] Create backend/src/models/__init__.py
+- [x] T016 [P] Create backend/src/models/**init**.py
 - [x] T017 [P] Create User model in backend/src/models/user.py per data-model.md
 - [x] T018 Create initial Alembic migration for users table
-- [x] T019 Create backend/src/api/routes/__init__.py with router registration
+- [x] T019 Create backend/src/api/routes/**init**.py with router registration
 
 ### Frontend Foundation
 
@@ -367,16 +368,16 @@ With multiple developers:
 
 ## Task Summary
 
-| Phase | Task Count | Stories |
-|-------|------------|---------|
-| Phase 1: Setup | 9 | - |
-| Phase 2: Foundational | 18 | - |
-| Phase 3: US1 | 27 | US1 |
-| Phase 4: US2 | 26 | US2 |
-| Phase 5: US3 | 16 | US3 |
-| Phase 6: US4 | 16 | US4 |
-| Phase 7: Polish | 10 | - |
-| **Total** | **122** | 4 stories |
+| Phase                 | Task Count | Stories   |
+| --------------------- | ---------- | --------- |
+| Phase 1: Setup        | 9          | -         |
+| Phase 2: Foundational | 18         | -         |
+| Phase 3: US1          | 27         | US1       |
+| Phase 4: US2          | 26         | US2       |
+| Phase 5: US3          | 16         | US3       |
+| Phase 6: US4          | 16         | US4       |
+| Phase 7: Polish       | 10         | -         |
+| **Total**             | **122**    | 4 stories |
 
 ### Tasks per User Story
 
@@ -388,6 +389,7 @@ With multiple developers:
 ### MVP Scope
 
 **Suggested MVP**: Complete through User Story 1 (Phase 3)
+
 - Total MVP tasks: 54 (Setup + Foundational + US1)
 - Delivers: Ledger creation, account management, initial balance setup
 

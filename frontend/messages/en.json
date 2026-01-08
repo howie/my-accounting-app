@@ -147,5 +147,40 @@
     "selectLedger": "Select Ledger",
     "noLedgers": "No ledgers yet",
     "manageLedgers": "Manage Ledgers"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "accounts": "Accounts",
+    "settings": "Settings",
+    "switchLedger": "Switch Ledger",
+    "currentLedger": "Current Ledger",
+    "selectLedgerToView": "Select a ledger to view accounts",
+    "failedToLoad": "Failed to load accounts"
+  },
+  "settings": {
+    "title": "Settings",
+    "preferences": "Preferences",
+    "accounts": "Account Management",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System"
+  },
+  "accountManagement": {
+    "title": "Account Management",
+    "addAccount": "Add Account",
+    "editAccount": "Edit Account",
+    "deleteAccount": "Delete Account",
+    "confirmDelete": "Are you sure you want to delete this account?",
+    "hasTransactions": "This account has {count} transactions",
+    "hasChildren": "This account has {count} child accounts",
+    "selectReplacement": "Select replacement account",
+    "reassignAndDelete": "Reassign & Delete",
+    "cannotDeleteChildren": "Remove child accounts first",
+    "cannotDeleteSystem": "System accounts cannot be deleted",
+    "maxDepthReached": "Maximum nesting level reached",
+    "dragToReorder": "Drag to reorder accounts",
+    "noAccounts": "No accounts in this category"
   }
 }

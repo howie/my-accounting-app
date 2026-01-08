@@ -18,17 +18,20 @@
 ### Tech Stack
 
 **Frontend (UI/UX):**
+
 - **Framework:** Next.js 15 (App Router) - SSR 渲染、路由
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS + ShadcnUI (元件庫) + Tremor (圖表庫)
 - **Desktop Wrapper:** Tauri (將 Web App 包裝為原生 Mac App)
 
 **Backend (Core Logic):**
+
 - **Framework:** Python FastAPI
 - **Data Processing:** Pandas, NumPy
 - **ORM:** SQLModel
 
 **Database (Storage):**
+
 - **Core:** PostgreSQL (Supabase 或 Local Docker)
 
 ## Clarifications
@@ -159,50 +162,50 @@
 
 ### `accounts`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Primary key |
-| `ledger_id` | UUID | Foreign key to ledger |
-| `name` | String | Account name (e.g., Cash, Bank, Food) |
-| `type` | Enum | ASSET, LIABILITY, INCOME, EXPENSE |
-| `balance` | Decimal(15,2) | Current balance (cached, calculated) |
-| `is_system` | Boolean | True for predefined accounts (Cash, Equity) |
-| `created_at` | Timestamp | Creation time |
-| `updated_at` | Timestamp | Last update time |
+| Field        | Type          | Description                                 |
+| ------------ | ------------- | ------------------------------------------- |
+| `id`         | UUID          | Primary key                                 |
+| `ledger_id`  | UUID          | Foreign key to ledger                       |
+| `name`       | String        | Account name (e.g., Cash, Bank, Food)       |
+| `type`       | Enum          | ASSET, LIABILITY, INCOME, EXPENSE           |
+| `balance`    | Decimal(15,2) | Current balance (cached, calculated)        |
+| `is_system`  | Boolean       | True for predefined accounts (Cash, Equity) |
+| `created_at` | Timestamp     | Creation time                               |
+| `updated_at` | Timestamp     | Last update time                            |
 
 ### `transactions`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Primary key |
-| `ledger_id` | UUID | Foreign key to ledger |
-| `date` | Date | Transaction date |
-| `description` | String | Transaction description |
-| `amount` | Decimal(15,2) | Amount (positive value) |
-| `from_account_id` | UUID | Source account (Credit side) |
-| `to_account_id` | UUID | Destination account (Debit side) |
-| `transaction_type` | Enum | EXPENSE, INCOME, TRANSFER |
-| `created_at` | Timestamp | Creation time |
-| `updated_at` | Timestamp | Last update time |
+| Field              | Type          | Description                      |
+| ------------------ | ------------- | -------------------------------- |
+| `id`               | UUID          | Primary key                      |
+| `ledger_id`        | UUID          | Foreign key to ledger            |
+| `date`             | Date          | Transaction date                 |
+| `description`      | String        | Transaction description          |
+| `amount`           | Decimal(15,2) | Amount (positive value)          |
+| `from_account_id`  | UUID          | Source account (Credit side)     |
+| `to_account_id`    | UUID          | Destination account (Debit side) |
+| `transaction_type` | Enum          | EXPENSE, INCOME, TRANSFER        |
+| `created_at`       | Timestamp     | Creation time                    |
+| `updated_at`       | Timestamp     | Last update time                 |
 
 ### `ledgers`
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Primary key |
-| `user_id` | UUID | Foreign key to user |
-| `name` | String | Ledger name |
+| Field             | Type          | Description          |
+| ----------------- | ------------- | -------------------- |
+| `id`              | UUID          | Primary key          |
+| `user_id`         | UUID          | Foreign key to user  |
+| `name`            | String        | Ledger name          |
 | `initial_balance` | Decimal(15,2) | Initial cash balance |
-| `created_at` | Timestamp | Creation time |
+| `created_at`      | Timestamp     | Creation time        |
 
 ### `balance_snapshots` (for future growth analysis)
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `id` | UUID | Primary key |
-| `date` | Date | Snapshot date (typically month-end) |
-| `account_id` | UUID | Foreign key to account |
-| `amount` | Decimal(15,2) | Balance at snapshot time |
+| Field        | Type          | Description                         |
+| ------------ | ------------- | ----------------------------------- |
+| `id`         | UUID          | Primary key                         |
+| `date`       | Date          | Snapshot date (typically month-end) |
+| `account_id` | UUID          | Foreign key to account              |
+| `amount`     | Decimal(15,2) | Balance at snapshot time            |
 
 ## Success Criteria
 

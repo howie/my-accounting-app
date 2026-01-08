@@ -15,11 +15,12 @@ This service manages transactions within a specific ledger. All transactions fol
 Create a new transaction.
 
 **Request**:
+
 ```json
 {
   "date": "2026-01-02",
   "description": "Lunch at restaurant",
-  "amount": 25.50,
+  "amount": 25.5,
   "from_account_id": "660e8400-e29b-41d4-a716-446655440001",
   "to_account_id": "660e8400-e29b-41d4-a716-446655440003",
   "transaction_type": "EXPENSE"
@@ -27,6 +28,7 @@ Create a new transaction.
 ```
 
 **Response** (201 Created):
+
 ```json
 {
   "id": "770e8400-e29b-41d4-a716-446655440001",
@@ -43,11 +45,13 @@ Create a new transaction.
 ```
 
 **Errors**:
+
 - `400 Bad Request`: Invalid input (see validation rules below)
 - `404 Not Found`: Ledger or referenced account does not exist
 - `422 Unprocessable Entity`: Transaction type doesn't match account types
 
 **Business Rules**:
+
 - Amount must be > 0 (FR-002)
 - from_account_id != to_account_id
 - Transaction type must match account types:
@@ -63,6 +67,7 @@ Create a new transaction.
 List transactions with filtering and pagination.
 
 **Query Parameters**:
+
 - `cursor` (optional): Pagination cursor from previous response
 - `limit` (optional): Number of results (default: 50, max: 100)
 - `from_date` (optional): Filter by start date (ISO 8601)
@@ -72,6 +77,7 @@ List transactions with filtering and pagination.
 - `type` (optional): Filter by transaction type
 
 **Response** (200 OK):
+
 ```json
 {
   "data": [
@@ -105,6 +111,7 @@ List transactions with filtering and pagination.
 Retrieve a single transaction.
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "770e8400-e29b-41d4-a716-446655440001",
@@ -121,6 +128,7 @@ Retrieve a single transaction.
 ```
 
 **Errors**:
+
 - `404 Not Found`: Transaction does not exist
 
 ---
@@ -130,11 +138,12 @@ Retrieve a single transaction.
 Update a transaction (full replacement).
 
 **Request**:
+
 ```json
 {
   "date": "2026-01-02",
   "description": "Dinner at restaurant",
-  "amount": 45.00,
+  "amount": 45.0,
   "from_account_id": "660e8400-e29b-41d4-a716-446655440001",
   "to_account_id": "660e8400-e29b-41d4-a716-446655440003",
   "transaction_type": "EXPENSE"
@@ -142,6 +151,7 @@ Update a transaction (full replacement).
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "id": "770e8400-e29b-41d4-a716-446655440001",
@@ -156,6 +166,7 @@ Update a transaction (full replacement).
 ```
 
 **Business Rules**:
+
 - Same validation rules as creation
 - Account balances are recalculated after update (FR-009)
 - `updated_at` timestamp is set automatically
@@ -169,9 +180,11 @@ Delete a transaction.
 **Response** (204 No Content)
 
 **Errors**:
+
 - `404 Not Found`: Transaction does not exist
 
 **Business Rules**:
+
 - Frontend must show confirmation dialog (DI-004)
 - Account balances are recalculated after deletion (FR-009)
 
@@ -182,6 +195,7 @@ Delete a transaction.
 Bulk delete transactions.
 
 **Request**:
+
 ```json
 {
   "ids": [
@@ -192,6 +206,7 @@ Bulk delete transactions.
 ```
 
 **Response** (200 OK):
+
 ```json
 {
   "deleted_count": 2
@@ -199,6 +214,7 @@ Bulk delete transactions.
 ```
 
 **Business Rules**:
+
 - Frontend must show confirmation dialog (DI-004)
 - All affected account balances are recalculated
 
@@ -207,6 +223,7 @@ Bulk delete transactions.
 ## Data Transfer Objects
 
 ### TransactionCreate
+
 ```python
 class TransactionCreate(SQLModel):
     date: date
@@ -224,6 +241,7 @@ class TransactionCreate(SQLModel):
 ```
 
 ### TransactionRead
+
 ```python
 class TransactionRead(SQLModel):
     id: uuid.UUID
@@ -239,6 +257,7 @@ class TransactionRead(SQLModel):
 ```
 
 ### TransactionListItem
+
 ```python
 class AccountSummary(SQLModel):
     id: uuid.UUID
@@ -256,6 +275,7 @@ class TransactionListItem(SQLModel):
 ```
 
 ### TransactionUpdate
+
 ```python
 class TransactionUpdate(SQLModel):
     date: date
@@ -267,6 +287,7 @@ class TransactionUpdate(SQLModel):
 ```
 
 ### PaginatedResponse
+
 ```python
 class PaginatedTransactions(SQLModel):
     data: list[TransactionListItem]
@@ -366,12 +387,13 @@ class TransactionService:
 ## Transaction Type Validation Matrix
 
 | Transaction Type | From Account Types | To Account Types |
-|-----------------|-------------------|------------------|
-| EXPENSE | ASSET, LIABILITY | EXPENSE |
-| INCOME | INCOME | ASSET, LIABILITY |
-| TRANSFER | ASSET, LIABILITY | ASSET, LIABILITY |
+| ---------------- | ------------------ | ---------------- |
+| EXPENSE          | ASSET, LIABILITY   | EXPENSE          |
+| INCOME           | INCOME             | ASSET, LIABILITY |
+| TRANSFER         | ASSET, LIABILITY   | ASSET, LIABILITY |
 
 Invalid combinations return `422 Unprocessable Entity` with details:
+
 ```json
 {
   "error": {

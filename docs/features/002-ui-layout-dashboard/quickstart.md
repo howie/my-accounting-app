@@ -35,6 +35,7 @@ This feature adds:
 ### Visual Reference
 
 Mirauve Financial Dashboard (Dribbble shot 23051720):
+
 - Dark sidebar (left)
 - Card-based metrics (center)
 - Donut chart for income/expense breakdown
@@ -106,7 +107,7 @@ export function Sidebar() {
       <div className="p-4">
         <Logo />
       </div>
-      {categories.map(category => (
+      {categories.map((category) => (
         <SidebarItem key={category.type} category={category} />
       ))}
     </aside>
@@ -141,12 +142,12 @@ export function IncomeExpenseChart({ income, expenses }) {
 
 ## Key Design Decisions
 
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| Charting library | Tremor | Already in deps, Tailwind-native |
-| Sidebar state | Session storage + URL | Persistent but not over-engineered |
-| Data fetching | Dedicated endpoint | Single API call, backend aggregation |
-| Mobile sidebar | Overlay drawer | Standard responsive pattern |
+| Decision         | Choice                | Rationale                            |
+| ---------------- | --------------------- | ------------------------------------ |
+| Charting library | Tremor                | Already in deps, Tailwind-native     |
+| Sidebar state    | Session storage + URL | Persistent but not over-engineered   |
+| Data fetching    | Dedicated endpoint    | Single API call, backend aggregation |
+| Mobile sidebar   | Overlay drawer        | Standard responsive pattern          |
 
 ---
 

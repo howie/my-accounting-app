@@ -39,6 +39,7 @@ Each feature has its own `issues/` subdirectory for tracking bugs, enhancements,
 - **Technical questions**: `docs/features/###-feature-name/issues/question-<description>.md`
 
 When documenting issues:
+
 - Use descriptive filenames (e.g., `bug-balance-calculation-rounding.md`)
 - Include reproduction steps for bugs
 - Link to relevant code sections when applicable
@@ -47,6 +48,7 @@ When documenting issues:
 ### Working with Features
 
 Use the speckit slash commands to manage features:
+
 - Create new feature spec: `/speckit.specify "feature description"`
 - Create implementation plan: `/speckit.plan`
 - Generate task breakdown: `/speckit.tasks`
@@ -61,6 +63,7 @@ This is a Python project. Based on the .gitignore configuration, the project may
 ### Environment Setup
 
 Standard Python virtual environment practices apply:
+
 - Virtual environments should be created in `.venv/` or `venv/` directories
 - Environment variables and secrets should be stored in `.env` files (gitignored)
 
@@ -70,9 +73,12 @@ Standard Python virtual environment practices apply:
 - Standard Python build artifacts, test coverage reports, and cache directories are gitignored
 
 ## Active Technologies
+
 - Python 3.12 (Backend), TypeScript 5.x (Frontend) (001-core-accounting)
 - PostgreSQL 16 (via Docker or Supabase) (001-core-accounting)
 - PostgreSQL 16 (existing data model from 001-core-accounting) (002-ui-layout-dashboard)
+- PostgreSQL 16 (accounts, transactions), Browser localStorage (user preferences) (003-settings-account-management)
 
 ## Recent Changes
+
 - 001-core-accounting: Added Python 3.12 (Backend), TypeScript 5.x (Frontend)

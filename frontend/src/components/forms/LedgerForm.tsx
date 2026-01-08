@@ -51,9 +51,7 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
       <h2 className="mb-4 text-xl font-semibold">{t('ledgerForm.title')}</h2>
 
       {error && (
-        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">
-          {error}
-        </div>
+        <div className="mb-4 rounded bg-destructive/10 p-3 text-sm text-destructive">{error}</div>
       )}
 
       <div className="mb-4">
@@ -83,9 +81,7 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
           onChange={(e) => setInitialBalance(e.target.value)}
           placeholder="0.00"
         />
-        <p className="mt-1 text-sm text-muted-foreground">
-          {t('ledgerForm.initialBalanceNote')}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{t('ledgerForm.initialBalanceNote')}</p>
       </div>
 
       <div className="flex gap-2">

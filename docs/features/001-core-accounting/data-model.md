@@ -28,13 +28,14 @@ Represents a unique user of the application.
 - **Source**: Future auth feature (simplified for MVP)
 - **Description**: A unique user identity. MVP assumes single-user; full auth in future feature.
 
-| Field | Type | Description | Constraints |
-|:------|:-----|:------------|:------------|
-| `id` | UUID | Primary Key | DEFAULT gen_random_uuid() |
-| `email` | VARCHAR(255) | User email | NOT NULL, UNIQUE |
-| `created_at` | TIMESTAMPTZ | Record creation time | NOT NULL, DEFAULT NOW() |
+| Field        | Type         | Description          | Constraints               |
+| :----------- | :----------- | :------------------- | :------------------------ |
+| `id`         | UUID         | Primary Key          | DEFAULT gen_random_uuid() |
+| `email`      | VARCHAR(255) | User email           | NOT NULL, UNIQUE          |
+| `created_at` | TIMESTAMPTZ  | Record creation time | NOT NULL, DEFAULT NOW()   |
 
 **SQLModel Definition**:
+
 ```python
 class User(SQLModel, table=True):
     __tablename__ = "users"
@@ -53,15 +54,16 @@ A container for a complete set of financial records (an account book).
 - **Source**: `spec.md` -> `Database Schema` -> `ledgers`
 - **Description**: Represents a specific tracking context (e.g., personal finances for 2024). Each ledger has an independent chart of accounts and transaction list.
 
-| Field | Type | Description | Constraints |
-|:------|:-----|:------------|:------------|
-| `id` | UUID | Primary Key | DEFAULT gen_random_uuid() |
-| `user_id` | UUID | Foreign Key to `users` | NOT NULL |
-| `name` | VARCHAR(100) | Name of the ledger | NOT NULL |
-| `initial_balance` | NUMERIC(15,2) | Initial cash balance | NOT NULL, DEFAULT 0 |
-| `created_at` | TIMESTAMPTZ | Record creation time | NOT NULL, DEFAULT NOW() |
+| Field             | Type          | Description            | Constraints               |
+| :---------------- | :------------ | :--------------------- | :------------------------ |
+| `id`              | UUID          | Primary Key            | DEFAULT gen_random_uuid() |
+| `user_id`         | UUID          | Foreign Key to `users` | NOT NULL                  |
+| `name`            | VARCHAR(100)  | Name of the ledger     | NOT NULL                  |
+| `initial_balance` | NUMERIC(15,2) | Initial cash balance   | NOT NULL, DEFAULT 0       |
+| `created_at`      | TIMESTAMPTZ   | Record creation time   | NOT NULL, DEFAULT NOW()   |
 
 **SQLModel Definition**:
+
 ```python
 class Ledger(SQLModel, table=True):
     __tablename__ = "ledgers"
@@ -86,18 +88,19 @@ A single category within the Chart of Accounts for a ledger.
 - **Source**: `spec.md` -> `Database Schema` -> `accounts`
 - **Description**: A classification category (Asset, Liability, Income, Expense).
 
-| Field | Type | Description | Constraints |
-|:------|:-----|:------------|:------------|
-| `id` | UUID | Primary Key | DEFAULT gen_random_uuid() |
-| `ledger_id` | UUID | Foreign Key to `ledgers` | NOT NULL |
-| `name` | VARCHAR(100) | Account name | NOT NULL |
-| `type` | ENUM | Account type | NOT NULL, one of: ASSET, LIABILITY, INCOME, EXPENSE |
-| `balance` | NUMERIC(15,2) | Cached balance | NOT NULL, DEFAULT 0 |
-| `is_system` | BOOLEAN | True for predefined accounts | NOT NULL, DEFAULT FALSE |
-| `created_at` | TIMESTAMPTZ | Record creation time | NOT NULL, DEFAULT NOW() |
-| `updated_at` | TIMESTAMPTZ | Last modification time | NOT NULL, DEFAULT NOW() |
+| Field        | Type          | Description                  | Constraints                                         |
+| :----------- | :------------ | :--------------------------- | :-------------------------------------------------- |
+| `id`         | UUID          | Primary Key                  | DEFAULT gen_random_uuid()                           |
+| `ledger_id`  | UUID          | Foreign Key to `ledgers`     | NOT NULL                                            |
+| `name`       | VARCHAR(100)  | Account name                 | NOT NULL                                            |
+| `type`       | ENUM          | Account type                 | NOT NULL, one of: ASSET, LIABILITY, INCOME, EXPENSE |
+| `balance`    | NUMERIC(15,2) | Cached balance               | NOT NULL, DEFAULT 0                                 |
+| `is_system`  | BOOLEAN       | True for predefined accounts | NOT NULL, DEFAULT FALSE                             |
+| `created_at` | TIMESTAMPTZ   | Record creation time         | NOT NULL, DEFAULT NOW()                             |
+| `updated_at` | TIMESTAMPTZ   | Last modification time       | NOT NULL, DEFAULT NOW()                             |
 
 **SQLModel Definition**:
+
 ```python
 class AccountType(str, Enum):
     ASSET = "ASSET"
@@ -132,20 +135,21 @@ A single financial event recorded using double-entry bookkeeping.
 - **Source**: `spec.md` -> `Database Schema` -> `transactions`
 - **Description**: An event affecting exactly two accounts with equal amounts.
 
-| Field | Type | Description | Constraints |
-|:------|:-----|:------------|:------------|
-| `id` | UUID | Primary Key | DEFAULT gen_random_uuid() |
-| `ledger_id` | UUID | Foreign Key to `ledgers` | NOT NULL |
-| `date` | DATE | Business date of transaction | NOT NULL |
-| `description` | VARCHAR(255) | User-provided description | NOT NULL |
-| `amount` | NUMERIC(15,2) | Transaction amount | NOT NULL, > 0 |
-| `from_account_id` | UUID | Source account (Credit) | NOT NULL, FK to accounts |
-| `to_account_id` | UUID | Destination account (Debit) | NOT NULL, FK to accounts |
-| `transaction_type` | ENUM | Transaction type | NOT NULL, one of: EXPENSE, INCOME, TRANSFER |
-| `created_at` | TIMESTAMPTZ | Record creation time | NOT NULL, DEFAULT NOW() |
-| `updated_at` | TIMESTAMPTZ | Last modification time | NOT NULL, DEFAULT NOW() |
+| Field              | Type          | Description                  | Constraints                                 |
+| :----------------- | :------------ | :--------------------------- | :------------------------------------------ |
+| `id`               | UUID          | Primary Key                  | DEFAULT gen_random_uuid()                   |
+| `ledger_id`        | UUID          | Foreign Key to `ledgers`     | NOT NULL                                    |
+| `date`             | DATE          | Business date of transaction | NOT NULL                                    |
+| `description`      | VARCHAR(255)  | User-provided description    | NOT NULL                                    |
+| `amount`           | NUMERIC(15,2) | Transaction amount           | NOT NULL, > 0                               |
+| `from_account_id`  | UUID          | Source account (Credit)      | NOT NULL, FK to accounts                    |
+| `to_account_id`    | UUID          | Destination account (Debit)  | NOT NULL, FK to accounts                    |
+| `transaction_type` | ENUM          | Transaction type             | NOT NULL, one of: EXPENSE, INCOME, TRANSFER |
+| `created_at`       | TIMESTAMPTZ   | Record creation time         | NOT NULL, DEFAULT NOW()                     |
+| `updated_at`       | TIMESTAMPTZ   | Last modification time       | NOT NULL, DEFAULT NOW()                     |
 
 **SQLModel Definition**:
+
 ```python
 class TransactionType(str, Enum):
     EXPENSE = "EXPENSE"
@@ -177,6 +181,7 @@ class Transaction(SQLModel, table=True):
 ```
 
 **Validation Rules**:
+
 - `from_account_id` != `to_account_id` (cannot transfer to same account)
 - `amount` > 0 (always positive; direction determined by from/to)
 - Transaction type must match account types:
@@ -193,14 +198,15 @@ Periodic snapshots of account balances for growth analysis.
 - **Source**: `spec.md` -> `Database Schema` -> `balance_snapshots`
 - **Description**: Monthly snapshots for CAGR calculation in 002-dashboard feature.
 
-| Field | Type | Description | Constraints |
-|:------|:-----|:------------|:------------|
-| `id` | UUID | Primary Key | DEFAULT gen_random_uuid() |
-| `date` | DATE | Snapshot date (month-end) | NOT NULL |
-| `account_id` | UUID | Foreign Key to `accounts` | NOT NULL |
-| `amount` | NUMERIC(15,2) | Balance at snapshot time | NOT NULL |
+| Field        | Type          | Description               | Constraints               |
+| :----------- | :------------ | :------------------------ | :------------------------ |
+| `id`         | UUID          | Primary Key               | DEFAULT gen_random_uuid() |
+| `date`       | DATE          | Snapshot date (month-end) | NOT NULL                  |
+| `account_id` | UUID          | Foreign Key to `accounts` | NOT NULL                  |
+| `amount`     | NUMERIC(15,2) | Balance at snapshot time  | NOT NULL                  |
 
 **SQLModel Definition**:
+
 ```python
 class BalanceSnapshot(SQLModel, table=True):
     __tablename__ = "balance_snapshots"
@@ -265,9 +271,9 @@ def calculate_account_balance(account_id: UUID, session: Session) -> Decimal:
 
 When creating a new ledger, these system accounts are automatically created:
 
-| Name | Type | is_system | Notes |
-|:-----|:-----|:----------|:------|
-| Cash | ASSET | TRUE | Initial balance from ledger.initial_balance |
-| Equity | ASSET | TRUE | Opening balance offset account |
+| Name   | Type  | is_system | Notes                                       |
+| :----- | :---- | :-------- | :------------------------------------------ |
+| Cash   | ASSET | TRUE      | Initial balance from ledger.initial_balance |
+| Equity | ASSET | TRUE      | Opening balance offset account              |
 
 These accounts cannot be deleted (FR-004).

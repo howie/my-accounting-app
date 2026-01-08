@@ -235,8 +235,8 @@ class TestTransactions:
                 to_account_id=groceries["id"],
                 amount=10.0,
                 transaction_type="EXPENSE",
-                description=f"Transaction {i+1}",
-                date=f"2024-01-{15+i:02d}",
+                description=f"Transaction {i + 1}",
+                date=f"2024-01-{15 + i:02d}",
             )
 
         # Get first page

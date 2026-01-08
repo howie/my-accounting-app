@@ -23,9 +23,7 @@ class TestUserServiceContract:
 
     # --- get_current_user ---
 
-    def test_get_current_user_returns_none_when_no_user(
-        self, service: UserService
-    ) -> None:
+    def test_get_current_user_returns_none_when_no_user(self, service: UserService) -> None:
         """get_current_user returns None when no user exists."""
         result = service.get_current_user()
         assert result is None
@@ -65,9 +63,7 @@ class TestUserServiceContract:
         # Should not raise
         uuid.UUID(str(result.id))
 
-    def test_setup_user_returns_user_with_created_at(
-        self, service: UserService
-    ) -> None:
+    def test_setup_user_returns_user_with_created_at(self, service: UserService) -> None:
         """setup_user returns a user with created_at timestamp."""
         data = UserSetup(email="test@example.com")
 
@@ -75,9 +71,7 @@ class TestUserServiceContract:
 
         assert result.created_at is not None
 
-    def test_setup_user_raises_if_user_exists(
-        self, service: UserService, session: Session
-    ) -> None:
+    def test_setup_user_raises_if_user_exists(self, service: UserService, session: Session) -> None:
         """setup_user raises ValueError if a user already exists (single-user mode)."""
         # Create existing user
         existing = User(email="existing@example.com")
@@ -89,9 +83,7 @@ class TestUserServiceContract:
         with pytest.raises(ValueError, match="already exists"):
             service.setup_user(data)
 
-    def test_setup_user_persists_user(
-        self, service: UserService, session: Session
-    ) -> None:
+    def test_setup_user_persists_user(self, service: UserService, session: Session) -> None:
         """setup_user persists the user to the database."""
         data = UserSetup(email="persist@example.com")
 
@@ -104,9 +96,7 @@ class TestUserServiceContract:
 
     # --- get_or_create_default_user ---
 
-    def test_get_or_create_default_user_creates_when_none(
-        self, service: UserService
-    ) -> None:
+    def test_get_or_create_default_user_creates_when_none(self, service: UserService) -> None:
         """get_or_create_default_user creates a default user if none exists."""
         result = service.get_or_create_default_user()
 
@@ -128,9 +118,7 @@ class TestUserServiceContract:
         assert result.id == existing_id
         assert result.email == "existing@example.com"
 
-    def test_get_or_create_default_user_idempotent(
-        self, service: UserService
-    ) -> None:
+    def test_get_or_create_default_user_idempotent(self, service: UserService) -> None:
         """get_or_create_default_user is idempotent - multiple calls return same user."""
         result1 = service.get_or_create_default_user()
         result2 = service.get_or_create_default_user()

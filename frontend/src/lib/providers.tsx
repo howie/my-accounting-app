@@ -25,9 +25,7 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LedgerProvider>
-        {children}
-      </LedgerProvider>
+      <LedgerProvider>{children}</LedgerProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

@@ -108,8 +108,8 @@ Focus on the most common error patterns first. Keep your response concise and ac
         summary = f"""## 🤖 Claude Agent Auto-Fix Report
 
 ### Lint Errors Found
-- **Total errors**: {lint_output.count('error') if 'error' in lint_output else 'multiple'}
-- **Auto-fixed by ruff**: {lint_output.count('error') - lint_output_after.count('error') if 'error' in lint_output and 'error' in lint_output_after else 'some'}
+- **Total errors**: {lint_output.count("error") if "error" in lint_output else "multiple"}
+- **Auto-fixed by ruff**: {lint_output.count("error") - lint_output_after.count("error") if "error" in lint_output and "error" in lint_output_after else "some"}
 - **Remaining errors**: {lint_code_after}
 
 ### Auto-Fix Actions Taken

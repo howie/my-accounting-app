@@ -319,7 +319,7 @@ class TestTransactionFlow:
                 ledger_id,
                 TransactionCreate(
                     date=date.today(),
-                    description=f"Meal {i+1}",
+                    description=f"Meal {i + 1}",
                     amount=Decimal("20.00"),
                     from_account_id=cash.id,
                     to_account_id=food.id,

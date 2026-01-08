@@ -2,10 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api'
-import type {
-  AccountTransactionsResponse,
-  TransactionListItem,
-} from '@/types/dashboard'
+import type { AccountTransactionsResponse, TransactionListItem } from '@/types/dashboard'
 
 interface UseAccountTransactionsOptions {
   accountId: string | undefined
@@ -51,9 +48,7 @@ export function useAccountTransactions({
 /**
  * Transform API response to frontend model.
  */
-function transformResponse(
-  response: AccountTransactionsResponse
-): AccountTransactionsData {
+function transformResponse(response: AccountTransactionsResponse): AccountTransactionsData {
   return {
     accountId: response.account_id,
     accountName: response.account_name,

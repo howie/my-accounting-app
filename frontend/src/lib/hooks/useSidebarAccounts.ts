@@ -2,10 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { apiGet } from '@/lib/api'
-import type {
-  AccountsByCategoryResponse,
-  SidebarCategory,
-} from '@/types/dashboard'
+import type { AccountsByCategoryResponse, SidebarCategory } from '@/types/dashboard'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { CATEGORY_CONFIG, type AccountType } from '@/types/dashboard'
 

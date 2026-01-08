@@ -51,6 +51,7 @@ class Account(SQLModel, table=True):
     # Hierarchy fields
     parent_id: uuid.UUID | None = Field(default=None, foreign_key="accounts.id", index=True)
     depth: int = Field(default=1, ge=1, le=3)  # 1=root, 2=child, 3=grandchild
+    sort_order: int = Field(default=0, ge=0)  # Custom ordering within parent
 
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

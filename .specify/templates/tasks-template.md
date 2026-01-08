@@ -1,5 +1,4 @@
 ---
-
 description: "Task list template for feature implementation"
 ---
 
@@ -25,21 +24,21 @@ description: "Task list template for feature implementation"
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`
 - Paths shown below assume single project - adjust based on plan.md structure
 
-<!-- 
+<!--
   ============================================================================
   IMPORTANT: The tasks below are SAMPLE TASKS for illustration purposes only.
-  
+
   The /speckit.tasks command MUST replace these with actual tasks based on:
   - User stories from spec.md (with their priorities P1, P2, P3...)
   - Feature requirements from plan.md
   - Entities from data-model.md
   - Endpoints from contracts/
-  
+
   Tasks MUST be organized by user story so each story can be:
   - Implemented independently
   - Tested independently
   - Delivered as an MVP increment
-  
+
   DO NOT keep these sample tasks in the generated tasks.md file.
   ============================================================================
 -->
@@ -84,9 +83,9 @@ Examples of foundational tasks (adjust based on your project):
 > **CRITICAL: Write these tests FIRST, get approval, ensure they FAIL, THEN implement**
 > Per Constitution Principle II: Tests → Approval → Red → Green → Refactor
 
-- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
-- [ ] T012 [P] [US1] Edge case tests (rounding, currency, dates) in tests/edge_cases/test_[name].py
+- [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test\_[name].py
+- [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test\_[name].py
+- [ ] T012 [P] [US1] Edge case tests (rounding, currency, dates) in tests/edge*cases/test*[name].py
 - [ ] T013 **GATE**: Get test approval from stakeholder before proceeding to implementation
 - [ ] T014 **GATE**: Verify all tests FAIL (proving they test the missing feature)
 
@@ -117,9 +116,9 @@ Examples of foundational tasks (adjust based on your project):
 
 > **CRITICAL: Write these tests FIRST, get approval, ensure they FAIL, THEN implement**
 
-- [ ] T023 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T024 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
-- [ ] T025 [P] [US2] Edge case tests in tests/edge_cases/test_[name].py
+- [ ] T023 [P] [US2] Contract test for [endpoint] in tests/contract/test\_[name].py
+- [ ] T024 [P] [US2] Integration test for [user journey] in tests/integration/test\_[name].py
+- [ ] T025 [P] [US2] Edge case tests in tests/edge*cases/test*[name].py
 - [ ] T026 **GATE**: Get test approval from stakeholder
 - [ ] T027 **GATE**: Verify all tests FAIL
 
@@ -148,9 +147,9 @@ Examples of foundational tasks (adjust based on your project):
 
 > **CRITICAL: Write these tests FIRST, get approval, ensure they FAIL, THEN implement**
 
-- [ ] T034 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
-- [ ] T035 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py
-- [ ] T036 [P] [US3] Edge case tests in tests/edge_cases/test_[name].py
+- [ ] T034 [P] [US3] Contract test for [endpoint] in tests/contract/test\_[name].py
+- [ ] T035 [P] [US3] Integration test for [user journey] in tests/integration/test\_[name].py
+- [ ] T036 [P] [US3] Edge case tests in tests/edge*cases/test*[name].py
 - [ ] T037 **GATE**: Get test approval from stakeholder
 - [ ] T038 **GATE**: Verify all tests FAIL
 

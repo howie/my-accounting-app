@@ -16,7 +16,11 @@ from src.schemas.account import (
     AccountCreate,
     AccountListItem,
     AccountRead,
+    AccountReorderRequest,
     AccountUpdate,
+    CanDeleteResponse,
+    ReassignRequest,
+    ReassignResponse,
 )
 from src.services.account_service import AccountService
 from src.services.ledger_service import LedgerService
@@ -85,6 +89,7 @@ def create_account(
         is_system=account.is_system,
         parent_id=account.parent_id,
         depth=account.depth,
+        sort_order=account.sort_order,
         has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
@@ -109,6 +114,7 @@ def list_accounts(
                 is_system=a.is_system,
                 parent_id=a.parent_id,
                 depth=a.depth,
+                sort_order=a.sort_order,
                 has_children=service.has_children(a.id),
             )
             for a in accounts
@@ -153,6 +159,7 @@ def get_account(
         is_system=account.is_system,
         parent_id=account.parent_id,
         depth=account.depth,
+        sort_order=account.sort_order,
         has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
@@ -200,6 +207,7 @@ def update_account(
         is_system=account.is_system,
         parent_id=account.parent_id,
         depth=account.depth,
+        sort_order=account.sort_order,
         has_children=service.has_children(account.id),
         created_at=account.created_at,
         updated_at=account.updated_at,
@@ -235,4 +243,100 @@ def delete_account(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Account not found",
+        )
+
+
+@router.patch("/reorder", response_model=dict)
+def reorder_accounts(
+    data: AccountReorderRequest,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> dict:
+    """Reorder accounts within a parent."""
+    try:
+        updated = service.reorder_accounts(ledger_id, data.parent_id, data.account_ids)
+        return {"updated_count": updated}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
+@router.get("/{account_id}/can-delete", response_model=CanDeleteResponse)
+def can_delete_account(
+    account_id: uuid.UUID,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> CanDeleteResponse:
+    """Check if account can be deleted."""
+    try:
+        return service.can_delete(account_id, ledger_id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+@router.get("/{account_id}/replacement-candidates", response_model=dict)
+def get_replacement_candidates(
+    account_id: uuid.UUID,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> dict:
+    """Get valid replacement accounts for reassigning transactions."""
+    try:
+        candidates = service.get_replacement_candidates(account_id, ledger_id)
+        return {
+            "data": [
+                AccountListItem(
+                    id=a.id,
+                    name=a.name,
+                    type=a.type,
+                    balance=service.calculate_balance(a.id),
+                    is_system=a.is_system,
+                    parent_id=a.parent_id,
+                    depth=a.depth,
+                    sort_order=a.sort_order,
+                    has_children=service.has_children(a.id),
+                )
+                for a in candidates
+            ]
+        }
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+@router.post("/{account_id}/reassign", response_model=ReassignResponse)
+def reassign_and_delete(
+    account_id: uuid.UUID,
+    data: ReassignRequest,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> ReassignResponse:
+    """Reassign transactions to another account and delete the original."""
+    try:
+        # First reassign transactions
+        moved = service.reassign_transactions(account_id, data.replacement_account_id, ledger_id)
+
+        # Then delete the original account
+        service.delete_account(account_id, ledger_id)
+
+        return ReassignResponse(
+            transactions_moved=moved,
+            deleted_account_id=account_id,
+        )
+    except ValueError as e:
+        if "not found" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e),
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
         )

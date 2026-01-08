@@ -22,56 +22,56 @@ Retrieve aggregated financial metrics for the dashboard.
 
 **Path Parameters**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| ledger_id | UUID | Yes | The ledger to get dashboard data for |
+| Parameter | Type | Required | Description                          |
+| --------- | ---- | -------- | ------------------------------------ |
+| ledger_id | UUID | Yes      | The ledger to get dashboard data for |
 
 **Response**: `200 OK`
 
 ```json
 {
-  "total_assets": 21847.00,
+  "total_assets": 21847.0,
   "current_month": {
-    "income": 2992.00,
-    "expenses": 1419.00,
-    "net_cash_flow": 1573.00
+    "income": 2992.0,
+    "expenses": 1419.0,
+    "net_cash_flow": 1573.0
   },
   "trends": [
     {
       "month": "Aug",
       "year": 2025,
-      "income": 2500.00,
-      "expenses": 1200.00
+      "income": 2500.0,
+      "expenses": 1200.0
     },
     {
       "month": "Sep",
       "year": 2025,
-      "income": 2800.00,
-      "expenses": 1400.00
+      "income": 2800.0,
+      "expenses": 1400.0
     },
     {
       "month": "Oct",
       "year": 2025,
-      "income": 3100.00,
-      "expenses": 1100.00
+      "income": 3100.0,
+      "expenses": 1100.0
     },
     {
       "month": "Nov",
       "year": 2025,
-      "income": 2900.00,
-      "expenses": 1300.00
+      "income": 2900.0,
+      "expenses": 1300.0
     },
     {
       "month": "Dec",
       "year": 2025,
-      "income": 3200.00,
-      "expenses": 1500.00
+      "income": 3200.0,
+      "expenses": 1500.0
     },
     {
       "month": "Jan",
       "year": 2026,
-      "income": 2992.00,
-      "expenses": 1419.00
+      "income": 2992.0,
+      "expenses": 1419.0
     }
   ]
 }
@@ -79,11 +79,12 @@ Retrieve aggregated financial metrics for the dashboard.
 
 **Error Responses**:
 
-| Status | Code | Description |
-|--------|------|-------------|
-| 404 | LEDGER_NOT_FOUND | Ledger with given ID does not exist |
+| Status | Code             | Description                         |
+| ------ | ---------------- | ----------------------------------- |
+| 404    | LEDGER_NOT_FOUND | Ledger with given ID does not exist |
 
 **Notes**:
+
 - `total_assets` is the sum of all ASSET account balances
 - `trends` contains up to 6 months of data, ordered chronologically
 - If less than 6 months of data exists, only available months are returned
@@ -99,9 +100,9 @@ Retrieve all accounts grouped by their category type for sidebar display.
 
 **Path Parameters**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| ledger_id | UUID | Yes | The ledger to get accounts for |
+| Parameter | Type | Required | Description                    |
+| --------- | ---- | -------- | ------------------------------ |
+| ledger_id | UUID | Yes      | The ledger to get accounts for |
 
 **Response**: `200 OK`
 
@@ -114,12 +115,12 @@ Retrieve all accounts grouped by their category type for sidebar display.
         {
           "id": "550e8400-e29b-41d4-a716-446655440001",
           "name": "Cash",
-          "balance": 15000.00
+          "balance": 15000.0
         },
         {
           "id": "550e8400-e29b-41d4-a716-446655440002",
           "name": "Bank Account",
-          "balance": 6847.00
+          "balance": 6847.0
         }
       ]
     },
@@ -129,7 +130,7 @@ Retrieve all accounts grouped by their category type for sidebar display.
         {
           "id": "550e8400-e29b-41d4-a716-446655440003",
           "name": "Credit Card",
-          "balance": 500.00
+          "balance": 500.0
         }
       ]
     },
@@ -139,7 +140,7 @@ Retrieve all accounts grouped by their category type for sidebar display.
         {
           "id": "550e8400-e29b-41d4-a716-446655440004",
           "name": "Salary",
-          "balance": 2992.00
+          "balance": 2992.0
         }
       ]
     },
@@ -149,12 +150,12 @@ Retrieve all accounts grouped by their category type for sidebar display.
         {
           "id": "550e8400-e29b-41d4-a716-446655440005",
           "name": "Food",
-          "balance": 800.00
+          "balance": 800.0
         },
         {
           "id": "550e8400-e29b-41d4-a716-446655440006",
           "name": "Transport",
-          "balance": 200.00
+          "balance": 200.0
         }
       ]
     }
@@ -164,11 +165,12 @@ Retrieve all accounts grouped by their category type for sidebar display.
 
 **Error Responses**:
 
-| Status | Code | Description |
-|--------|------|-------------|
-| 404 | LEDGER_NOT_FOUND | Ledger with given ID does not exist |
+| Status | Code             | Description                         |
+| ------ | ---------------- | ----------------------------------- |
+| 404    | LEDGER_NOT_FOUND | Ledger with given ID does not exist |
 
 **Notes**:
+
 - Categories are returned in fixed order: ASSET, LIABILITY, INCOME, EXPENSE
 - Empty categories are still included with empty `accounts` array
 - Accounts within each category are ordered alphabetically by name
@@ -183,16 +185,16 @@ Retrieve paginated transactions for a specific account.
 
 **Path Parameters**:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| account_id | UUID | Yes | The account to get transactions for |
+| Parameter  | Type | Required | Description                         |
+| ---------- | ---- | -------- | ----------------------------------- |
+| account_id | UUID | Yes      | The account to get transactions for |
 
 **Query Parameters**:
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| page | int | No | 1 | Page number (1-indexed) |
-| page_size | int | No | 50 | Items per page (max 100) |
+| Parameter | Type | Required | Default | Description              |
+| --------- | ---- | -------- | ------- | ------------------------ |
+| page      | int  | No       | 1       | Page number (1-indexed)  |
+| page_size | int  | No       | 50      | Items per page (max 100) |
 
 **Response**: `200 OK`
 
@@ -205,7 +207,7 @@ Retrieve paginated transactions for a specific account.
       "id": "660e8400-e29b-41d4-a716-446655440001",
       "date": "2026-01-05",
       "description": "Grocery shopping",
-      "amount": 150.00,
+      "amount": 150.0,
       "type": "EXPENSE",
       "other_account_name": "Food"
     },
@@ -213,7 +215,7 @@ Retrieve paginated transactions for a specific account.
       "id": "660e8400-e29b-41d4-a716-446655440002",
       "date": "2026-01-03",
       "description": "Monthly salary",
-      "amount": 5000.00,
+      "amount": 5000.0,
       "type": "INCOME",
       "other_account_name": "Salary"
     }
@@ -227,13 +229,14 @@ Retrieve paginated transactions for a specific account.
 
 **Error Responses**:
 
-| Status | Code | Description |
-|--------|------|-------------|
-| 404 | ACCOUNT_NOT_FOUND | Account with given ID does not exist |
-| 400 | INVALID_PAGE | Page number is invalid |
-| 400 | INVALID_PAGE_SIZE | Page size exceeds maximum (100) |
+| Status | Code              | Description                          |
+| ------ | ----------------- | ------------------------------------ |
+| 404    | ACCOUNT_NOT_FOUND | Account with given ID does not exist |
+| 400    | INVALID_PAGE      | Page number is invalid               |
+| 400    | INVALID_PAGE_SIZE | Page size exceeds maximum (100)      |
 
 **Notes**:
+
 - Transactions are ordered by date DESC (newest first)
 - `other_account_name` shows the counterpart account in the transaction
 - For expenses: other account is the expense category
@@ -341,12 +344,13 @@ class DashboardService:
 
 ## Caching Strategy
 
-| Endpoint | Cache Duration | Invalidation |
-|----------|---------------|--------------|
-| Dashboard summary | 5 minutes | On any transaction CRUD |
-| Accounts by category | 10 minutes | On account CRUD |
-| Account transactions | No cache | N/A (paginated) |
+| Endpoint             | Cache Duration | Invalidation            |
+| -------------------- | -------------- | ----------------------- |
+| Dashboard summary    | 5 minutes      | On any transaction CRUD |
+| Accounts by category | 10 minutes     | On account CRUD         |
+| Account transactions | No cache       | N/A (paginated)         |
 
 Cache keys:
+
 - `dashboard:{ledger_id}`
 - `accounts_by_category:{ledger_id}`
