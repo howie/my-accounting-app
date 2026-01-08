@@ -8,7 +8,9 @@ repos:
     rev: v4.5.0
     hooks:
       - id: trailing-whitespace
+        exclude: ^(src/myab/|tests/(?!backend))
       - id: end-of-file-fixer
+        exclude: ^(src/myab/|tests/(?!backend)|frontend/tsconfig\.tsbuildinfo)
       - id: check-yaml
       - id: check-json
       - id: check-added-large-files
@@ -16,7 +18,9 @@ repos:
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-docstring-first
+        exclude: ^(src/myab/|tests/(?!backend))
       - id: debug-statements
+        exclude: ^(src/myab/|tests/(?!backend))
       - id: mixed-line-ending
         args: ["--fix=lf"]
 
@@ -36,7 +40,8 @@ repos:
     hooks:
       - id: mypy
         name: mypy-backend
-        files: ^backend/
+        files: ^backend/src/
+        exclude: ^backend/(alembic|tests|scripts)/
         args: [--config-file=backend/pyproject.toml]
         additional_dependencies:
           - fastapi>=0.109.0
