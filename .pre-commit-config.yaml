@@ -71,12 +71,15 @@ repos:
   #       files: pyproject.toml
 
   # Frontend checks (if applicable)
+  # Note: frontend files are excluded from prettier because they use
+  # prettier-plugin-tailwindcss which requires npm dependencies.
+  # Frontend formatting is handled by npm run format in the frontend directory.
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
         files: \.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$
-        exclude: package-lock.json
+        exclude: (package-lock\.json|frontend/)
 
 # Configuration for CI mode
 ci:
