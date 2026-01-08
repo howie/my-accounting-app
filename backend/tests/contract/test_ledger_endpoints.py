@@ -5,9 +5,7 @@ These tests verify the endpoints behave according to the documented contract.
 """
 
 import uuid
-from decimal import Decimal
 
-import pytest
 from fastapi.testclient import TestClient
 
 

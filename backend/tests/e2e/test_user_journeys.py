@@ -6,8 +6,6 @@ Tests end-to-end user flows through the entire system.
 import uuid
 from decimal import Decimal
 
-import pytest
-
 from tests.e2e.conftest import E2ETestHelper
 
 

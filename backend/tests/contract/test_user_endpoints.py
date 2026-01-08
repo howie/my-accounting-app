@@ -6,7 +6,6 @@ These tests verify the endpoints behave according to the documented contract.
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
@@ -47,9 +46,7 @@ class TestUserEndpointsContract:
         data = response.json()
         assert data["email"] == "user@localhost"
 
-    def test_get_me_returns_same_user_on_repeated_calls(
-        self, client: TestClient
-    ) -> None:
+    def test_get_me_returns_same_user_on_repeated_calls(self, client: TestClient) -> None:
         """GET /api/v1/users/me returns the same user on repeated calls."""
         response1 = client.get("/api/v1/users/me")
         response2 = client.get("/api/v1/users/me")
@@ -90,9 +87,7 @@ class TestUserEndpointsContract:
         # Should not raise
         uuid.UUID(data["id"])
 
-    def test_setup_returns_409_if_user_exists(
-        self, client: TestClient, session: Session
-    ) -> None:
+    def test_setup_returns_409_if_user_exists(self, client: TestClient, session: Session) -> None:
         """POST /api/v1/users/setup returns 409 Conflict if user already exists."""
         # Create existing user
         existing = User(email="existing@example.com")
@@ -142,18 +137,14 @@ class TestUserSetupStatus:
         response = client.get("/api/v1/users/status")
         assert response.status_code == 200
 
-    def test_get_status_returns_setup_needed_true_when_no_user(
-        self, client: TestClient
-    ) -> None:
+    def test_get_status_returns_setup_needed_true_when_no_user(self, client: TestClient) -> None:
         """GET /api/v1/users/status returns setup_needed: true when no user."""
         response = client.get("/api/v1/users/status")
 
         data = response.json()
         assert data["setup_needed"] is True
 
-    def test_get_status_returns_setup_needed_false_after_setup(
-        self, client: TestClient
-    ) -> None:
+    def test_get_status_returns_setup_needed_false_after_setup(self, client: TestClient) -> None:
         """GET /api/v1/users/status returns setup_needed: false after setup."""
         # Setup user
         client.post(

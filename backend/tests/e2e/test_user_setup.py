@@ -8,7 +8,6 @@ Multi-user tests are skipped in this mode.
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
 
 from tests.e2e.conftest import E2ETestHelper
@@ -65,7 +64,6 @@ class TestUserSetup:
         assert any(l["id"] == ledger["id"] for l in ledgers)
 
         # User cannot access non-existent ledger
-        from fastapi.testclient import TestClient
 
         # Create a fake ledger ID
         fake_id = str(uuid.uuid4())

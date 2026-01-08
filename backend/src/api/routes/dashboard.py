@@ -7,7 +7,7 @@ Provides read-only endpoints for dashboard and sidebar data.
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from src.api.deps import SessionDep
 from src.services.dashboard_service import DashboardService
@@ -59,9 +59,7 @@ def get_account_transactions(
     account_id: uuid.UUID,
     session: SessionDep,
     page: Annotated[int, Query(ge=1, description="Page number (1-indexed)")] = 1,
-    page_size: Annotated[
-        int, Query(ge=1, le=100, description="Items per page (max 100)")
-    ] = 50,
+    page_size: Annotated[int, Query(ge=1, le=100, description="Items per page (max 100)")] = 50,
 ) -> dict:
     """Get paginated transactions for an account.
 

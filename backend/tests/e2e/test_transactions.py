@@ -6,7 +6,6 @@ Tests transaction CRUD, validations, and filtering.
 import uuid
 from decimal import Decimal
 
-import pytest
 from fastapi.testclient import TestClient
 
 from tests.e2e.conftest import E2ETestHelper
@@ -124,7 +123,10 @@ class TestTransactions:
         )
 
         assert response.status_code == 400
-        assert "asset" in response.json()["detail"].lower() or "liability" in response.json()["detail"].lower()
+        assert (
+            "asset" in response.json()["detail"].lower()
+            or "liability" in response.json()["detail"].lower()
+        )
 
     def test_txn_005_same_account_transaction_rejected(
         self, setup_user_and_ledger: E2ETestHelper, client: TestClient

@@ -10,16 +10,14 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from src.api.deps import get_session, get_current_user_id
+from src.api.deps import get_current_user_id, get_session
+from src.schemas.ledger import LedgerCreate, LedgerListItem, LedgerRead, LedgerUpdate
 from src.services.ledger_service import LedgerService
-from src.schemas.ledger import LedgerCreate, LedgerRead, LedgerListItem, LedgerUpdate
 
 router = APIRouter(prefix="/ledgers", tags=["ledgers"])
 
 
-def get_ledger_service(
-    session: Annotated[Session, Depends(get_session)]
-) -> LedgerService:
+def get_ledger_service(session: Annotated[Session, Depends(get_session)]) -> LedgerService:
     """Dependency to get LedgerService instance."""
     return LedgerService(session)
 

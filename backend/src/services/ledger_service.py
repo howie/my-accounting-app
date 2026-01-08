@@ -4,13 +4,13 @@ Based on contracts/ledger_service.md
 """
 
 import uuid
-from decimal import Decimal
 from datetime import date
+from decimal import Decimal
 
 from sqlmodel import Session, select
 
-from src.models.ledger import Ledger
 from src.models.account import Account, AccountType
+from src.models.ledger import Ledger
 from src.models.transaction import Transaction, TransactionType
 from src.schemas.ledger import LedgerCreate, LedgerUpdate
 
@@ -85,9 +85,7 @@ class LedgerService:
 
     def get_ledger(self, ledger_id: uuid.UUID, user_id: uuid.UUID) -> Ledger | None:
         """Get a single ledger, ensuring ownership."""
-        statement = select(Ledger).where(
-            Ledger.id == ledger_id, Ledger.user_id == user_id
-        )
+        statement = select(Ledger).where(Ledger.id == ledger_id, Ledger.user_id == user_id)
         result = self.session.exec(statement)
         return result.first()
 

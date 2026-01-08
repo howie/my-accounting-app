@@ -1,7 +1,6 @@
 """E2E test fixtures and helpers."""
 
 import uuid
-from decimal import Decimal
 from typing import Any
 
 import pytest
@@ -190,9 +189,7 @@ class E2ETestHelper:
         assert response.status_code == 200, f"List transactions failed: {response.text}"
         return response.json()
 
-    def get_transaction(
-        self, transaction_id: str, ledger_id: str | None = None
-    ) -> dict[str, Any]:
+    def get_transaction(self, transaction_id: str, ledger_id: str | None = None) -> dict[str, Any]:
         """Get a single transaction."""
         lid = ledger_id or self.ledger_id
         response = self.client.get(
@@ -230,9 +227,7 @@ class E2ETestHelper:
         assert response.status_code == 200, f"Transaction update failed: {response.text}"
         return response.json()
 
-    def delete_transaction(
-        self, transaction_id: str, ledger_id: str | None = None
-    ) -> None:
+    def delete_transaction(self, transaction_id: str, ledger_id: str | None = None) -> None:
         """Delete a transaction."""
         lid = ledger_id or self.ledger_id
         response = self.client.delete(

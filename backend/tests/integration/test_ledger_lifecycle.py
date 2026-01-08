@@ -10,11 +10,11 @@ from decimal import Decimal
 import pytest
 from sqlmodel import Session
 
-from src.services.ledger_service import LedgerService
-from src.services.account_service import AccountService
-from src.schemas.ledger import LedgerCreate
-from src.schemas.account import AccountCreate
 from src.models.account import AccountType
+from src.schemas.account import AccountCreate
+from src.schemas.ledger import LedgerCreate
+from src.services.account_service import AccountService
+from src.services.ledger_service import LedgerService
 
 
 class TestLedgerCreationLifecycle:
@@ -60,9 +60,7 @@ class TestLedgerCreationLifecycle:
         user_id: uuid.UUID,
     ) -> None:
         """System accounts are created with ASSET type."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         accounts = account_service.get_accounts(ledger.id)
         cash = next(a for a in accounts if a.name == "Cash")
@@ -78,9 +76,7 @@ class TestLedgerCreationLifecycle:
         user_id: uuid.UUID,
     ) -> None:
         """System accounts have is_system=True."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         accounts = account_service.get_accounts(ledger.id)
         cash = next(a for a in accounts if a.name == "Cash")
@@ -103,11 +99,7 @@ class TestLedgerCreationLifecycle:
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("5000.00"))
         )
 
-        transactions = (
-            session.query(Transaction)
-            .filter(Transaction.ledger_id == ledger.id)
-            .all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == ledger.id).all()
 
         assert len(transactions) == 1
         tx = transactions[0]
@@ -132,11 +124,7 @@ class TestLedgerCreationLifecycle:
         cash = next(a for a in accounts if a.name == "Cash")
         equity = next(a for a in accounts if a.name == "Equity")
 
-        transactions = (
-            session.query(Transaction)
-            .filter(Transaction.ledger_id == ledger.id)
-            .all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == ledger.id).all()
 
         tx = transactions[0]
         assert tx.from_account_id == equity.id
@@ -154,11 +142,7 @@ class TestLedgerCreationLifecycle:
         )
 
         cash_balance = account_service.calculate_balance(
-            next(
-                a.id
-                for a in account_service.get_accounts(ledger.id)
-                if a.name == "Cash"
-            )
+            next(a.id for a in account_service.get_accounts(ledger.id) if a.name == "Cash")
         )
 
         assert cash_balance == Decimal("2500.00")
@@ -175,11 +159,7 @@ class TestLedgerCreationLifecycle:
         )
 
         equity_balance = account_service.calculate_balance(
-            next(
-                a.id
-                for a in account_service.get_accounts(ledger.id)
-                if a.name == "Equity"
-            )
+            next(a.id for a in account_service.get_accounts(ledger.id) if a.name == "Equity")
         )
 
         assert equity_balance == Decimal("-3000.00")
@@ -197,11 +177,7 @@ class TestLedgerCreationLifecycle:
             user_id, LedgerCreate(name="Test", initial_balance=Decimal("0"))
         )
 
-        transactions = (
-            session.query(Transaction)
-            .filter(Transaction.ledger_id == ledger.id)
-            .all()
-        )
+        transactions = session.query(Transaction).filter(Transaction.ledger_id == ledger.id).all()
 
         assert len(transactions) == 0
 
@@ -228,9 +204,7 @@ class TestLedgerCreationLifecycle:
         user_id: uuid.UUID,
     ) -> None:
         """User can add custom accounts after ledger creation."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         food_account = account_service.create_account(
             ledger.id, AccountCreate(name="Food", type=AccountType.EXPENSE)
@@ -253,9 +227,7 @@ class TestLedgerCreationLifecycle:
         user_id: uuid.UUID,
     ) -> None:
         """User-created accounts have is_system=False."""
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test"))
 
         food_account = account_service.create_account(
             ledger.id, AccountCreate(name="Food", type=AccountType.EXPENSE)
@@ -308,11 +280,7 @@ class TestLedgerCreationLifecycle:
         ledger_service.delete_ledger(ledger_id, user_id)
 
         # Verify all transactions are deleted
-        remaining = (
-            session.query(Transaction)
-            .filter(Transaction.ledger_id == ledger_id)
-            .all()
-        )
+        remaining = session.query(Transaction).filter(Transaction.ledger_id == ledger_id).all()
         assert len(remaining) == 0
 
 
@@ -341,12 +309,8 @@ class TestMultipleLedgerIsolation:
         user_id: uuid.UUID,
     ) -> None:
         """Each ledger gets its own Cash and Equity accounts."""
-        ledger1 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Personal")
-        )
-        ledger2 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Business")
-        )
+        ledger1 = ledger_service.create_ledger(user_id, LedgerCreate(name="Personal"))
+        ledger2 = ledger_service.create_ledger(user_id, LedgerCreate(name="Business"))
 
         accounts1 = account_service.get_accounts(ledger1.id)
         accounts2 = account_service.get_accounts(ledger2.id)
@@ -374,12 +338,8 @@ class TestMultipleLedgerIsolation:
             user_id, LedgerCreate(name="Business", initial_balance=Decimal("5000.00"))
         )
 
-        cash1 = next(
-            a for a in account_service.get_accounts(ledger1.id) if a.name == "Cash"
-        )
-        cash2 = next(
-            a for a in account_service.get_accounts(ledger2.id) if a.name == "Cash"
-        )
+        cash1 = next(a for a in account_service.get_accounts(ledger1.id) if a.name == "Cash")
+        cash2 = next(a for a in account_service.get_accounts(ledger2.id) if a.name == "Cash")
 
         balance1 = account_service.calculate_balance(cash1.id)
         balance2 = account_service.calculate_balance(cash2.id)
@@ -394,12 +354,8 @@ class TestMultipleLedgerIsolation:
         user_id: uuid.UUID,
     ) -> None:
         """User-created accounts only appear in their ledger."""
-        ledger1 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Personal")
-        )
-        ledger2 = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Business")
-        )
+        ledger1 = ledger_service.create_ledger(user_id, LedgerCreate(name="Personal"))
+        ledger2 = ledger_service.create_ledger(user_id, LedgerCreate(name="Business"))
 
         # Add account to ledger1 only
         account_service.create_account(
