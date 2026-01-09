@@ -215,3 +215,7 @@ myab.db
 frontend/.next/
 frontend/node_modules/
 tmp/
+.playwright-mcp/
+frontend/.env.local
+frontend/coverage/
+frontend/tsconfig.tsbuildinfo
