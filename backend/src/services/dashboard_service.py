@@ -78,12 +78,12 @@ class DashboardService:
 
         categories = []
         for account_type in category_order:
-            # Get all accounts for this type
+            # Get all accounts for this type, sorted by sort_order then name
             accounts = self.session.exec(
                 select(Account)
                 .where(Account.ledger_id == ledger_id)
                 .where(Account.type == account_type)
-                .order_by(Account.name)
+                .order_by(Account.sort_order, Account.name)
             ).all()
 
             # Build tree structure
@@ -99,7 +99,10 @@ class DashboardService:
         return {"categories": categories}
 
     def _build_account_tree(self, accounts: list[Account]) -> list[dict]:
-        """Build hierarchical tree from flat account list."""
+        """Build hierarchical tree from flat account list.
+
+        Accounts are sorted by sort_order, then name within each level.
+        """
         # Create lookup dict
         account_dict = {}
         for account in accounts:
@@ -109,6 +112,7 @@ class DashboardService:
                 "balance": float(self._calculate_account_balance(account)),
                 "parent_id": str(account.parent_id) if account.parent_id else None,
                 "depth": account.depth,
+                "sort_order": account.sort_order,
                 "children": [],
             }
 
@@ -122,6 +126,15 @@ class DashboardService:
             else:
                 # Root level account
                 root_accounts.append(node)
+
+        # Sort children at each level by sort_order, then name
+        def sort_children(nodes: list[dict]) -> None:
+            nodes.sort(key=lambda x: (x["sort_order"], x["name"]))
+            for node in nodes:
+                if node["children"]:
+                    sort_children(node["children"])
+
+        sort_children(root_accounts)
 
         return root_accounts
 

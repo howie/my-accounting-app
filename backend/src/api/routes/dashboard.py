@@ -42,7 +42,7 @@ def get_accounts_by_category(
     """Get all accounts grouped by category type.
 
     Returns accounts in fixed order: ASSET, LIABILITY, INCOME, EXPENSE.
-    Each category includes all accounts sorted alphabetically.
+    Each category includes accounts sorted by sort_order (user-defined), then name.
     """
     service = DashboardService(session)
     try:
