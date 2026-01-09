@@ -294,6 +294,7 @@
 **Scope**: This phase implements aggregated balances in the **Sidebar** component (`SidebarItem.tsx`). Note: The Settings > Account Management page (`AccountTree.tsx`) already has aggregated balances implemented.
 
 **Current Status**:
+
 - ✅ Sidebar shows aggregated balances with "(total)" suffix for parent accounts
 - ✅ AccountTree (Settings page) DOES show aggregated balances with "(total)" suffix
 

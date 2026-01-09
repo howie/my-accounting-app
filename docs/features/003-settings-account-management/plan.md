@@ -5,6 +5,7 @@
 **Input**: Feature specification from `/docs/features/003-settings-account-management/spec.md`
 
 ### Version History
+
 - **v1.0.0** (2026-01-07): Core account management, language/theme switching
 - **v1.1.0** (In Progress): US6a - Sidebar aggregated balances (FR-021~FR-026)
 
