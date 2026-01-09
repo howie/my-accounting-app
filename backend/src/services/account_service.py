@@ -283,6 +283,10 @@ class AccountService:
                 children_map[parent_key] = []
             children_map[parent_key].append(account)
 
+        # Sort children by sort_order, then name within each parent group
+        for parent_key in children_map:
+            children_map[parent_key].sort(key=lambda a: (a.sort_order, a.name))
+
         def build_tree_node(account: Account) -> AccountTreeNode:
             """Recursively build tree node with children."""
             children = children_map.get(account.id, [])
