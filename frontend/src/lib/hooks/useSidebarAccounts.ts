@@ -25,7 +25,7 @@ export function useSidebarAccounts() {
       return transformResponse(response)
     },
     enabled: !!ledgerId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 seconds - shorter to pick up reorder changes faster
     refetchOnWindowFocus: false,
   })
 }

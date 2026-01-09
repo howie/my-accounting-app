@@ -102,6 +102,8 @@ export function useAccountTree(ledgerId: string, typeFilter?: AccountType) {
   })
 }
 
+const SIDEBAR_ACCOUNTS_KEY = (ledgerId: string) => ['sidebar-accounts', ledgerId]
+
 /**
  * Hook to reorder accounts within a parent.
  */
@@ -115,6 +117,8 @@ export function useReorderAccounts(ledgerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_TREE_KEY(ledgerId) })
+      // Also invalidate sidebar accounts to reflect new order
+      queryClient.invalidateQueries({ queryKey: SIDEBAR_ACCOUNTS_KEY(ledgerId) })
     },
   })
 }
