@@ -1,8 +1,13 @@
 # Implementation Plan: Settings & Account Management
 
 **Branch**: `003-settings-account-management` | **Date**: 2026-01-07 | **Spec**: [spec.md](./spec.md)
-**Status**: Implemented | **Version**: 1.0.0 | **Completed**: 2026-01-07
+**Status**: In Progress | **Version**: 1.1.0 | **v1.0.0 Completed**: 2026-01-07
 **Input**: Feature specification from `/docs/features/003-settings-account-management/spec.md`
+
+### Version History
+
+- **v1.0.0** (2026-01-07): Core account management, language/theme switching
+- **v1.1.0** (In Progress): US6a - Sidebar aggregated balances (FR-021~FR-026)
 
 ## Summary
 

@@ -287,36 +287,43 @@
 
 ---
 
-## Phase 11: User Story 6a - Collapsible Account Tree with Aggregated Balances (Priority: P1)
+## Phase 11: User Story 6a - Collapsible Account Tree with Aggregated Balances (Priority: P1) ✅
 
 **Goal**: Parent accounts in sidebar show aggregated balances of children; users can collapse/expand to drill down
 
+**Scope**: This phase implements aggregated balances in the **Sidebar** component (`SidebarItem.tsx`). Note: The Settings > Account Management page (`AccountTree.tsx`) already has aggregated balances implemented.
+
+**Current Status**:
+
+- ✅ Sidebar shows aggregated balances with "(total)" suffix for parent accounts
+- ✅ AccountTree (Settings page) DOES show aggregated balances with "(total)" suffix
+
 **Independent Test**: Check parent shows sum of child balances; verify collapse hides children and expand reveals them
 
-**Requirements Covered**: FR-021, FR-022, FR-023, FR-024, FR-025
+**Requirements Covered**: FR-021, FR-022, FR-023, FR-024, FR-025, FR-026
 
 ### Tests for User Story 6a (MANDATORY - TDD Required)
 
-- [ ] T128 [P] [US6a] Unit test for aggregateBalance calculation (recursive sum) in frontend/tests/lib/utils/aggregateBalance.test.ts
-- [ ] T129 [P] [US6a] Component test for collapsible sidebar accounts in frontend/tests/components/layout/Sidebar.test.tsx
-- [ ] T130 [P] [US6a] Test for default collapsed state on initial load in frontend/tests/components/layout/Sidebar.test.tsx
-- [ ] T131 [P] [US6a] Test for expand/collapse state preservation in sessionStorage in frontend/tests/lib/hooks/useExpandedAccounts.test.ts
-- [ ] T132 [P] [US6a] Integration test for aggregated balance display with hierarchical accounts in frontend/tests/integration/sidebar-aggregation.test.tsx
-- [ ] T133 **GATE**: Get test approval from stakeholder before proceeding
-- [ ] T134 **GATE**: Verify all US6a tests FAIL (proving they test missing feature)
+- [x] T128 [P] [US6a] Unit test for aggregateBalance calculation (recursive sum) in frontend/tests/lib/utils/aggregateBalance.test.ts
+- [x] T129 [P] [US6a] Component test for collapsible sidebar accounts in frontend/tests/components/layout/Sidebar.test.tsx
+- [x] T130 [P] [US6a] Test for default collapsed state on initial load in frontend/tests/components/layout/Sidebar.test.tsx
+- [x] T131 [P] [US6a] Test for expand/collapse state preservation in sessionStorage in frontend/tests/lib/hooks/useExpandedAccounts.test.ts
+- [x] T132 [P] [US6a] Integration test for aggregated balance display with hierarchical accounts in frontend/tests/integration/sidebar-aggregation.test.tsx
+- [x] T133 **GATE**: Get test approval from stakeholder before proceeding
+- [x] T134 **GATE**: Verify all US6a tests FAIL (proving they test missing feature)
 
 ### Implementation for User Story 6a
 
-- [ ] T135 [P] [US6a] Create aggregateBalance utility function in frontend/src/lib/utils/aggregateBalance.ts
-- [ ] T136 [P] [US6a] Create useExpandedAccounts hook with sessionStorage in frontend/src/lib/hooks/useExpandedAccounts.ts
-- [ ] T137 [US6a] Update Sidebar to calculate and display aggregated balances in frontend/src/components/layout/Sidebar.tsx
-- [ ] T138 [US6a] Add chevron expand/collapse icons to parent accounts in frontend/src/components/layout/Sidebar.tsx
-- [ ] T139 [US6a] Implement default collapsed state (only root accounts visible) in frontend/src/components/layout/Sidebar.tsx
-- [ ] T140 [US6a] Wire up expand/collapse state with useExpandedAccounts hook in frontend/src/components/layout/Sidebar.tsx
-- [ ] T141 [US6a] Style child accounts with appropriate indentation when expanded in frontend/src/components/layout/Sidebar.tsx
-- [ ] T142 [US6a] Ensure aggregated balances update when child balances change (react-query invalidation) in frontend/src/components/layout/Sidebar.tsx
-- [ ] T143 [US6a] Verify all US6a tests PASS
-- [ ] T144 [US6a] Refactor while keeping tests green
+- [x] T135 [P] [US6a] Create aggregateBalance utility function in frontend/src/lib/utils/aggregateBalance.ts
+- [x] T136 [P] [US6a] Create useExpandedAccounts hook with sessionStorage in frontend/src/lib/hooks/useExpandedAccounts.ts
+- [x] T137 [US6a] Update Sidebar to calculate and display aggregated balances in frontend/src/components/layout/SidebarItem.tsx
+- [x] T138 [US6a] Add chevron expand/collapse icons to parent accounts in frontend/src/components/layout/SidebarItem.tsx
+- [x] T139 [US6a] Implement default collapsed state (only root accounts visible) in frontend/src/components/layout/SidebarItem.tsx
+- [x] T140 [US6a] Wire up expand/collapse state with useExpandedAccounts hook in frontend/src/components/layout/SidebarItem.tsx
+- [x] T141 [US6a] Style child accounts with appropriate indentation when expanded in frontend/src/components/layout/SidebarItem.tsx
+- [x] T142 [US6a] Ensure aggregated balances update when child balances change (react-query invalidation) in frontend/src/components/layout/SidebarItem.tsx
+- [x] T143 [US6a] Verify all US6a tests PASS
+- [x] T144 [US6a] Refactor while keeping tests green
 
 **Checkpoint**: Sidebar shows collapsible account tree with aggregated balances
 
