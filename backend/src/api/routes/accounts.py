@@ -137,6 +137,23 @@ def get_account_tree(
     return {"data": tree}
 
 
+@router.patch("/reorder", response_model=dict)
+def reorder_accounts(
+    data: AccountReorderRequest,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> dict:
+    """Reorder accounts within a parent."""
+    try:
+        updated = service.reorder_accounts(ledger_id, data.parent_id, data.account_ids)
+        return {"updated_count": updated}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+
 @router.get("/{account_id}", response_model=AccountRead)
 def get_account(
     account_id: uuid.UUID,
@@ -243,23 +260,6 @@ def delete_account(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Account not found",
-        )
-
-
-@router.patch("/reorder", response_model=dict)
-def reorder_accounts(
-    data: AccountReorderRequest,
-    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
-    service: Annotated[AccountService, Depends(get_account_service)],
-) -> dict:
-    """Reorder accounts within a parent."""
-    try:
-        updated = service.reorder_accounts(ledger_id, data.parent_id, data.account_ids)
-        return {"updated_count": updated}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
         )
 
 
