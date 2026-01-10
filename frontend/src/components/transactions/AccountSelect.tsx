@@ -39,6 +39,7 @@ const TYPE_ORDER: AccountType[] = ['ASSET', 'LIABILITY', 'INCOME', 'EXPENSE']
  * - Shows hierarchy through indentation (based on depth)
  * - Filters accounts by allowed types
  * - Excludes specific accounts (e.g., the other account in a transaction)
+ * - Only shows leaf accounts (accounts without children) for transaction entry
  */
 export function AccountSelect({
   accounts,
@@ -56,10 +57,12 @@ export function AccountSelect({
 
   // Filter and group accounts
   const groupedAccounts = useMemo(() => {
-    // Filter by allowed types and exclude specific account
+    // Filter by allowed types, exclude specific account, and only show leaf accounts
     const filtered = accounts.filter(
       (account) =>
-        allowedTypes.includes(account.type) && account.id !== excludeAccountId
+        allowedTypes.includes(account.type) &&
+        account.id !== excludeAccountId &&
+        !account.has_children
     )
 
     // Group by type

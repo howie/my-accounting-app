@@ -34,30 +34,24 @@
 - Dark/Light mode 切換
 - Audit trail 記錄所有科目變更
 
+### 004-transaction-entry (DONE)
+
+- 科目頁面「新增交易」按鈕與 Modal 表單
+- From/To 帳戶階層式選擇器
+- 日期選擇器（預設今天）
+- 金額輸入（支援計算式：50+40=90）
+- 描述（必填）與備註（選填）欄位
+- 快速入帳模板
+  - 儲存常用交易樣本（最多 50 個）
+  - 套用模板快速記帳
+  - 模板編輯與刪除
+- Dashboard QuickEntryPanel 整合
+- i18n 支援（zh-TW, en）
+- Dark/Light mode 支援
+
 ---
 
 ## Planned Features
-
-### 004-transaction-entry (DONE)
-
-**Priority: High**
-
-科目頁面新增交易功能。
-
-**Scope:**
-
-- [x] 科目頁面增加「新增交易」按鈕
-- [x] 交易表單（From/To 帳戶選擇）
-- [x] 日期選擇器
-- [x] 金額輸入（支援計算：50+40=90）
-- [x] 明細/備註欄位
-- [x] 快速入帳模板
-  - [x] 儲存常用交易樣本
-  - [x] 套用模板快速記帳
-
-**Reference:** MyAB spec 2.1, 2.2
-
----
 
 ### 005-ui-navigation-v2
 
