@@ -123,9 +123,7 @@ class TestTemplateEndpointsContract:
         assert "description" in template
         assert "sort_order" in template
 
-    def test_list_templates_returns_404_for_nonexistent_ledger(
-        self, client: TestClient
-    ) -> None:
+    def test_list_templates_returns_404_for_nonexistent_ledger(self, client: TestClient) -> None:
         """GET /templates returns 404 for non-existent ledger."""
         fake_id = str(uuid.uuid4())
 
@@ -309,9 +307,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         template = self._create_template(client, ledger_id)
 
-        response = client.get(
-            f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}"
-        )
+        response = client.get(f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}")
 
         assert response.status_code == 200
 
@@ -320,9 +316,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         created = self._create_template(client, ledger_id, "Find Me")
 
-        response = client.get(
-            f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}"
-        )
+        response = client.get(f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}")
 
         data = response.json()
         assert data["id"] == created["id"]
@@ -333,9 +327,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         created = self._create_template(client, ledger_id)
 
-        response = client.get(
-            f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}"
-        )
+        response = client.get(f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}")
 
         data = response.json()
         assert "id" in data
@@ -366,9 +358,7 @@ class TestTemplateEndpointsContract:
 
         other_ledger_id = self._create_ledger(client)
 
-        response = client.get(
-            f"/api/v1/ledgers/{other_ledger_id}/templates/{created['id']}"
-        )
+        response = client.get(f"/api/v1/ledgers/{other_ledger_id}/templates/{created['id']}")
 
         assert response.status_code == 404
 
@@ -467,9 +457,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         created = self._create_template(client, ledger_id)
 
-        response = client.delete(
-            f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}"
-        )
+        response = client.delete(f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}")
 
         assert response.status_code == 204
 
@@ -491,9 +479,7 @@ class TestTemplateEndpointsContract:
 
         client.delete(f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}")
 
-        response = client.get(
-            f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}"
-        )
+        response = client.get(f"/api/v1/ledgers/{ledger_id}/templates/{created['id']}")
         assert response.status_code == 404
 
     def test_delete_template_nonexistent_returns_404(self, client: TestClient) -> None:
@@ -518,7 +504,9 @@ class TestTemplateEndpointsContract:
             json={"template_ids": [t2["id"], t1["id"]]},
         )
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.json()}"
+        assert (
+            response.status_code == 200
+        ), f"Expected 200, got {response.status_code}: {response.json()}"
 
     def test_reorder_templates_changes_order(self, client: TestClient) -> None:
         """PATCH /templates/reorder changes the order of templates."""
@@ -531,14 +519,14 @@ class TestTemplateEndpointsContract:
             json={"template_ids": [t2["id"], t1["id"]]},
         )
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.json()}"
+        assert (
+            response.status_code == 200
+        ), f"Expected 200, got {response.status_code}: {response.json()}"
         data = response.json()
         assert data["data"][0]["id"] == t2["id"]
         assert data["data"][1]["id"] == t1["id"]
 
-    def test_reorder_templates_mismatched_ids_returns_422(
-        self, client: TestClient
-    ) -> None:
+    def test_reorder_templates_mismatched_ids_returns_422(self, client: TestClient) -> None:
         """PATCH /templates/reorder returns 422 if IDs don't match."""
         ledger_id = self._create_ledger(client)
         self._create_template(client, ledger_id)
@@ -557,9 +545,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         template = self._create_template(client, ledger_id)
 
-        response = client.post(
-            f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply"
-        )
+        response = client.post(f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply")
 
         assert response.status_code == 201
 
@@ -568,9 +554,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         template = self._create_template(client, ledger_id, amount="123.45")
 
-        response = client.post(
-            f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply"
-        )
+        response = client.post(f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply")
 
         data = response.json()
         assert "id" in data
@@ -585,9 +569,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         template = self._create_template(client, ledger_id)
 
-        response = client.post(
-            f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply"
-        )
+        response = client.post(f"/api/v1/ledgers/{ledger_id}/templates/{template['id']}/apply")
 
         data = response.json()
         assert data["date"] == date.today().isoformat()
@@ -623,9 +605,7 @@ class TestTemplateEndpointsContract:
         ledger_id = self._create_ledger(client)
         fake_id = str(uuid.uuid4())
 
-        response = client.post(
-            f"/api/v1/ledgers/{ledger_id}/templates/{fake_id}/apply"
-        )
+        response = client.post(f"/api/v1/ledgers/{ledger_id}/templates/{fake_id}/apply")
 
         assert response.status_code == 404
 

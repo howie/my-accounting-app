@@ -53,9 +53,7 @@ class TestTemplateServiceContract:
         return ledger.id
 
     @pytest.fixture
-    def cash_account_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def cash_account_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         accounts = account_service.get_accounts(ledger_id)
         return next(a.id for a in accounts if a.name == "Cash")
 
@@ -69,18 +67,14 @@ class TestTemplateServiceContract:
         return account.id
 
     @pytest.fixture
-    def income_account_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def income_account_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Salary", type=AccountType.INCOME)
         )
         return account.id
 
     @pytest.fixture
-    def bank_account_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def bank_account_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         account = account_service.create_account(
             ledger_id, AccountCreate(name="Bank", type=AccountType.ASSET)
         )
@@ -845,9 +839,7 @@ class TestTemplateServiceLimits:
         return ledger.id
 
     @pytest.fixture
-    def cash_account_id(
-        self, account_service: AccountService, ledger_id: uuid.UUID
-    ) -> uuid.UUID:
+    def cash_account_id(self, account_service: AccountService, ledger_id: uuid.UUID) -> uuid.UUID:
         accounts = account_service.get_accounts(ledger_id)
         return next(a.id for a in accounts if a.name == "Cash")
 

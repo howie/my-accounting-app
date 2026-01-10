@@ -423,9 +423,7 @@ class TestAuditServiceEdgeCases:
 
     @pytest.fixture
     def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
-        ledger = ledger_service.create_ledger(
-            user_id, LedgerCreate(name="Test Ledger")
-        )
+        ledger = ledger_service.create_ledger(user_id, LedgerCreate(name="Test Ledger"))
         return ledger.id
 
     def test_log_create_with_complex_nested_value(

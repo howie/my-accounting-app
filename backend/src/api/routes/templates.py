@@ -224,7 +224,9 @@ def delete_template(
         )
 
 
-@router.post("/{template_id}/apply", status_code=status.HTTP_201_CREATED, response_model=TransactionRead)
+@router.post(
+    "/{template_id}/apply", status_code=status.HTTP_201_CREATED, response_model=TransactionRead
+)
 def apply_template(
     template_id: uuid.UUID,
     ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
