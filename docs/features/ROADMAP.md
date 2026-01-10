@@ -19,33 +19,24 @@
 - Mobile responsive hamburger menu
 - i18n support (zh-TW, en)
 
+### 003-settings-account-management (DONE)
+
+- Settings 入口（Sidebar menu 增加 Settings）
+- 科目管理頁面
+  - 新增科目（支援父子關係）
+  - 編輯科目名稱
+  - 刪除科目（含交易重新指派流程）
+  - 科目排序（拖拉排序）
+- 科目樹狀結構改進
+  - 支援 3 層結構
+  - 可收合的科目樹與聚合餘額顯示
+- i18n 語言切換設定（zh-TW, en）
+- Dark/Light mode 切換
+- Audit trail 記錄所有科目變更
+
 ---
 
 ## Planned Features
-
-### 003-settings-account-management
-
-**Priority: High**
-
-Settings 頁面與科目管理功能。
-
-**Scope:**
-
-- [ ] Settings 入口（Sidebar menu 增加 Settings）
-- [ ] 科目管理頁面
-  - [ ] 新增科目（支援父子關係）
-  - [ ] 編輯科目名稱
-  - [ ] 刪除科目（檢查是否有交易）
-  - [ ] 科目排序（拖拉排序）
-- [ ] 科目樹狀結構改進
-  - [ ] 支援 3 層結構（如：存款.LineBank.外幣帳戶）
-  - [ ] MyAB 格式解析（A-代墊應收帳款.借別人錢）
-- [ ] i18n 語言切換設定
-- [ ] Dark/Light mode 切換
-
-**Reference:** MyAB spec 1.4 自訂科目
-
----
 
 ### 004-transaction-entry
 
@@ -218,7 +209,7 @@ UI 導航改進。
 ```
 001-core-accounting (DONE)
     └── 002-ui-layout-dashboard (DONE)
-            ├── 003-settings-account-management
+            ├── 003-settings-account-management (DONE)
             │       └── 005-ui-navigation-v2
             ├── 004-transaction-entry
             ├── 006-data-import
@@ -234,10 +225,18 @@ UI 導航改進。
 
 **Phase 1 - Core Enhancements (High Priority)**
 
-1. 003-settings-account-management
+1. ~~003-settings-account-management~~ ✅ DONE
 2. 004-transaction-entry
 3. 005-ui-navigation-v2
 
-**Phase 2 - Data Management (Medium Priority)** 4. 006-data-import 5. 007-data-export 6. 008-reports
+**Phase 2 - Data Management (Medium Priority)**
 
-**Phase 3 - Advanced Features (Low Priority)** 7. 009-advanced-transactions 8. 010-budget 9. 011-backup-sync
+4. 006-data-import
+5. 007-data-export
+6. 008-reports
+
+**Phase 3 - Advanced Features (Low Priority)**
+
+7. 009-advanced-transactions
+8. 010-budget
+9. 011-backup-sync

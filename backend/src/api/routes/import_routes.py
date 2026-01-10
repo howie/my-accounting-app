@@ -31,7 +31,7 @@ async def create_import_preview(
     file: Annotated[UploadFile, File(...)],
     import_type: Annotated[ImportType, Form(...)],
     session: Session = Depends(get_session),
-    _bank_code: Annotated[str | None, Form()] = None,
+    bank_code: Annotated[str | None, Form()] = None,  # noqa: ARG001 - Reserved for credit card import
 ) -> Any:
     """
     Parse CSV and generate import preview.

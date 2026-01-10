@@ -104,7 +104,7 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Account Mappings</h3>
                 <p className="text-sm text-gray-500 mb-4">
-                    Review how CSV accounts map to your ledger. We've auto-matched names where possible.
+                    Review how CSV accounts map to your ledger. We&apos;ve auto-matched names where possible.
                 </p>
 
                 <div className="overflow-x-auto">

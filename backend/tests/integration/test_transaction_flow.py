@@ -330,3 +330,175 @@ class TestTransactionFlow:
         # 5 * $20 = $100 spent
         assert account_service.calculate_balance(cash.id) == Decimal("900.00")
         assert account_service.calculate_balance(food.id) == Decimal("100.00")
+
+
+class TestTransactionEntryFeatures:
+    """Integration tests for transaction entry with notes and expressions (Feature 004)."""
+
+    @pytest.fixture
+    def ledger_service(self, session: Session) -> LedgerService:
+        return LedgerService(session)
+
+    @pytest.fixture
+    def account_service(self, session: Session) -> AccountService:
+        return AccountService(session)
+
+    @pytest.fixture
+    def transaction_service(self, session: Session) -> TransactionService:
+        return TransactionService(session)
+
+    @pytest.fixture
+    def user_id(self) -> uuid.UUID:
+        return uuid.uuid4()
+
+    @pytest.fixture
+    def ledger_id(self, ledger_service: LedgerService, user_id: uuid.UUID) -> uuid.UUID:
+        ledger = ledger_service.create_ledger(
+            user_id, LedgerCreate(name="Test", initial_balance=Decimal("1000.00"))
+        )
+        return ledger.id
+
+    def test_create_transaction_with_notes(
+        self,
+        transaction_service: TransactionService,
+        account_service: AccountService,
+        ledger_id: uuid.UUID,
+    ) -> None:
+        """Transaction can be created with notes field."""
+        accounts = account_service.get_accounts(ledger_id)
+        cash = next(a for a in accounts if a.name == "Cash")
+
+        food = account_service.create_account(
+            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
+        )
+
+        tx = transaction_service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Business lunch",
+                amount=Decimal("150.00"),
+                from_account_id=cash.id,
+                to_account_id=food.id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Meeting with client at downtown restaurant",
+            ),
+        )
+
+        # Verify notes is stored
+        result = transaction_service.get_transaction(tx.id, ledger_id)
+        assert result is not None
+        assert result.notes == "Meeting with client at downtown restaurant"
+
+    def test_create_transaction_with_amount_expression(
+        self,
+        transaction_service: TransactionService,
+        account_service: AccountService,
+        ledger_id: uuid.UUID,
+    ) -> None:
+        """Transaction can store amount_expression for audit trail."""
+        accounts = account_service.get_accounts(ledger_id)
+        cash = next(a for a in accounts if a.name == "Cash")
+
+        food = account_service.create_account(
+            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
+        )
+
+        tx = transaction_service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Split bill",
+                amount=Decimal("375.00"),  # Result of 1500/4
+                from_account_id=cash.id,
+                to_account_id=food.id,
+                transaction_type=TransactionType.EXPENSE,
+                amount_expression="1500/4",
+            ),
+        )
+
+        # Verify expression is stored
+        result = transaction_service.get_transaction(tx.id, ledger_id)
+        assert result is not None
+        assert result.amount_expression == "1500/4"
+        assert result.amount == Decimal("375.00")
+
+    def test_transaction_without_optional_fields(
+        self,
+        transaction_service: TransactionService,
+        account_service: AccountService,
+        ledger_id: uuid.UUID,
+    ) -> None:
+        """Transaction can be created without notes and amount_expression."""
+        accounts = account_service.get_accounts(ledger_id)
+        cash = next(a for a in accounts if a.name == "Cash")
+
+        food = account_service.create_account(
+            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
+        )
+
+        tx = transaction_service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Simple expense",
+                amount=Decimal("50.00"),
+                from_account_id=cash.id,
+                to_account_id=food.id,
+                transaction_type=TransactionType.EXPENSE,
+            ),
+        )
+
+        result = transaction_service.get_transaction(tx.id, ledger_id)
+        assert result is not None
+        assert result.notes is None
+        assert result.amount_expression is None
+
+    def test_update_transaction_preserves_notes(
+        self,
+        transaction_service: TransactionService,
+        account_service: AccountService,
+        ledger_id: uuid.UUID,
+    ) -> None:
+        """Updating transaction preserves notes field."""
+        from src.schemas.transaction import TransactionUpdate
+
+        accounts = account_service.get_accounts(ledger_id)
+        cash = next(a for a in accounts if a.name == "Cash")
+
+        food = account_service.create_account(
+            ledger_id, AccountCreate(name="Food", type=AccountType.EXPENSE)
+        )
+
+        # Create with notes
+        tx = transaction_service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Lunch",
+                amount=Decimal("50.00"),
+                from_account_id=cash.id,
+                to_account_id=food.id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Original note",
+            ),
+        )
+
+        # Update amount but keep notes
+        updated = transaction_service.update_transaction(
+            tx.id,
+            ledger_id,
+            TransactionUpdate(
+                date=date.today(),
+                description="Lunch updated",
+                amount=Decimal("75.00"),
+                from_account_id=cash.id,
+                to_account_id=food.id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Updated note",
+            ),
+        )
+
+        assert updated is not None
+        assert updated.notes == "Updated note"
+        assert updated.amount == Decimal("75.00")

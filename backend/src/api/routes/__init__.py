@@ -2,7 +2,15 @@
 
 from fastapi import APIRouter
 
-from src.api.routes import accounts, dashboard, import_routes, ledgers, transactions, users
+from src.api.routes import (
+    accounts,
+    dashboard,
+    import_routes,
+    ledgers,
+    templates,
+    transactions,
+    users,
+)
 
 api_router = APIRouter()
 
@@ -15,6 +23,9 @@ api_router.include_router(accounts.router)
 
 # Phase 4 (US2): Transactions
 api_router.include_router(transactions.router)
+
+# Feature 004: Transaction Templates
+api_router.include_router(templates.router)
 
 # Phase 6 (US4): Users
 api_router.include_router(users.router)

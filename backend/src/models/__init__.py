@@ -5,6 +5,7 @@ from src.models.audit_log import AuditAction, AuditLog
 from src.models.import_session import ImportSession, ImportStatus, ImportType
 from src.models.ledger import Ledger
 from src.models.transaction import Transaction, TransactionType
+from src.models.transaction_template import TransactionTemplate
 from src.models.user import User, UserBase, UserCreate, UserRead, UserSetup
 
 __all__ = [
@@ -18,6 +19,7 @@ __all__ = [
     "AccountType",
     "Transaction",
     "TransactionType",
+    "TransactionTemplate",
     "AuditLog",
     "AuditAction",
     "ImportSession",
