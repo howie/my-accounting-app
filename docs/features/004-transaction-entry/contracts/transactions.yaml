@@ -1,0 +1,192 @@
+openapi: 3.0.3
+info:
+  title: Transaction Entry API
+  description: API endpoints for transaction creation and management
+  version: 1.0.0
+
+paths:
+  /api/ledgers/{ledgerId}/transactions:
+    post:
+      summary: Create a new transaction
+      description: |
+        Creates a new transaction in the specified ledger.
+        Validates double-entry bookkeeping rules and account references.
+      operationId: createTransaction
+      tags:
+        - Transactions
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTransactionRequest"
+            examples:
+              expense:
+                summary: Record an expense
+                value:
+                  date: "2026-01-09"
+                  description: "午餐 - 麥當勞"
+                  amount: 150.00
+                  fromAccountId: "550e8400-e29b-41d4-a716-446655440001"
+                  toAccountId: "550e8400-e29b-41d4-a716-446655440002"
+                  transactionType: "EXPENSE"
+                  notes: "與同事聚餐"
+              withExpression:
+                summary: Record with calculated amount
+                value:
+                  date: "2026-01-09"
+                  description: "分攤晚餐"
+                  amount: 250.00
+                  fromAccountId: "550e8400-e29b-41d4-a716-446655440001"
+                  toAccountId: "550e8400-e29b-41d4-a716-446655440002"
+                  transactionType: "EXPENSE"
+                  amountExpression: "1000/4"
+      responses:
+        "201":
+          description: Transaction created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                sameAccount:
+                  summary: Same account error
+                  value:
+                    error: "validation_error"
+                    message: "From and To accounts must be different"
+                    field: "toAccountId"
+                invalidAmount:
+                  summary: Invalid amount
+                  value:
+                    error: "validation_error"
+                    message: "Amount must be between 0.01 and 999,999,999.99"
+                    field: "amount"
+                expressionMismatch:
+                  summary: Expression calculation mismatch
+                  value:
+                    error: "validation_error"
+                    message: "Amount does not match expression result"
+                    field: "amountExpression"
+        "404":
+          description: Ledger or account not found
+
+components:
+  schemas:
+    CreateTransactionRequest:
+      type: object
+      required:
+        - date
+        - description
+        - amount
+        - fromAccountId
+        - toAccountId
+        - transactionType
+      properties:
+        date:
+          type: string
+          format: date
+          description: Transaction business date (YYYY-MM-DD)
+          example: "2026-01-09"
+        description:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Transaction description
+          example: "午餐 - 麥當勞"
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 999999999.99
+          description: Transaction amount (2 decimal places)
+          example: 150.00
+        fromAccountId:
+          type: string
+          format: uuid
+          description: Source account ID (credited)
+        toAccountId:
+          type: string
+          format: uuid
+          description: Destination account ID (debited)
+        transactionType:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+          description: Type of transaction
+        notes:
+          type: string
+          maxLength: 500
+          nullable: true
+          description: Optional detailed notes
+        amountExpression:
+          type: string
+          maxLength: 100
+          nullable: true
+          description: Original arithmetic expression (e.g., "50+40+10")
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ledgerId:
+          type: string
+          format: uuid
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        transactionType:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+        notes:
+          type: string
+          nullable: true
+        amountExpression:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        field:
+          type: string
+          description: Field that caused the error (if applicable)

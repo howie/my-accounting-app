@@ -96,6 +96,8 @@ export interface Transaction {
   from_account_id: string
   to_account_id: string
   transaction_type: TransactionType
+  notes: string | null
+  amount_expression: string | null
   created_at: string
   updated_at: string
 }
@@ -107,6 +109,8 @@ export interface TransactionCreate {
   from_account_id: string
   to_account_id: string
   transaction_type: TransactionType
+  notes?: string | null
+  amount_expression?: string | null
 }
 
 export interface TransactionUpdate {
@@ -116,6 +120,8 @@ export interface TransactionUpdate {
   from_account_id: string
   to_account_id: string
   transaction_type: TransactionType
+  notes?: string | null
+  amount_expression?: string | null
 }
 
 export interface AccountSummary {
@@ -166,4 +172,62 @@ export interface ReassignResponse {
 export interface AccountReorderRequest {
   parent_id: string | null
   account_ids: string[]
+}
+
+// Transaction Template
+export interface TransactionTemplate {
+  id: string
+  ledger_id: string
+  name: string
+  transaction_type: TransactionType
+  from_account_id: string
+  to_account_id: string
+  amount: string
+  description: string
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface TransactionTemplateCreate {
+  name: string
+  transaction_type: TransactionType
+  from_account_id: string
+  to_account_id: string
+  amount: number
+  description: string
+}
+
+export interface TransactionTemplateUpdate {
+  name?: string
+  transaction_type?: TransactionType
+  from_account_id?: string
+  to_account_id?: string
+  amount?: number
+  description?: string
+}
+
+export interface TransactionTemplateListItem {
+  id: string
+  name: string
+  transaction_type: TransactionType
+  from_account_id: string
+  to_account_id: string
+  amount: string
+  description: string
+  sort_order: number
+}
+
+export interface TransactionTemplateList {
+  data: TransactionTemplateListItem[]
+  total: number
+}
+
+export interface ApplyTemplateRequest {
+  date?: string
+  notes?: string
+}
+
+export interface ReorderTemplatesRequest {
+  template_ids: string[]
 }

@@ -1,0 +1,424 @@
+openapi: 3.0.3
+info:
+  title: Transaction Templates API
+  description: API endpoints for transaction template management
+  version: 1.0.0
+
+paths:
+  /api/ledgers/{ledgerId}/templates:
+    get:
+      summary: List all templates for a ledger
+      description: Returns templates ordered by sort_order
+      operationId: listTemplates
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransactionTemplate"
+        "404":
+          description: Ledger not found
+
+    post:
+      summary: Create a new template
+      description: |
+        Creates a new transaction template.
+        Maximum 50 templates per ledger.
+      operationId: createTemplate
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTemplateRequest"
+            example:
+              name: "月租房"
+              transactionType: "EXPENSE"
+              fromAccountId: "550e8400-e29b-41d4-a716-446655440001"
+              toAccountId: "550e8400-e29b-41d4-a716-446655440003"
+              amount: 15000.00
+              description: "每月房租"
+      responses:
+        "201":
+          description: Template created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionTemplate"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                duplicateName:
+                  summary: Duplicate template name
+                  value:
+                    error: "validation_error"
+                    message: "Template with this name already exists"
+                    field: "name"
+                limitReached:
+                  summary: Template limit reached
+                  value:
+                    error: "limit_exceeded"
+                    message: "Maximum 50 templates per ledger"
+        "404":
+          description: Ledger or account not found
+
+  /api/ledgers/{ledgerId}/templates/{templateId}:
+    get:
+      summary: Get a specific template
+      operationId: getTemplate
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Template details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionTemplate"
+        "404":
+          description: Template not found
+
+    patch:
+      summary: Update a template
+      operationId: updateTemplate
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTemplateRequest"
+      responses:
+        "200":
+          description: Template updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionTemplate"
+        "400":
+          description: Validation error
+        "404":
+          description: Template not found
+
+    delete:
+      summary: Delete a template
+      operationId: deleteTemplate
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Template deleted successfully
+        "404":
+          description: Template not found
+
+  /api/ledgers/{ledgerId}/templates/reorder:
+    patch:
+      summary: Reorder templates
+      description: Updates sort_order for multiple templates
+      operationId: reorderTemplates
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReorderTemplatesRequest"
+            example:
+              orderedIds:
+                - "550e8400-e29b-41d4-a716-446655440010"
+                - "550e8400-e29b-41d4-a716-446655440011"
+                - "550e8400-e29b-41d4-a716-446655440012"
+      responses:
+        "200":
+          description: Templates reordered successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TransactionTemplate"
+        "400":
+          description: Invalid template IDs
+
+  /api/ledgers/{ledgerId}/templates/{templateId}/apply:
+    post:
+      summary: Apply template to create transaction
+      description: |
+        Creates a new transaction using template values.
+        Date defaults to today. Returns the created transaction.
+      operationId: applyTemplate
+      tags:
+        - Templates
+      parameters:
+        - name: ledgerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplyTemplateRequest"
+            example:
+              date: "2026-01-09"
+              amountOverride: 160.00
+              notesOverride: "今天比較貴"
+      responses:
+        "201":
+          description: Transaction created from template
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Template references deleted account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "invalid_reference"
+                message: "Template references a deleted account. Please edit the template."
+        "404":
+          description: Template not found
+
+components:
+  schemas:
+    TransactionTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        ledgerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          maxLength: 50
+        transactionType:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+        description:
+          type: string
+          maxLength: 200
+        sortOrder:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        # Expanded account info for display
+        fromAccount:
+          $ref: "#/components/schemas/AccountSummary"
+        toAccount:
+          $ref: "#/components/schemas/AccountSummary"
+
+    AccountSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ASSET, LIABILITY, INCOME, EXPENSE]
+
+    CreateTemplateRequest:
+      type: object
+      required:
+        - name
+        - transactionType
+        - fromAccountId
+        - toAccountId
+        - amount
+        - description
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Unique template name within ledger
+        transactionType:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 999999999.99
+        description:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    UpdateTemplateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        transactionType:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          maximum: 999999999.99
+        description:
+          type: string
+          minLength: 1
+          maxLength: 200
+
+    ReorderTemplatesRequest:
+      type: object
+      required:
+        - orderedIds
+      properties:
+        orderedIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Template IDs in desired order
+
+    ApplyTemplateRequest:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Override date (defaults to today)
+        amountOverride:
+          type: number
+          format: decimal
+          description: Override template amount
+        notesOverride:
+          type: string
+          maxLength: 500
+          description: Override/add notes
+
+    Transaction:
+      $ref: "transactions.yaml#/components/schemas/Transaction"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        field:
+          type: string

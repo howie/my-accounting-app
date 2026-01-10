@@ -48,6 +48,8 @@ class Transaction(SQLModel, table=True):
     from_account_id: uuid.UUID = Field(foreign_key="accounts.id", index=True)
     to_account_id: uuid.UUID = Field(foreign_key="accounts.id", index=True)
     transaction_type: TransactionType = Field(sa_column=Column(SAEnum(TransactionType)))
+    notes: str | None = Field(default=None, max_length=500)
+    amount_expression: str | None = Field(default=None, max_length=100)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

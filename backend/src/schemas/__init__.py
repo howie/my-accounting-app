@@ -9,6 +9,15 @@ from src.schemas.transaction import (
     TransactionRead,
     TransactionUpdate,
 )
+from src.schemas.transaction_template import (
+    ApplyTemplateRequest,
+    ReorderTemplatesRequest,
+    TransactionTemplateCreate,
+    TransactionTemplateList,
+    TransactionTemplateListItem,
+    TransactionTemplateRead,
+    TransactionTemplateUpdate,
+)
 
 __all__ = [
     "LedgerCreate",
@@ -23,4 +32,11 @@ __all__ = [
     "TransactionUpdate",
     "TransactionListItem",
     "PaginatedTransactions",
+    "TransactionTemplateCreate",
+    "TransactionTemplateRead",
+    "TransactionTemplateUpdate",
+    "TransactionTemplateList",
+    "TransactionTemplateListItem",
+    "ReorderTemplatesRequest",
+    "ApplyTemplateRequest",
 ]

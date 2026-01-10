@@ -510,3 +510,175 @@ class TestTransactionServiceContract:
         """delete_transaction returns False for non-existent transaction."""
         result = service.delete_transaction(uuid.uuid4(), ledger_id)
         assert result is False
+
+    # --- notes and amount_expression fields (004-transaction-entry) ---
+
+    def test_create_transaction_with_notes(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """Creating a transaction with notes stores them correctly."""
+        data = TransactionCreate(
+            date=date.today(),
+            description="Lunch with client",
+            amount=Decimal("85.50"),
+            from_account_id=cash_account_id,
+            to_account_id=expense_account_id,
+            transaction_type=TransactionType.EXPENSE,
+            notes="Business meeting at downtown restaurant",
+        )
+
+        result = service.create_transaction(ledger_id, data)
+
+        assert result.notes == "Business meeting at downtown restaurant"
+
+    def test_create_transaction_without_notes_has_null_notes(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """Creating a transaction without notes results in null notes."""
+        data = TransactionCreate(
+            date=date.today(),
+            description="Regular expense",
+            amount=Decimal("25.00"),
+            from_account_id=cash_account_id,
+            to_account_id=expense_account_id,
+            transaction_type=TransactionType.EXPENSE,
+        )
+
+        result = service.create_transaction(ledger_id, data)
+
+        assert result.notes is None
+
+    def test_create_transaction_with_amount_expression(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """Creating a transaction with amount_expression stores it for audit."""
+        data = TransactionCreate(
+            date=date.today(),
+            description="Split expense",
+            amount=Decimal("100.00"),  # Result of 50+40+10
+            from_account_id=cash_account_id,
+            to_account_id=expense_account_id,
+            transaction_type=TransactionType.EXPENSE,
+            amount_expression="50+40+10",
+        )
+
+        result = service.create_transaction(ledger_id, data)
+
+        assert result.amount_expression == "50+40+10"
+        assert result.amount == Decimal("100.00")
+
+    def test_get_transaction_includes_notes_and_expression(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """get_transaction returns notes and amount_expression in response."""
+        created = service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Full details",
+                amount=Decimal("150.00"),
+                from_account_id=cash_account_id,
+                to_account_id=expense_account_id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Important note",
+                amount_expression="100+50",
+            ),
+        )
+
+        result = service.get_transaction(created.id, ledger_id)
+
+        assert result is not None
+        assert result.notes == "Important note"
+        assert result.amount_expression == "100+50"
+
+    def test_update_transaction_updates_notes(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """update_transaction can update notes field."""
+        created = service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="Original",
+                amount=Decimal("50.00"),
+                from_account_id=cash_account_id,
+                to_account_id=expense_account_id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Original note",
+            ),
+        )
+
+        result = service.update_transaction(
+            created.id,
+            ledger_id,
+            TransactionUpdate(
+                date=date.today(),
+                description="Updated",
+                amount=Decimal("50.00"),
+                from_account_id=cash_account_id,
+                to_account_id=expense_account_id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Updated note",
+            ),
+        )
+
+        assert result is not None
+        assert result.notes == "Updated note"
+
+    def test_update_transaction_can_clear_notes(
+        self,
+        service: TransactionService,
+        ledger_id: uuid.UUID,
+        cash_account_id: uuid.UUID,
+        expense_account_id: uuid.UUID,
+    ) -> None:
+        """update_transaction can set notes to null."""
+        created = service.create_transaction(
+            ledger_id,
+            TransactionCreate(
+                date=date.today(),
+                description="With notes",
+                amount=Decimal("50.00"),
+                from_account_id=cash_account_id,
+                to_account_id=expense_account_id,
+                transaction_type=TransactionType.EXPENSE,
+                notes="Some note",
+            ),
+        )
+
+        result = service.update_transaction(
+            created.id,
+            ledger_id,
+            TransactionUpdate(
+                date=date.today(),
+                description="Without notes",
+                amount=Decimal("50.00"),
+                from_account_id=cash_account_id,
+                to_account_id=expense_account_id,
+                transaction_type=TransactionType.EXPENSE,
+                notes=None,
+            ),
+        )
+
+        assert result is not None
+        assert result.notes is None

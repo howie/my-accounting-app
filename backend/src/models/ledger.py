@@ -13,6 +13,7 @@ from sqlmodel import Field, Relationship, SQLModel
 if TYPE_CHECKING:
     from src.models.account import Account
     from src.models.transaction import Transaction
+    from src.models.transaction_template import TransactionTemplate
 
 
 class Ledger(SQLModel, table=True):
@@ -36,6 +37,10 @@ class Ledger(SQLModel, table=True):
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
     transactions: list["Transaction"] = Relationship(
+        back_populates="ledger",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
+    templates: list["TransactionTemplate"] = Relationship(
         back_populates="ledger",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
     )
