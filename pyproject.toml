@@ -1,6 +1,6 @@
 [project]
 name = "myab"
-version = "0.2.0"
+version = "0.3.0"
 description = "A personal accounting application built with Python and Tkinter."
 authors = [{ name = "Gemini", email = "gemini@example.com" }]
 dependencies = []
