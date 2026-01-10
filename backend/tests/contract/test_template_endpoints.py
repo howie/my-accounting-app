@@ -504,9 +504,9 @@ class TestTemplateEndpointsContract:
             json={"template_ids": [t2["id"], t1["id"]]},
         )
 
-        assert (
-            response.status_code == 200
-        ), f"Expected 200, got {response.status_code}: {response.json()}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.json()}"
+        )
 
     def test_reorder_templates_changes_order(self, client: TestClient) -> None:
         """PATCH /templates/reorder changes the order of templates."""
@@ -519,9 +519,9 @@ class TestTemplateEndpointsContract:
             json={"template_ids": [t2["id"], t1["id"]]},
         )
 
-        assert (
-            response.status_code == 200
-        ), f"Expected 200, got {response.status_code}: {response.json()}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.json()}"
+        )
         data = response.json()
         assert data["data"][0]["id"] == t2["id"]
         assert data["data"][1]["id"] == t1["id"]
