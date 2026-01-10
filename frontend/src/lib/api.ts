@@ -118,6 +118,7 @@ export async function apiPatch<T, D = unknown>(endpoint: string, data: D): Promi
   return handleResponse<T>(response)
 }
 
+
 export async function apiDelete(endpoint: string): Promise<void> {
   const response = await fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
     method: 'DELETE',
@@ -126,4 +127,13 @@ export async function apiDelete(endpoint: string): Promise<void> {
     },
   })
   return handleResponse<void>(response)
+}
+
+export async function apiPostMultipart<T>(endpoint: string, formData: FormData): Promise<T> {
+  const response = await fetchWithErrorHandling(`${API_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    // Content-Type header is not set for FormData; browser sets it with boundary
+    body: formData,
+  })
+  return handleResponse<T>(response)
 }

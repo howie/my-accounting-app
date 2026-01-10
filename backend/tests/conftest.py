@@ -20,6 +20,7 @@ from src.api.main import app
 from src.models import (  # noqa: F401
     Account,
     AuditLog,
+    ImportSession,
     Ledger,
     Transaction,
     TransactionTemplate,
