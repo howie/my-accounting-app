@@ -49,6 +49,7 @@ class ImportSession(SQLModel, table=True):
     import_type: ImportType = Field(sa_column=Column(SAEnum(ImportType)))
     source_filename: str = Field(max_length=255)
     source_file_hash: str = Field(max_length=64)  # SHA-256 for duplicate detection
+    bank_code: str | None = Field(default=None, max_length=20)  # Bank code for credit card imports
 
     # Status tracking
     status: ImportStatus = Field(

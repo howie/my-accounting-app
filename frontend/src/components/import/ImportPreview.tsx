@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { ImportPreviewResponse, ImportExecuteRequest, ImportResult, importApi } from '@/lib/api/import'
 import { accountsApi, AccountListItem } from '@/lib/api/accounts'
+import ImportProgress from './ImportProgress'
+import CategoryEditor from './CategoryEditor'
 
 interface ImportPreviewProps {
     ledgerId: string
@@ -11,12 +13,20 @@ interface ImportPreviewProps {
     onCancel: () => void
 }
 
+type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
+
 export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: ImportPreviewProps) {
     const [mappings, setMappings] = useState(data.account_mappings)
     const [skipDuplicates, setSkipDuplicates] = useState(true)
     const [existingAccounts, setExistingAccounts] = useState<AccountListItem[]>([])
     const [executing, setExecuting] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [importStatus, setImportStatus] = useState<ImportStatus>('pending')
+
+    // Check if this is a credit card import (has category suggestions)
+    const hasCategorySuggestions = useMemo(() => {
+        return data.transactions.some((tx: any) => tx.category_suggestion)
+    }, [data.transactions])
 
     useEffect(() => {
         accountsApi.list(ledgerId)
@@ -27,6 +37,7 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
     const handleExecute = async () => {
         setExecuting(true)
         setError(null)
+        setImportStatus('processing')
         try {
             const skippedRows = skipDuplicates ? data.duplicates.map((d: any) => d.row_number) : []
 
@@ -37,10 +48,12 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
             }
 
             const res = await importApi.execute(ledgerId, req)
+            setImportStatus('completed')
             onSuccess(res)
         } catch (err: any) {
             console.error(err)
             setError(err.message || 'Import failed')
+            setImportStatus('failed')
         } finally {
             setExecuting(false)
         }
@@ -156,17 +169,31 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
             {/* Transaction Preview */}
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
                 <h3 className="text-lg font-bold text-gray-800 mb-4">Transaction Preview ({data.total_count})</h3>
+                {hasCategorySuggestions && (
+                    <p className="text-sm text-gray-500 mb-4">
+                        信用卡交易已自動分類。點擊類別可修改。
+                    </p>
+                )}
                 <div className="overflow-x-auto max-h-96">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-700 sticky top-0">
                             <tr>
                                 <th className="px-4 py-2">Row</th>
                                 <th className="px-4 py-2">Date</th>
-                                <th className="px-4 py-2">Type</th>
+                                {!hasCategorySuggestions && <th className="px-4 py-2">Type</th>}
                                 <th className="px-4 py-2">Description</th>
                                 <th className="px-4 py-2 text-right">Amount</th>
-                                <th className="px-4 py-2">From</th>
-                                <th className="px-4 py-2">To</th>
+                                {hasCategorySuggestions ? (
+                                    <>
+                                        <th className="px-4 py-2">Card</th>
+                                        <th className="px-4 py-2">Category</th>
+                                    </>
+                                ) : (
+                                    <>
+                                        <th className="px-4 py-2">From</th>
+                                        <th className="px-4 py-2">To</th>
+                                    </>
+                                )}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-100">
@@ -174,11 +201,27 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
                                 <tr key={i} className={`hover:bg-gray-50 ${data.duplicates.some((d: any) => d.row_number === tx.row_number) ? "bg-yellow-50" : ""}`}>
                                     <td className="px-4 py-2 text-gray-500">{tx.row_number}</td>
                                     <td className="px-4 py-2">{tx.date}</td>
-                                    <td className="px-4 py-2">{tx.transaction_type}</td>
+                                    {!hasCategorySuggestions && <td className="px-4 py-2">{tx.transaction_type}</td>}
                                     <td className="px-4 py-2">{tx.description}</td>
                                     <td className="px-4 py-2 text-right font-mono">{tx.amount}</td>
-                                    <td className="px-4 py-2 text-xs truncate max-w-[150px]" title={tx.from_account_name}>{tx.from_account_name}</td>
-                                    <td className="px-4 py-2 text-xs truncate max-w-[150px]" title={tx.to_account_name}>{tx.to_account_name}</td>
+                                    {hasCategorySuggestions ? (
+                                        <>
+                                            <td className="px-4 py-2 text-xs truncate max-w-[150px]" title={tx.from_account_name}>
+                                                {tx.from_account_name}
+                                            </td>
+                                            <td className="px-4 py-2">
+                                                <CategoryEditor
+                                                    suggestion={tx.category_suggestion}
+                                                    value={tx.to_account_name}
+                                                />
+                                            </td>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <td className="px-4 py-2 text-xs truncate max-w-[150px]" title={tx.from_account_name}>{tx.from_account_name}</td>
+                                            <td className="px-4 py-2 text-xs truncate max-w-[150px]" title={tx.to_account_name}>{tx.to_account_name}</td>
+                                        </>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
@@ -186,12 +229,23 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
                 </div>
             </div>
 
+            {/* Progress Indicator */}
+            {executing && (
+                <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+                    <ImportProgress
+                        current={importStatus === 'processing' ? data.total_count : 0}
+                        total={data.total_count}
+                        status={importStatus}
+                    />
+                </div>
+            )}
+
             {/* Actions */}
             <div className="flex justify-end space-x-4 pt-4">
                 <button
                     onClick={onCancel}
                     disabled={executing}
-                    className="px-6 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 bg-white"
+                    className="px-6 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     Cancel
                 </button>

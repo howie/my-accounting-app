@@ -19,7 +19,7 @@ from src.schemas.data_import import (
     ImportResult,
     ImportType,
 )
-from src.services.csv_parser import MyAbCsvParser
+from src.services.csv_parser import CreditCardCsvParser, MyAbCsvParser
 from src.services.import_service import ImportService
 
 router = APIRouter()
@@ -78,8 +78,15 @@ async def create_import_preview(
             if import_type == ImportType.MYAB_CSV:
                 parser = MyAbCsvParser()
                 parsed_txs = parser.parse(f)
+            elif import_type == ImportType.CREDIT_CARD:
+                if not bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="bank_code is required for credit card import",
+                    )
+                parser = CreditCardCsvParser(bank_code)
+                parsed_txs = parser.parse(f)
             else:
-                # Placeholder for Credit Card
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
                     detail="Import type not supported yet",
@@ -129,6 +136,7 @@ async def create_import_preview(
         import_type=import_type,
         source_filename=filename,
         source_file_hash=file_hash,
+        bank_code=bank_code if import_type == ImportType.CREDIT_CARD else None,
         status=ImportStatus.PENDING,
         progress_total=len(mapped_txs),
         imported_count=0,
@@ -195,10 +203,20 @@ async def execute_import(
             if import_session.import_type == ImportType.MYAB_CSV:
                 parser = MyAbCsvParser()
                 parsed_txs = parser.parse(f)
+            elif import_session.import_type == ImportType.CREDIT_CARD:
+                if not import_session.bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Bank code not found in import session",
+                    )
+                parser = CreditCardCsvParser(import_session.bank_code)
+                parsed_txs = parser.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
                 )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -238,7 +256,10 @@ async def list_supported_banks() -> Any:
     """
     List supported banks for credit card import.
     """
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    from src.services.bank_configs import get_supported_banks
+
+    banks = get_supported_banks()
+    return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
 
 
 @router.get("/ledgers/{_ledger_id}/import/history")
