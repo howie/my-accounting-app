@@ -1,0 +1,540 @@
+openapi: 3.1.0
+info:
+  title: Data Import API
+  description: API for importing transactions from CSV files (MyAB and Credit Card statements)
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: API server
+
+paths:
+  /ledgers/{ledgerId}/import/preview:
+    post:
+      summary: Parse CSV and generate import preview
+      description: |
+        Upload a CSV file for parsing. Returns a preview of transactions,
+        detected duplicates, and account mappings for user confirmation.
+      operationId: createImportPreview
+      tags:
+        - Import
+      parameters:
+        - $ref: "#/components/parameters/LedgerId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - import_type
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV file to import (max 10MB)
+                import_type:
+                  type: string
+                  enum: [MYAB_CSV, CREDIT_CARD]
+                  description: Type of import
+                bank_code:
+                  type: string
+                  description: Bank code for credit card import (required when import_type is CREDIT_CARD)
+                  example: cathay
+      responses:
+        "200":
+          description: Preview generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPreviewResponse"
+        "400":
+          description: Invalid file or format
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportError"
+        "413":
+          description: File too large (exceeds 10MB)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportError"
+
+  /ledgers/{ledgerId}/import/execute:
+    post:
+      summary: Execute the import
+      description: |
+        Execute the import based on a previous preview.
+        This is an atomic operation - either all transactions are imported or none.
+      operationId: executeImport
+      tags:
+        - Import
+      parameters:
+        - $ref: "#/components/parameters/LedgerId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportExecuteRequest"
+      responses:
+        "200":
+          description: Import completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportResult"
+        "202":
+          description: Import started (for large imports, check status via job endpoint)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportJobStarted"
+        "400":
+          description: Invalid request or preview expired
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportError"
+        "409":
+          description: Import failed due to data conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportError"
+
+  /import/jobs/{jobId}:
+    get:
+      summary: Get import job status
+      description: Check the status of a long-running import job
+      operationId: getImportJobStatus
+      tags:
+        - Import
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Job status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportJobStatus"
+        "404":
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportError"
+
+  /import/banks:
+    get:
+      summary: List supported banks for credit card import
+      description: Returns a list of supported banks and their configurations
+      operationId: listSupportedBanks
+      tags:
+        - Import
+      responses:
+        "200":
+          description: List of supported banks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  banks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BankConfig"
+
+  /ledgers/{ledgerId}/import/history:
+    get:
+      summary: Get import history
+      description: Returns a list of previous import sessions for the ledger
+      operationId: getImportHistory
+      tags:
+        - Import
+      parameters:
+        - $ref: "#/components/parameters/LedgerId"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Import history retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ImportSession"
+                  total:
+                    type: integer
+
+components:
+  parameters:
+    LedgerId:
+      name: ledgerId
+      in: path
+      required: true
+      description: Ledger UUID
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    ImportPreviewResponse:
+      type: object
+      required:
+        - session_id
+        - total_count
+        - date_range
+        - transactions
+        - account_mappings
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session ID for executing the import
+        total_count:
+          type: integer
+          description: Total number of transactions in the file
+        date_range:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ParsedTransaction"
+          description: Sample of parsed transactions (first 50)
+        duplicates:
+          type: array
+          items:
+            $ref: "#/components/schemas/DuplicateWarning"
+        account_mappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountMapping"
+        validation_errors:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+        is_valid:
+          type: boolean
+          description: Whether the import can proceed
+
+    ParsedTransaction:
+      type: object
+      required:
+        - row_number
+        - date
+        - transaction_type
+        - from_account_name
+        - to_account_name
+        - amount
+        - description
+      properties:
+        row_number:
+          type: integer
+        date:
+          type: string
+          format: date
+        transaction_type:
+          type: string
+          enum: [EXPENSE, INCOME, TRANSFER]
+        from_account_name:
+          type: string
+        to_account_name:
+          type: string
+        amount:
+          type: string
+          description: Decimal amount as string for precision
+        description:
+          type: string
+        invoice_number:
+          type: string
+          nullable: true
+        category_suggestion:
+          $ref: "#/components/schemas/CategorySuggestion"
+
+    AccountMapping:
+      type: object
+      required:
+        - csv_account_name
+        - csv_account_type
+      properties:
+        csv_account_name:
+          type: string
+          description: Account name from CSV (e.g., "A-現金")
+        csv_account_type:
+          type: string
+          enum: [ASSET, LIABILITY, INCOME, EXPENSE]
+        system_account_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Matched system account ID (null if new)
+        create_new:
+          type: boolean
+          default: false
+          description: Whether to create a new account
+        suggested_name:
+          type: string
+          nullable: true
+          description: Suggested name for new account
+
+    DuplicateWarning:
+      type: object
+      required:
+        - row_number
+        - existing_transaction_ids
+        - similarity_reason
+      properties:
+        row_number:
+          type: integer
+          description: Row number in the CSV file
+        existing_transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        similarity_reason:
+          type: string
+          description: Description of why these are considered duplicates
+
+    CategorySuggestion:
+      type: object
+      properties:
+        suggested_account_id:
+          type: string
+          format: uuid
+          nullable: true
+        suggested_account_name:
+          type: string
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        matched_keyword:
+          type: string
+          nullable: true
+
+    ValidationError:
+      type: object
+      required:
+        - row_number
+        - error_type
+        - message
+      properties:
+        row_number:
+          type: integer
+        error_type:
+          type: string
+          enum:
+            - INVALID_DATE
+            - INVALID_AMOUNT
+            - MISSING_COLUMN
+            - UNKNOWN_ACCOUNT_TYPE
+        message:
+          type: string
+        value:
+          type: string
+          description: The problematic value
+
+    ImportExecuteRequest:
+      type: object
+      required:
+        - session_id
+        - account_mappings
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session ID from preview
+        account_mappings:
+          type: array
+          items:
+            $ref: "#/components/schemas/AccountMapping"
+          description: Updated account mappings with user selections
+        skip_duplicate_rows:
+          type: array
+          items:
+            type: integer
+          description: Row numbers to skip (duplicates)
+
+    ImportResult:
+      type: object
+      required:
+        - success
+        - imported_count
+      properties:
+        success:
+          type: boolean
+        imported_count:
+          type: integer
+        skipped_count:
+          type: integer
+        created_accounts:
+          type: array
+          items:
+            $ref: "#/components/schemas/CreatedAccount"
+        date_range:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+
+    CreatedAccount:
+      type: object
+      required:
+        - id
+        - name
+        - type
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [ASSET, LIABILITY, INCOME, EXPENSE]
+
+    ImportJobStarted:
+      type: object
+      required:
+        - job_id
+        - status
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing]
+
+    ImportJobStatus:
+      type: object
+      required:
+        - job_id
+        - status
+      properties:
+        job_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [processing, completed, failed]
+        progress:
+          type: object
+          properties:
+            current:
+              type: integer
+            total:
+              type: integer
+        result:
+          $ref: "#/components/schemas/ImportResult"
+        error:
+          $ref: "#/components/schemas/ImportError"
+
+    ImportSession:
+      type: object
+      required:
+        - id
+        - import_type
+        - status
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+        import_type:
+          type: string
+          enum: [MYAB_CSV, CREDIT_CARD]
+        source_filename:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED]
+        imported_count:
+          type: integer
+        skipped_count:
+          type: integer
+        error_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    BankConfig:
+      type: object
+      required:
+        - code
+        - name
+      properties:
+        code:
+          type: string
+          description: Bank code identifier
+          example: cathay
+        name:
+          type: string
+          description: Display name
+          example: 國泰世華
+        encoding:
+          type: string
+          description: Expected file encoding
+          example: Big5
+
+    ImportError:
+      type: object
+      required:
+        - error_type
+        - message
+      properties:
+        error_type:
+          type: string
+          enum:
+            - FILE_TOO_LARGE
+            - INVALID_FORMAT
+            - ENCODING_ERROR
+            - MISSING_COLUMN
+            - TRANSACTION_LIMIT
+            - PREVIEW_EXPIRED
+            - IMPORT_FAILED
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true

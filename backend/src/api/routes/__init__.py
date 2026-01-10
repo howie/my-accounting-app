@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from src.api.routes import accounts, dashboard, ledgers, transactions, users
+from src.api.routes import accounts, dashboard, import_routes, ledgers, transactions, users
 
 api_router = APIRouter()
 
@@ -18,3 +18,6 @@ api_router.include_router(transactions.router)
 
 # Phase 6 (US4): Users
 api_router.include_router(users.router)
+
+# Feature 006: Data Import
+api_router.include_router(import_routes.router, tags=["Import"])
