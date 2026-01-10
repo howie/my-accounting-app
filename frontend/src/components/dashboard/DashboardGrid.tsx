@@ -4,6 +4,7 @@ import { useDashboard } from '@/lib/hooks/useDashboard'
 import { BalanceCard } from './BalanceCard'
 import { IncomeExpenseChart } from './IncomeExpenseChart'
 import { TrendChart } from './TrendChart'
+import { QuickEntryPanel } from '@/components/templates'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { AlertCircle } from 'lucide-react'
 
@@ -59,6 +60,9 @@ export function DashboardGrid() {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Quick Entry Panel */}
+      <QuickEntryPanel ledgerId={currentLedger.id} />
 
       {/* Trend Chart - Full width */}
       <TrendChart trends={data?.trends ?? []} isLoading={isLoading} />
