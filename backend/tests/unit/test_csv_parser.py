@@ -73,3 +73,104 @@ invalid_date,支出,E-Food,,,A-Cash,100,Desc,""".encode()
         parser = MyAbCsvParser()
         with pytest.raises(ValueError, match="Invalid amount format"):
             parser.parse(BytesIO(content))
+
+
+# T043: Unit test for credit card CSV parser (multiple banks)
+# T045: Unit test for bank config loading
+
+SAMPLE_CATHAY_CSV = """交易日期,入帳日期,商店名稱,金額
+2024/01/15,2024/01/16,星巴克信義店,150
+2024/01/16,2024/01/17,全聯福利中心,520
+2024/01/18,2024/01/19,台灣高鐵,1490
+""".encode()
+
+SAMPLE_CTBC_CSV = """交易日,商店,消費金額
+2024-01-10,台北101美食街,280
+2024-01-12,中油加油站,1200
+""".encode()
+
+
+class TestBankConfigLoading:
+    """T045: Unit test for bank config loading"""
+
+    def test_get_supported_banks(self):
+        from src.services.bank_configs import get_supported_banks
+
+        banks = get_supported_banks()
+        assert len(banks) >= 5  # 至少支援 5 家銀行
+        bank_codes = [b.code for b in banks]
+        assert "CATHAY" in bank_codes
+        assert "CTBC" in bank_codes
+        assert "ESUN" in bank_codes
+        assert "TAISHIN" in bank_codes
+        assert "FUBON" in bank_codes
+
+    def test_get_bank_config(self):
+        from src.services.bank_configs import get_bank_config
+
+        config = get_bank_config("CATHAY")
+        assert config is not None
+        assert config.code == "CATHAY"
+        assert config.name == "國泰世華"
+        assert config.date_column >= 0
+        assert config.amount_column >= 0
+        assert config.description_column >= 0
+
+    def test_get_bank_config_not_found(self):
+        from src.services.bank_configs import get_bank_config
+
+        config = get_bank_config("UNKNOWN_BANK")
+        assert config is None
+
+
+class TestCreditCardCsvParser:
+    """T043: Unit test for credit card CSV parser (multiple banks)"""
+
+    def test_parse_cathay_csv(self):
+        from src.services.csv_parser import CreditCardCsvParser
+
+        parser = CreditCardCsvParser("CATHAY")
+        transactions = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
+
+        assert len(transactions) == 3
+
+        tx1 = transactions[0]
+        assert tx1.date == datetime.date(2024, 1, 15)
+        assert tx1.amount == Decimal("150")
+        assert tx1.description == "星巴克信義店"
+
+        tx2 = transactions[1]
+        assert tx2.date == datetime.date(2024, 1, 16)
+        assert tx2.amount == Decimal("520")
+        assert tx2.description == "全聯福利中心"
+
+    def test_parse_ctbc_csv(self):
+        from src.services.csv_parser import CreditCardCsvParser
+
+        parser = CreditCardCsvParser("CTBC")
+        transactions = parser.parse(BytesIO(SAMPLE_CTBC_CSV))
+
+        assert len(transactions) == 2
+
+        tx1 = transactions[0]
+        assert tx1.date == datetime.date(2024, 1, 10)
+        assert tx1.amount == Decimal("280")
+        assert tx1.description == "台北101美食街"
+
+    def test_parse_unsupported_bank(self):
+        from src.services.csv_parser import CreditCardCsvParser
+
+        with pytest.raises(ValueError, match="Unsupported bank"):
+            CreditCardCsvParser("UNKNOWN_BANK")
+
+    def test_parse_invalid_format(self):
+        from src.services.csv_parser import CreditCardCsvParser
+
+        # CSV with wrong column count
+        invalid_csv = b"""col1,col2
+data1,data2
+"""
+
+        parser = CreditCardCsvParser("CATHAY")
+        with pytest.raises(ValueError):
+            parser.parse(BytesIO(invalid_csv))
