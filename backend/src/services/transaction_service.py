@@ -61,6 +61,8 @@ class TransactionService:
             from_account_id=data.from_account_id,
             to_account_id=data.to_account_id,
             transaction_type=data.transaction_type,
+            notes=data.notes,
+            amount_expression=data.amount_expression,
         )
 
         self.session.add(transaction)
@@ -210,6 +212,8 @@ class TransactionService:
             from_account_id=transaction.from_account_id,
             to_account_id=transaction.to_account_id,
             transaction_type=transaction.transaction_type,
+            notes=transaction.notes,
+            amount_expression=transaction.amount_expression,
             created_at=transaction.created_at,
             updated_at=transaction.updated_at,
             from_account=AccountSummary(
@@ -267,6 +271,8 @@ class TransactionService:
         transaction.from_account_id = data.from_account_id
         transaction.to_account_id = data.to_account_id
         transaction.transaction_type = data.transaction_type
+        transaction.notes = data.notes
+        transaction.amount_expression = data.amount_expression
         transaction.updated_at = datetime.now(UTC)
 
         self.session.add(transaction)
@@ -282,6 +288,8 @@ class TransactionService:
             from_account_id=transaction.from_account_id,
             to_account_id=transaction.to_account_id,
             transaction_type=transaction.transaction_type,
+            notes=transaction.notes,
+            amount_expression=transaction.amount_expression,
             created_at=transaction.created_at,
             updated_at=transaction.updated_at,
             from_account=AccountSummary(

@@ -17,7 +17,14 @@ from src.api.deps import get_session
 from src.api.main import app
 
 # Import all models to register them with SQLModel metadata
-from src.models import Account, AuditLog, Ledger, Transaction, User  # noqa: F401
+from src.models import (  # noqa: F401
+    Account,
+    AuditLog,
+    Ledger,
+    Transaction,
+    TransactionTemplate,
+    User,
+)
 
 
 @pytest.fixture(name="engine")

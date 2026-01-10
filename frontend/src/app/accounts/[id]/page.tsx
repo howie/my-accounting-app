@@ -6,7 +6,10 @@ import { ArrowLeft } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { AccountTransactionList } from '@/components/tables/AccountTransactionList'
+import { TransactionModal } from '@/components/transactions/TransactionModal'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
+import { useAccount } from '@/lib/hooks/useAccounts'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface AccountPageProps {
   params: Promise<{ id: string }>
@@ -19,7 +22,16 @@ interface AccountPageProps {
 export default function AccountPage({ params }: AccountPageProps) {
   const { id } = use(params)
   const router = useRouter()
+  const queryClient = useQueryClient()
   const { currentLedger, isLoading } = useLedgerContext()
+
+  // Fetch account data for pre-selection
+  const { data: account } = useAccount(currentLedger?.id ?? '', id)
+
+  // Refresh transaction list after creating a new transaction
+  const handleTransactionCreated = () => {
+    queryClient.invalidateQueries({ queryKey: ['account-transactions', id] })
+  }
 
   // Still loading ledger context
   if (isLoading) {
@@ -54,6 +66,16 @@ export default function AccountPage({ params }: AccountPageProps) {
         <ArrowLeft className="mr-1 h-4 w-4" />
         Back to Dashboard
       </Button>
+
+      {/* Add Transaction button */}
+      <div className="mb-4 flex justify-end">
+        <TransactionModal
+          ledgerId={currentLedger.id}
+          preSelectedAccountId={account?.id}
+          preSelectedAccountType={account?.type}
+          onTransactionCreated={handleTransactionCreated}
+        />
+      </div>
 
       {/* Transaction list */}
       <AccountTransactionList accountId={id} />

@@ -23,6 +23,8 @@ class TransactionCreate(SQLModel):
     from_account_id: uuid.UUID
     to_account_id: uuid.UUID
     transaction_type: TransactionType
+    notes: str | None = Field(default=None, max_length=500)
+    amount_expression: str | None = Field(default=None, max_length=100)
 
     @field_validator("description")
     @classmethod
@@ -31,6 +33,24 @@ class TransactionCreate(SQLModel):
         if not v.strip():
             raise ValueError("Description cannot be empty or whitespace only")
         return v.strip()
+
+    @field_validator("notes")
+    @classmethod
+    def notes_not_empty_if_provided(cls, v: str | None) -> str | None:
+        """Ensure notes is not whitespace only if provided."""
+        if v is None:
+            return v
+        stripped = v.strip()
+        return stripped if stripped else None
+
+    @field_validator("amount_expression")
+    @classmethod
+    def expression_not_empty_if_provided(cls, v: str | None) -> str | None:
+        """Ensure amount_expression is not whitespace only if provided."""
+        if v is None:
+            return v
+        stripped = v.strip()
+        return stripped if stripped else None
 
 
 class TransactionUpdate(SQLModel):
@@ -42,6 +62,8 @@ class TransactionUpdate(SQLModel):
     from_account_id: uuid.UUID
     to_account_id: uuid.UUID
     transaction_type: TransactionType
+    notes: str | None = Field(default=None, max_length=500)
+    amount_expression: str | None = Field(default=None, max_length=100)
 
     @field_validator("description")
     @classmethod
@@ -50,6 +72,24 @@ class TransactionUpdate(SQLModel):
         if not v.strip():
             raise ValueError("Description cannot be empty or whitespace only")
         return v.strip()
+
+    @field_validator("notes")
+    @classmethod
+    def notes_not_empty_if_provided(cls, v: str | None) -> str | None:
+        """Ensure notes is not whitespace only if provided."""
+        if v is None:
+            return v
+        stripped = v.strip()
+        return stripped if stripped else None
+
+    @field_validator("amount_expression")
+    @classmethod
+    def expression_not_empty_if_provided(cls, v: str | None) -> str | None:
+        """Ensure amount_expression is not whitespace only if provided."""
+        if v is None:
+            return v
+        stripped = v.strip()
+        return stripped if stripped else None
 
 
 class AccountSummary(SQLModel):
@@ -71,6 +111,8 @@ class TransactionRead(SQLModel):
     from_account_id: uuid.UUID
     to_account_id: uuid.UUID
     transaction_type: TransactionType
+    notes: str | None = None
+    amount_expression: str | None = None
     created_at: datetime
     updated_at: datetime
     from_account: AccountSummary | None = None
