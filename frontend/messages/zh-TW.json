@@ -233,7 +233,9 @@
     "viewDetails": "查看詳情",
     "retry": "重試",
     "cancel": "取消匯入",
-    "confirmCancel": "確定要取消匯入嗎？"
+    "confirmCancel": "確定要取消匯入嗎？",
+    "importMore": "再匯入更多",
+    "viewTransactions": "查看交易"
   },
   "transactionModal": {
     "title": "新增交易",

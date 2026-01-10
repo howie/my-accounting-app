@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Home, Menu, X, BookOpen, Settings } from 'lucide-react'
+import { Home, Menu, X, BookOpen, Settings, Upload } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
@@ -149,6 +149,25 @@ export function Sidebar() {
             </div>
           )}
         </nav>
+
+        {/* Import Link */}
+        {currentLedger && (
+          <div className="px-2 pb-2">
+            <Link
+              href={`/ledgers/${currentLedger.id}/import`}
+              className={cn(
+                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+                'transition-colors duration-150',
+                pathname.includes('/import')
+                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+              )}
+            >
+              <Upload className="h-4 w-4" />
+              <span>{t('import')}</span>
+            </Link>
+          </div>
+        )}
 
         {/* Settings Link */}
         <div className="mt-auto px-2 pb-2">

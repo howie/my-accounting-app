@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import FileUploader from '@/components/import/FileUploader'
 import ImportPreview from '@/components/import/ImportPreview'
 import { ImportPreviewResponse, ImportResult } from '@/lib/api/import'
@@ -9,6 +10,7 @@ import { ImportPreviewResponse, ImportResult } from '@/lib/api/import'
 export default function ImportPage() {
     const params = useParams()
     const router = useRouter()
+    const t = useTranslations('import')
     const ledgerId = params.id as string
     const idValue = Array.isArray(ledgerId) ? ledgerId[0] : ledgerId
 
@@ -39,21 +41,21 @@ export default function ImportPage() {
                         </div>
                     </div>
 
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">Import Complete!</h2>
-                    <p className="text-gray-500 mb-8">Your transactions have been successfully imported.</p>
+                    <h2 className="text-3xl font-bold text-gray-800 mb-2">{t('importSuccess')}</h2>
+                    <p className="text-gray-500 mb-8">{t('importSuccessMessage', { count: result.imported_count })}</p>
 
                     <div className="grid grid-cols-3 gap-4 mb-8">
                         <div className="p-4 bg-gray-50 rounded border border-gray-100">
                             <div className="text-3xl font-bold text-gray-900">{result.imported_count}</div>
-                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Imported</div>
+                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">{t('importedCount')}</div>
                         </div>
                         <div className="p-4 bg-gray-50 rounded border border-gray-100">
                             <div className="text-3xl font-bold text-gray-900">{result.created_accounts.length}</div>
-                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">New Accounts</div>
+                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">{t('createdAccounts')}</div>
                         </div>
                         <div className="p-4 bg-gray-50 rounded border border-gray-100">
                             <div className="text-3xl font-bold text-gray-900">{result.skipped_count}</div>
-                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">Skipped</div>
+                            <div className="text-xs uppercase font-bold text-gray-400 tracking-wider">{t('skippedCount')}</div>
                         </div>
                     </div>
 
@@ -62,13 +64,13 @@ export default function ImportPage() {
                             onClick={handleReset}
                             className="px-6 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                            Import More
+                            {t('importMore')}
                         </button>
                         <button
-                            onClick={() => router.push(`/ledgers/${idValue}/transactions`)}
+                            onClick={() => router.push(`/ledgers/${idValue}`)}
                             className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium shadow-md transition-colors"
                         >
-                            View Transactions
+                            {t('viewTransactions')}
                         </button>
                     </div>
                 </div>
@@ -81,8 +83,8 @@ export default function ImportPage() {
             {!previewData ? (
                 <>
                     <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-gray-900">Import Transactions</h1>
-                        <p className="text-gray-500">Upload CSV files to import transactions into your ledger.</p>
+                        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+                        <p className="text-gray-500">{t('subtitle')}</p>
                     </div>
                     <FileUploader ledgerId={idValue} onPreviewLoaded={setPreviewData} />
                 </>
