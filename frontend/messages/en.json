@@ -233,7 +233,9 @@
     "viewDetails": "View Details",
     "retry": "Retry",
     "cancel": "Cancel Import",
-    "confirmCancel": "Are you sure you want to cancel the import?"
+    "confirmCancel": "Are you sure you want to cancel the import?",
+    "importMore": "Import More",
+    "viewTransactions": "View Transactions"
   },
   "transactionModal": {
     "title": "Add Transaction",
