@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-transaction-entry`
 **Created**: 2026-01-09
-**Status**: Draft
+**Status**: Done
 **Input**: User description: "Transaction entry feature for adding new transactions from account page"
 
 ## User Scenarios & Testing _(mandatory)_

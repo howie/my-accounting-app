@@ -81,4 +81,5 @@ Standard Python virtual environment practices apply:
 
 ## Recent Changes
 
+- 004-transaction-entry: Feature complete - transaction entry from account page, amount calculator, templates, QuickEntryPanel
 - 001-core-accounting: Added Python 3.12 (Backend), TypeScript 5.x (Frontend)
