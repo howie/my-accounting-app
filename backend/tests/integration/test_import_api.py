@@ -233,9 +233,9 @@ def test_import_atomic_rollback_on_invalid_mapping(
     assert import_session.status in [ImportStatus.PENDING, ImportStatus.FAILED]
 
 
-def test_import_history(client: TestClient, _session, setup_user_and_ledger):
+def test_import_history(client: TestClient, session, setup_user_and_ledger):  # noqa: ARG001
     """T068: Test GET /api/ledgers/{id}/import/history endpoint."""
-    _user, ledger = setup_user_and_ledger
+    _, ledger = setup_user_and_ledger
 
     # 1. Create and execute an import to have some history
     csv_content = """日期,交易類型,支出科目,收入科目,從科目,到科目,金額,明細,發票號碼
@@ -287,9 +287,9 @@ def test_import_history(client: TestClient, _session, setup_user_and_ledger):
     assert found, "Recently completed import should appear in history"
 
 
-def test_import_history_pagination(client: TestClient, _session, setup_user_and_ledger):
+def test_import_history_pagination(client: TestClient, session, setup_user_and_ledger):  # noqa: ARG001
     """Test import history pagination."""
-    _user, ledger = setup_user_and_ledger
+    _, ledger = setup_user_and_ledger
 
     # Create multiple import sessions
     for i in range(3):
