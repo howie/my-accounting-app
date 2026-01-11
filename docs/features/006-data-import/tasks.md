@@ -169,7 +169,7 @@
 - [x] T068 [P] Implement GET /api/ledgers/{id}/import/history endpoint in backend/src/api/import_routes.py
 - [x] T069 Performance testing: verify 2000 transactions import < 30 seconds
 - [x] T070 Verify data integrity compliance (double-entry, audit trails) across all import types
-- [ ] T071 [P] Add frontend unit tests for import components in frontend/tests/components/import/
+- [x] T071 [P] Add frontend unit tests for import components in frontend/tests/components/import/
 - [x] T072 Run quickstart.md validation checklist
 - [x] T073 Update API documentation with import endpoints (contracts/import-api.yaml)
 

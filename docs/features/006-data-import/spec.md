@@ -2,7 +2,7 @@
 
 **Feature Branch**: `006-data-import`
 **Created**: 2026-01-09
-**Status**: Draft
+**Status**: Complete
 **Input**: User description: "006-data-import 參考 ROADMAP.md - 批次匯入入口、MyAB CSV 匯入、信用卡帳單匯入"
 
 ## Clarifications
