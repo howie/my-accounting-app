@@ -167,3 +167,114 @@ class MyAbCsvParser(CsvParser):
         if account_name.startswith("E-"):
             return AccountType.EXPENSE
         return None
+
+
+class CreditCardCsvParser(CsvParser):
+    """Parser for bank credit card CSV files."""
+
+    def __init__(self, bank_code: str):
+        """
+        Initialize parser with bank configuration.
+
+        Args:
+            bank_code: Bank code (e.g., CATHAY, CTBC)
+
+        Raises:
+            ValueError: If bank is not supported
+        """
+        from src.services.bank_configs import get_bank_config
+
+        self.config = get_bank_config(bank_code)
+        if self.config is None:
+            raise ValueError(f"Unsupported bank: {bank_code}")
+
+    def parse(self, file: BinaryIO) -> list[ParsedTransaction]:
+        """
+        Parse credit card CSV file.
+
+        Args:
+            file: Binary file object containing CSV data
+
+        Returns:
+            List of ParsedTransaction objects
+        """
+        from src.services.category_suggester import CategorySuggester
+
+        # Read raw CSV rows
+        encoding = self.config.encoding or self.detect_encoding(file)
+        file.seek(0)
+
+        try:
+            content = file.read().decode(encoding)
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Failed to decode file with encoding {encoding}: {e}") from e
+
+        # Remove BOM if present
+        if content.startswith("\ufeff"):
+            content = content[1:]
+
+        f = io.StringIO(content)
+        reader = csv.reader(f)
+        rows = list(reader)
+
+        # Skip header rows
+        data_rows = rows[self.config.skip_rows :]
+
+        # Initialize category suggester
+        suggester = CategorySuggester()
+
+        result = []
+        for i, row in enumerate(data_rows, start=1):
+            try:
+                # Validate row has enough columns
+                max_col = max(
+                    self.config.date_column,
+                    self.config.description_column,
+                    self.config.amount_column,
+                )
+                if len(row) <= max_col:
+                    raise ValueError(f"Row {i} has insufficient columns")
+
+                # Parse date
+                date_str = row[self.config.date_column].strip()
+                try:
+                    parsed_date = datetime.strptime(date_str, self.config.date_format).date()
+                except ValueError as e:
+                    raise ValueError(f"Invalid date format in row {i}: {date_str}") from e
+
+                # Parse description
+                description = row[self.config.description_column].strip()
+
+                # Parse amount
+                amount_str = row[self.config.amount_column].strip()
+                try:
+                    # Remove thousand separators and handle negative amounts
+                    amount_str = amount_str.replace(",", "").replace("$", "").replace("NT", "")
+                    amount = abs(Decimal(amount_str))
+                except InvalidOperation as e:
+                    raise ValueError(f"Invalid amount format in row {i}: {amount_str}") from e
+
+                # Get category suggestion
+                suggestion = suggester.suggest(description)
+
+                # Create transaction
+                # For credit card: from_account = credit card (LIABILITY)
+                # to_account = expense category (EXPENSE)
+                tx = ParsedTransaction(
+                    row_number=i,
+                    date=parsed_date,
+                    transaction_type=TransactionType.EXPENSE,
+                    from_account_name=f"信用卡-{self.config.name}",  # Will be mapped later
+                    to_account_name=suggestion.suggested_account_name,
+                    amount=amount,
+                    description=description,
+                    category_suggestion=suggestion,
+                )
+                result.append(tx)
+
+            except ValueError:
+                raise
+            except Exception as e:
+                raise ValueError(f"Error parsing row {i}: {e}") from e
+
+        return result

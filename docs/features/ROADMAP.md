@@ -57,25 +57,36 @@
 
 **Priority: High**
 
-UI 導航改進。
+UI 導航改進與進階導覽功能。
 
 **Scope:**
 
 - [ ] Sidebar menu 調整
   - [ ] 「回到帳本清單」移到最上方
   - [ ] 新增 Settings 入口
-  - [ ] 新增批次匯入入口
+  - [x] 新增批次匯入入口（已在 006 實作）
+  - [ ] 可收合的 Sidebar（Icon-only mode）
+  - [ ] 最近瀏覽科目（Recent Accounts）
 - [ ] Top bar 改進
   - [ ] 帳本選擇器（右上角）
   - [ ] 設定選單（i18n、主題切換）
+  - [ ] 麵包屑導覽（Breadcrumbs）
 - [ ] Dashboard 卡片改進
   - [ ] 第一行：總資產、總負債、當月收入、當月支出
   - [ ] 總資產圖表：數值 + 一年趨勢折線圖
   - [ ] Income vs Expense：每月長條圖
+- [ ] 快速搜尋（Command Palette）
+  - [ ] Cmd/Ctrl+K 開啟搜尋
+  - [ ] 搜尋科目與頁面
+  - [ ] 鍵盤導覽結果
+- [ ] 鍵盤快捷鍵
+  - [ ] g+d 前往 Dashboard
+  - [ ] g+s 前往 Settings
+  - [ ] ? 顯示快捷鍵說明
 
 ---
 
-### 006-data-import
+### 006-data-import (IN PROGRESS)
 
 **Priority: Medium**
 
@@ -83,12 +94,12 @@ UI 導航改進。
 
 **Scope:**
 
-- [ ] 批次匯入入口（Menu）
-- [ ] MyAB CSV 匯入
-  - [ ] 解析 MyAB 匯出格式
-  - [ ] 科目自動對應/建立
-  - [ ] 預覽匯入資料
-  - [ ] 確認匯入
+- [x] 批次匯入入口（Menu）
+- [x] MyAB CSV 匯入
+  - [x] 解析 MyAB 匯出格式
+  - [x] 科目自動對應/建立
+  - [x] 預覽匯入資料
+  - [x] 確認匯入
 - [ ] 信用卡帳單匯入
   - [ ] 支援常見銀行 CSV/PDF 格式
   - [ ] 自動分類支出科目
@@ -206,7 +217,7 @@ UI 導航改進。
             ├── 003-settings-account-management (DONE)
             │       └── 005-ui-navigation-v2
             ├── 004-transaction-entry (DONE)
-            ├── 006-data-import
+            ├── 006-data-import (IN PROGRESS)
             ├── 007-data-export
             └── 008-reports
                     ├── 009-advanced-transactions
@@ -225,7 +236,7 @@ UI 導航改進。
 
 **Phase 2 - Data Management (Medium Priority)**
 
-4. 006-data-import
+4. 006-data-import 🚧 IN PROGRESS (MyAB CSV 完成，信用卡帳單待實作)
 5. 007-data-export
 6. 008-reports
 
