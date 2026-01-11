@@ -86,7 +86,7 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 006-data-import (IN PROGRESS)
+### 006-data-import (DONE)
 
 **Priority: Medium**
 
@@ -100,7 +100,7 @@ UI 導航改進與進階導覽功能。
   - [x] 科目自動對應/建立
   - [x] 預覽匯入資料
   - [x] 確認匯入
-- [ ] 信用卡帳單匯入
+- [ ] 信用卡帳單匯入（Future）
   - [ ] 支援常見銀行 CSV/PDF 格式
   - [ ] 自動分類支出科目
 - [ ] 對話式匯入（AI）- Future
@@ -217,7 +217,7 @@ UI 導航改進與進階導覽功能。
             ├── 003-settings-account-management (DONE)
             │       └── 005-ui-navigation-v2
             ├── 004-transaction-entry (DONE)
-            ├── 006-data-import (IN PROGRESS)
+            ├── 006-data-import (DONE)
             ├── 007-data-export
             └── 008-reports
                     ├── 009-advanced-transactions
@@ -236,7 +236,7 @@ UI 導航改進與進階導覽功能。
 
 **Phase 2 - Data Management (Medium Priority)**
 
-4. 006-data-import 🚧 IN PROGRESS (MyAB CSV 完成，信用卡帳單待實作)
+4. ~~006-data-import~~ ✅ DONE (MyAB CSV 完成)
 5. 007-data-export
 6. 008-reports
 
