@@ -262,13 +262,50 @@ async def list_supported_banks() -> Any:
     return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
 
 
-@router.get("/ledgers/{_ledger_id}/import/history")
+@router.get("/ledgers/{ledger_id}/import/history")
 async def get_import_history(
-    _ledger_id: uuid.UUID,
-    _limit: int = 20,
-    _offset: int = 0,
+    ledger_id: uuid.UUID,
+    limit: int = 20,
+    offset: int = 0,
+    session: Session = Depends(get_session),
 ) -> Any:
     """
-    Get import history.
+    Get import history for a ledger.
+    Returns paginated list of import sessions ordered by creation date (newest first).
     """
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    from sqlmodel import func
+
+    # Get total count
+    count_statement = (
+        select(func.count()).select_from(ImportSession).where(ImportSession.ledger_id == ledger_id)
+    )
+    total = session.exec(count_statement).one()
+
+    # Get paginated items
+    statement = (
+        select(ImportSession)
+        .where(ImportSession.ledger_id == ledger_id)
+        .order_by(ImportSession.created_at.desc())  # type: ignore[union-attr]
+        .offset(offset)
+        .limit(limit)
+    )
+    items = session.exec(statement).all()
+
+    return {
+        "items": [
+            {
+                "id": str(item.id),
+                "import_type": item.import_type.value,
+                "source_filename": item.source_filename,
+                "status": item.status.value,
+                "imported_count": item.imported_count,
+                "skipped_count": item.skipped_count,
+                "error_count": item.error_count,
+                "created_accounts_count": item.created_accounts_count,
+                "created_at": item.created_at.isoformat() if item.created_at else None,
+                "completed_at": item.completed_at.isoformat() if item.completed_at else None,
+            }
+            for item in items
+        ],
+        "total": total,
+    }

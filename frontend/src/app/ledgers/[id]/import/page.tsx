@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
+import Link from 'next/link'
 import FileUploader from '@/components/import/FileUploader'
 import ImportPreview from '@/components/import/ImportPreview'
 import { ImportPreviewResponse, ImportResult } from '@/lib/api/import'
@@ -82,9 +83,17 @@ export default function ImportPage() {
         <div className="max-w-5xl mx-auto py-8 px-4">
             {!previewData ? (
                 <>
-                    <div className="mb-8">
-                        <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
-                        <p className="text-gray-500">{t('subtitle')}</p>
+                    <div className="mb-8 flex justify-between items-center">
+                        <div>
+                            <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+                            <p className="text-gray-500">{t('subtitle')}</p>
+                        </div>
+                        <Link
+                            href={`/ledgers/${idValue}/import/history`}
+                            className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        >
+                            {t('history')}
+                        </Link>
                     </div>
                     <FileUploader ledgerId={idValue} onPreviewLoaded={setPreviewData} />
                 </>

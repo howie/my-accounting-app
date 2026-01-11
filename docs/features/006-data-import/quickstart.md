@@ -231,12 +231,12 @@ def find_duplicates(new_txs, existing_txs):
 
 ## Verification Checklist
 
-- [ ] Migration 成功執行
-- [ ] `POST /api/ledgers/{id}/import/preview` 回傳正確預覽
-- [ ] `POST /api/ledgers/{id}/import/execute` 成功匯入交易
-- [ ] 重複偵測正確警告
-- [ ] 新科目自動建立
-- [ ] Audit log 正確記錄
-- [ ] 前端上傳介面運作正常
-- [ ] 進度條正確顯示
-- [ ] i18n 翻譯完整
+- [x] Migration 成功執行
+- [x] `POST /api/ledgers/{id}/import/preview` 回傳正確預覽
+- [x] `POST /api/ledgers/{id}/import/execute` 成功匯入交易
+- [x] 重複偵測正確警告
+- [x] 新科目自動建立
+- [x] Audit log 正確記錄
+- [x] 前端上傳介面運作正常
+- [x] 進度條正確顯示
+- [x] i18n 翻譯完整
