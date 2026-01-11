@@ -8,7 +8,7 @@ interface AppShellProps {
   children: React.ReactNode
 }
 
-// Routes that should NOT show the sidebar
+// Routes that should NOT show the sidebar (exact match only)
 const NO_SIDEBAR_ROUTES = ['/setup', '/ledgers']
 
 /**
@@ -19,9 +19,8 @@ export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname()
 
   // Check if current route should hide sidebar
-  const shouldHideSidebar = NO_SIDEBAR_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`)
-  )
+  // Only exact matches - /ledgers/[id]/* routes should show sidebar
+  const shouldHideSidebar = NO_SIDEBAR_ROUTES.includes(pathname)
 
   // No sidebar for setup/ledger pages
   if (shouldHideSidebar) {
