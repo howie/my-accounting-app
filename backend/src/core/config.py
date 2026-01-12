@@ -26,8 +26,20 @@ class Settings(BaseSettings):
     # API
     api_v1_prefix: str = "/api/v1"
 
+    # LLM Configuration
+    llm_provider: str = "gemini"  # gemini | claude | ollama
+
     # Gemini AI
     gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
+
+    # Claude AI
+    claude_api_key: str = ""
+    claude_model: str = "claude-sonnet-4-20250514"
+
+    # Ollama (Local LLM)
+    ollama_base_url: str = "http://localhost:11434"
+    ollama_model: str = "llama3.2"
 
     @property
     def cors_origins_list(self) -> list[str]:
