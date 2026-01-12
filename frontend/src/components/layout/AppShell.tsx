@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation'
 import { Sidebar } from './Sidebar'
 import { MainContent } from './MainContent'
+import { ChatPanel } from '@/components/chat/ChatPanel'
 
 interface AppShellProps {
   children: React.ReactNode
@@ -32,6 +33,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="flex min-h-screen">
       <Sidebar />
       <MainContent>{children}</MainContent>
+      <ChatPanel />
     </div>
   )
 }

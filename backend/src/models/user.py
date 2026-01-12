@@ -2,14 +2,19 @@
 
 import uuid
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
+
+if TYPE_CHECKING:
+    from src.models.api_token import ApiToken
 
 
 class UserBase(SQLModel):
     """User base schema."""
 
     email: str = Field(max_length=255, unique=True, index=True)
+    display_name: str | None = Field(default=None, max_length=100)
 
 
 class User(UserBase, table=True):
@@ -19,6 +24,9 @@ class User(UserBase, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+
+    # Relationships
+    api_tokens: list["ApiToken"] = Relationship(back_populates="user")
 
 
 class UserCreate(UserBase):

@@ -4,10 +4,11 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Home, Menu, X, BookOpen, Settings, Upload } from 'lucide-react'
+import { Home, Menu, X, BookOpen, Settings, Upload, MessageCircle } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
+import { useChatContext } from '@/lib/context/ChatContext'
 import { SidebarItem } from './SidebarItem'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils'
 export function Sidebar() {
   const pathname = usePathname()
   const { currentLedger } = useLedgerContext()
+  const { openChat } = useChatContext()
   const { data: categories, isLoading, error } = useSidebarAccounts()
   const t = useTranslations('sidebar')
   const {
@@ -168,6 +170,21 @@ export function Sidebar() {
             </Link>
           </div>
         )}
+
+        {/* AI Chat Button */}
+        <div className="px-2 pb-2">
+          <button
+            onClick={openChat}
+            className={cn(
+              'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+              'transition-colors duration-150',
+              'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+            )}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>{t('chat')}</span>
+          </button>
+        </div>
 
         {/* Settings Link */}
         <div className="mt-auto px-2 pb-2">

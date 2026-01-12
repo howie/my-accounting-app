@@ -33,6 +33,14 @@ LedgerOne is a personal finance management application that implements proper do
 - **Duplicate Detection** - Identify and skip duplicate transactions
 - **Preview Before Import** - Review data before committing
 
+### MCP API for AI Assistants (New)
+
+- **AI-Powered Accounting** - Let Claude or other AI assistants help you record transactions
+- **Natural Language Commands** - Say "Lunch cost $15" and AI creates the transaction
+- **Query Support** - Ask "How much did I spend on food this month?"
+- **Secure API Tokens** - Generate and manage tokens from the Settings page
+- **Full MCP Protocol** - Compatible with Claude Desktop and other MCP clients
+
 ### Audit & Integrity
 
 - **Audit Trail** - All account changes are logged
@@ -46,6 +54,7 @@ LedgerOne is a personal finance management application that implements proper do
 | Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
 | Backend  | Python 3.12, FastAPI, SQLModel                 |
 | Database | PostgreSQL 16                                  |
+| MCP API  | FastMCP, Model Context Protocol                |
 | Charts   | Tremor, Recharts                               |
 | State    | TanStack Query                                 |
 | i18n     | next-intl                                      |
@@ -63,6 +72,46 @@ make dev-db        # Start PostgreSQL
 make dev-backend   # Start FastAPI server
 make dev-frontend  # Start Next.js dev server
 ```
+
+## MCP API Setup (AI Assistant Integration)
+
+LedgerOne supports Model Context Protocol (MCP), allowing AI assistants like Claude Desktop to help manage your accounting.
+
+### 1. Generate an API Token
+
+1. Start LedgerOne and go to **Settings** → **API Tokens**
+2. Click **Create Token** and give it a name (e.g., "Claude Desktop")
+3. Copy the generated token (shown only once!)
+
+### 2. Configure Claude Desktop
+
+Edit your Claude Desktop config file:
+
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "ledgerone": {
+      "url": "http://localhost:8000/mcp",
+      "headers": {
+        "Authorization": "Bearer ldo_your_token_here..."
+      }
+    }
+  }
+}
+```
+
+### 3. Start Using
+
+Once connected, you can tell Claude things like:
+
+- "Lunch was $12"
+- "How much cash do I have?"
+- "Show this week's expenses"
+
+For detailed setup, see [docs/features/007-api-for-mcp/quickstart.md](./docs/features/007-api-for-mcp/quickstart.md).
 
 ## Project Structure
 
@@ -95,12 +144,12 @@ See [docs/features/ROADMAP.md](./docs/features/ROADMAP.md) for planned features.
 - UI Layout & Dashboard (002)
 - Settings & Account Management (003)
 - Transaction Entry with Templates (004)
-- Data Import - MyAB CSV (006) - In Progress
+- Data Import - MyAB CSV (006)
+- MCP API for AI Assistants (007)
 
 **Planned:**
 
 - UI Navigation v2 (005)
-- Data Export (007)
 - Reports - Balance Sheet, Income Statement (008)
 - Advanced Transactions (009)
 - Budget Management (010)

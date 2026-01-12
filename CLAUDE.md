@@ -74,6 +74,8 @@ Standard Python virtual environment practices apply:
 
 ## Active Technologies
 
+- Python 3.12 (Backend), TypeScript 5.x (Frontend for token management UI) + FastAPI, mcp (Python SDK), SQLModel, Pydantic (007-api-for-mcp)
+
 - Python 3.12 (Backend), TypeScript 5.x (Frontend) + FastAPI, SQLModel, Next.js 15, React 19, TanStack Query (006-data-import)
 - PostgreSQL 16 (existing schema from 001-core-accounting) (006-data-import)
 
