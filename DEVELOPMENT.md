@@ -2,6 +2,39 @@
 
 This document covers how to set up, develop, and test LedgerOne locally.
 
+## Tech Stack
+
+| Layer    | Technology                                     |
+| -------- | ---------------------------------------------- |
+| Frontend | Next.js 15, React 19, TypeScript, Tailwind CSS |
+| Backend  | Python 3.12, FastAPI, SQLModel                 |
+| Database | PostgreSQL 16                                  |
+| MCP API  | FastMCP, Model Context Protocol                |
+| Charts   | Tremor, Recharts                               |
+| State    | TanStack Query                                 |
+| i18n     | next-intl                                      |
+
+## Project Structure
+
+```
+.
+├── backend/          # FastAPI backend
+│   ├── src/          # Source code
+│   │   ├── api/      # API routes
+│   │   ├── models/   # SQLModel models
+│   │   ├── schemas/  # Pydantic schemas
+│   │   └── services/ # Business logic
+│   └── tests/        # Backend tests
+├── frontend/         # Next.js frontend
+│   ├── src/
+│   │   ├── app/      # App router pages
+│   │   ├── components/
+│   │   └── lib/      # Utilities, hooks, API clients
+│   └── messages/     # i18n translations
+└── docs/             # Documentation
+    └── features/     # Feature specifications
+```
+
 ## Prerequisites
 
 - **Python 3.12+** (managed via asdf or pyenv)
