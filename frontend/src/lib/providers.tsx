@@ -5,6 +5,7 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { useState, type ReactNode } from 'react'
 
 import { LedgerProvider } from '@/lib/context/LedgerContext'
+import { ChatProvider } from '@/lib/context/ChatContext'
 
 interface ProvidersProps {
   children: ReactNode
@@ -25,7 +26,9 @@ export function Providers({ children }: ProvidersProps) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <LedgerProvider>{children}</LedgerProvider>
+      <LedgerProvider>
+        <ChatProvider>{children}</ChatProvider>
+      </LedgerProvider>
       <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   )

@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from src.api.routes import (
     accounts,
+    chat,
     dashboard,
     import_routes,
     ledgers,
@@ -36,3 +37,6 @@ api_router.include_router(import_routes.router, tags=["Import"])
 
 # Feature 007: API Tokens for MCP
 api_router.include_router(tokens.router)
+
+# AI Chat Assistant
+api_router.include_router(chat.router)

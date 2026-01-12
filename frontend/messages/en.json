@@ -152,6 +152,7 @@
     "dashboard": "Dashboard",
     "accounts": "Accounts",
     "import": "Batch Import",
+    "chat": "AI Assistant",
     "settings": "Settings",
     "switchLedger": "Switch Ledger",
     "currentLedger": "Current Ledger",
