@@ -6,10 +6,11 @@ Based on contracts/api-tokens.md from 007-api-for-mcp feature.
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlmodel import Session
 
-from src.api.deps import get_current_user_id, get_session
+from src.api.deps import get_session
+from src.models.user import User
 from src.schemas.api_token import (
     TokenCreate,
     TokenListItem,
@@ -22,10 +23,37 @@ from src.services.api_token_service import ApiTokenService
 router = APIRouter(prefix="/tokens", tags=["tokens"])
 
 
+def get_token_user_id(
+    session: Annotated[Session, Depends(get_session)],
+    x_user_id: Annotated[str | None, Header(alias="X-User-ID")] = None,
+) -> uuid.UUID:
+    """Get user ID for token operations.
+
+    Supports X-User-ID header for testing, falls back to first user (single-user mode).
+    """
+    if x_user_id:
+        try:
+            return uuid.UUID(x_user_id)
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid X-User-ID header format",
+            ) from e
+
+    # Fall back to single-user mode
+    user = session.query(User).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No user found",
+        )
+    return user.id
+
+
 @router.get("", response_model=TokenListResponse)
 def list_tokens(
     session: Annotated[Session, Depends(get_session)],
-    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
+    user_id: Annotated[uuid.UUID, Depends(get_token_user_id)],
 ) -> TokenListResponse:
     """List all API tokens for the current user."""
     service = ApiTokenService(session)
@@ -50,7 +78,7 @@ def list_tokens(
 def create_token(
     data: TokenCreate,
     session: Annotated[Session, Depends(get_session)],
-    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
+    user_id: Annotated[uuid.UUID, Depends(get_token_user_id)],
 ) -> TokenResponse:
     """Create a new API token.
 
@@ -79,7 +107,7 @@ def create_token(
 def revoke_token(
     token_id: uuid.UUID,
     session: Annotated[Session, Depends(get_session)],
-    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
+    user_id: Annotated[uuid.UUID, Depends(get_token_user_id)],
 ) -> TokenRevokeResponse:
     """Revoke an API token.
 
