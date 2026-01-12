@@ -231,3 +231,31 @@ export interface ApplyTemplateRequest {
 export interface ReorderTemplatesRequest {
   template_ids: string[]
 }
+
+// API Token
+export interface ApiToken {
+  id: string
+  user_id: string
+  name: string
+  token_prefix: string
+  created_at: string
+  last_used_at: string | null
+  is_active: boolean
+}
+
+export interface ApiTokenCreate {
+  name: string
+}
+
+export interface ApiTokenCreateResponse {
+  id: string
+  name: string
+  token: string
+  token_prefix: string
+  created_at: string
+}
+
+export interface ApiTokenList {
+  data: ApiToken[]
+  total: number
+}

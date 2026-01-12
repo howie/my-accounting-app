@@ -1,6 +1,7 @@
 """SQLModel models for LedgerOne."""
 
 from src.models.account import Account, AccountType
+from src.models.api_token import ApiToken
 from src.models.audit_log import AuditAction, AuditLog
 from src.models.import_session import ImportSession, ImportStatus, ImportType
 from src.models.ledger import Ledger
@@ -25,4 +26,5 @@ __all__ = [
     "ImportSession",
     "ImportStatus",
     "ImportType",
+    "ApiToken",
 ]

@@ -100,3 +100,9 @@ async def health_check() -> dict[str, Any]:
 from src.api.routes import api_router
 
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+# Mount MCP server
+from src.api.mcp.server import get_mcp_server
+
+mcp_server = get_mcp_server()
+app.mount("/mcp", mcp_server.streamable_http_app())

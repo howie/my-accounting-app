@@ -19,6 +19,7 @@ from src.api.main import app
 # Import all models to register them with SQLModel metadata
 from src.models import (  # noqa: F401
     Account,
+    ApiToken,
     AuditLog,
     ImportSession,
     Ledger,

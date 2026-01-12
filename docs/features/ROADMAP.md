@@ -111,7 +111,35 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 007-data-export
+### 007-api-for-mcp (DONE)
+
+**Priority: Medium**
+
+MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可透過自然語言協助記帳。
+
+**Scope:**
+
+- [x] MCP 基礎建設
+  - [x] FastMCP 伺服器設定
+  - [x] Bearer Token 認證
+  - [x] API Token 管理（建立、撤銷、列表）
+- [x] MCP 工具
+  - [x] create_transaction - 建立交易（支援科目模糊比對）
+  - [x] list_accounts - 列出科目（支援類型篩選、餘額篩選）
+  - [x] get_account - 查詢單一科目餘額與近期交易
+  - [x] list_transactions - 查詢交易紀錄（分頁、日期篩選）
+  - [x] list_ledgers - 列出帳本
+- [x] 前端 Token 管理 UI
+  - [x] Settings → API Tokens 頁面
+  - [x] 建立新 Token
+  - [x] 撤銷 Token
+  - [x] i18n 支援（zh-TW, en）
+
+**Reference:** [docs/features/007-api-for-mcp/](./007-api-for-mcp/)
+
+---
+
+### 008-data-export
 
 **Priority: Medium**
 
@@ -129,7 +157,7 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 008-reports
+### 009-reports
 
 **Priority: Medium**
 
@@ -152,7 +180,7 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 009-advanced-transactions
+### 010-advanced-transactions
 
 **Priority: Low**
 
@@ -175,7 +203,7 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 010-budget
+### 011-budget
 
 **Priority: Low**
 
@@ -193,7 +221,7 @@ UI 導航改進與進階導覽功能。
 
 ---
 
-### 011-backup-sync
+### 012-backup-sync
 
 **Priority: Low**
 
@@ -218,10 +246,11 @@ UI 導航改進與進階導覽功能。
             │       └── 005-ui-navigation-v2
             ├── 004-transaction-entry (DONE)
             ├── 006-data-import (DONE)
-            ├── 007-data-export
-            └── 008-reports
-                    ├── 009-advanced-transactions
-                    └── 010-budget
+            ├── 007-api-for-mcp (DONE)
+            ├── 008-data-export
+            └── 009-reports
+                    ├── 010-advanced-transactions
+                    └── 011-budget
 ```
 
 ---
@@ -237,11 +266,12 @@ UI 導航改進與進階導覽功能。
 **Phase 2 - Data Management (Medium Priority)**
 
 4. ~~006-data-import~~ ✅ DONE (MyAB CSV 完成)
-5. 007-data-export
-6. 008-reports
+5. ~~007-api-for-mcp~~ ✅ DONE (MCP API + Token 管理 UI)
+6. 008-data-export
+7. 009-reports
 
 **Phase 3 - Advanced Features (Low Priority)**
 
-7. 009-advanced-transactions
-8. 010-budget
-9. 011-backup-sync
+8. 010-advanced-transactions
+9. 011-budget
+10. 012-backup-sync

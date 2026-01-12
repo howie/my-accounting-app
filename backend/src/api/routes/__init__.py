@@ -8,6 +8,7 @@ from src.api.routes import (
     import_routes,
     ledgers,
     templates,
+    tokens,
     transactions,
     users,
 )
@@ -32,3 +33,6 @@ api_router.include_router(users.router)
 
 # Feature 006: Data Import
 api_router.include_router(import_routes.router, tags=["Import"])
+
+# Feature 007: API Tokens for MCP
+api_router.include_router(tokens.router)
