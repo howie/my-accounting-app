@@ -1,5 +1,6 @@
 """FastAPI application entry point."""
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -21,7 +22,7 @@ settings = get_settings()
 
 
 @asynccontextmanager
-async def lifespan(_app: FastAPI):
+async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan events."""
     # Startup: create tables if needed (for development)
     if settings.is_development:

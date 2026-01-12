@@ -9,6 +9,8 @@ from sqlmodel import Session
 from src.db.session import get_session
 from src.models.user import User
 
+__all__ = ["get_session", "get_current_user", "get_current_user_id"]
+
 # Database session dependency
 SessionDep = Annotated[Session, Depends(get_session)]
 

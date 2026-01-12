@@ -58,7 +58,7 @@ class CsvParser:
         return list(reader)
 
 
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 
 from src.schemas.data_import import AccountType, ParsedTransaction, TransactionType
@@ -144,7 +144,7 @@ class MyAbCsvParser(CsvParser):
 
         return result
 
-    def _parse_date(self, date_str: str) -> datetime.date:
+    def _parse_date(self, date_str: str) -> date:
         formats = ["%Y/%m/%d", "%Y-%m-%d", "%m/%d/%Y"]
         for fmt in formats:
             try:
@@ -199,6 +199,10 @@ class CreditCardCsvParser(CsvParser):
             List of ParsedTransaction objects
         """
         from src.services.category_suggester import CategorySuggester
+
+        # Ensure config is present (init validatio should guarantee this, but for types)
+        if self.config is None:
+            raise ValueError("Parser not initialized with valid bank config")
 
         # Read raw CSV rows
         encoding = self.config.encoding or self.detect_encoding(file)

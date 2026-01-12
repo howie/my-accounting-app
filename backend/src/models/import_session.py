@@ -26,11 +26,7 @@ class ImportStatus(str, Enum):
     FAILED = "FAILED"  # Import failed
 
 
-class ImportType(str, Enum):
-    """Enum for import types."""
-
-    MYAB_CSV = "MYAB_CSV"  # MyAB CSV export file
-    CREDIT_CARD = "CREDIT_CARD"  # Credit card statement CSV
+from src.schemas.data_import import ImportType
 
 
 class ImportSession(SQLModel, table=True):
