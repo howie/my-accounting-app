@@ -6,10 +6,10 @@ Based on contracts/api-tokens.md from 007-api-for-mcp feature.
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 
-from src.api.deps import get_session
+from src.api.deps import get_current_user_id, get_session
 from src.schemas.api_token import (
     TokenCreate,
     TokenListItem,
@@ -20,21 +20,6 @@ from src.schemas.api_token import (
 from src.services.api_token_service import ApiTokenService
 
 router = APIRouter(prefix="/tokens", tags=["tokens"])
-
-
-def get_current_user_id(x_user_id: Annotated[str, Header()]) -> uuid.UUID:
-    """Get current user ID from header.
-
-    Note: In production, this would use proper session authentication.
-    For now, we use a header for testing purposes.
-    """
-    try:
-        return uuid.UUID(x_user_id)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid user ID",
-        ) from e
 
 
 @router.get("", response_model=TokenListResponse)
