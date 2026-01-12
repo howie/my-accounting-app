@@ -1,10 +1,9 @@
-"""Chat service with Gemini AI integration."""
+"""Chat service with pluggable LLM provider support."""
 
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-import google.generativeai as genai
 from sqlmodel import Session
 
 from src.api.mcp.tools.accounts import get_account, list_accounts
@@ -13,8 +12,10 @@ from src.api.mcp.tools.transactions import create_transaction, list_transactions
 from src.core.config import get_settings
 from src.models.user import User
 from src.schemas.chat import ChatResponse, ToolCallResult
+from src.services.llm import LLMFactory, LLMProvider, LLMToolDefinition
+from src.services.llm.base import LLMMessage
 
-# System prompt for Gemini
+# System prompt for LLM
 SYSTEM_PROMPT = """你是 LedgerOne 記帳應用程式的 AI 助手。
 你可以幫助使用者：
 - 建立交易記錄（使用 create_transaction 工具）
@@ -31,112 +32,97 @@ SYSTEM_PROMPT = """你是 LedgerOne 記帳應用程式的 AI 助手。
 回覆時請使用繁體中文，保持簡潔友善。
 """
 
-# Tool declarations for Gemini
-TOOL_DECLARATIONS = [
-    {
-        "name": "list_accounts",
-        "description": "列出所有帳戶及其餘額。可以按帳戶類型篩選。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "type_filter": {
-                    "type": "string",
-                    "enum": ["ASSET", "LIABILITY", "INCOME", "EXPENSE"],
-                    "description": "按帳戶類型篩選（資產、負債、收入、費用）",
-                },
-                "include_zero_balance": {
-                    "type": "boolean",
-                    "description": "是否包含餘額為零的帳戶，預設為 true",
-                },
+# Provider-agnostic tool definitions
+TOOL_DEFINITIONS = [
+    LLMToolDefinition(
+        name="list_accounts",
+        description="列出所有帳戶及其餘額。可以按帳戶類型篩選。",
+        parameters={
+            "type_filter": {
+                "type": "string",
+                "enum": ["ASSET", "LIABILITY", "INCOME", "EXPENSE"],
+                "description": "按帳戶類型篩選（資產、負債、收入、費用）",
+            },
+            "include_zero_balance": {
+                "type": "boolean",
+                "description": "是否包含餘額為零的帳戶，預設為 true",
             },
         },
-    },
-    {
-        "name": "get_account",
-        "description": "取得單一帳戶的詳細資訊，包括最近的交易記錄。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "account": {
-                    "type": "string",
-                    "description": "帳戶名稱或 UUID",
-                },
-            },
-            "required": ["account"],
-        },
-    },
-    {
-        "name": "create_transaction",
-        "description": "建立一筆新的複式記帳交易。從來源帳戶扣款，記入目標帳戶。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "amount": {
-                    "type": "number",
-                    "description": "交易金額（正數）",
-                },
-                "from_account": {
-                    "type": "string",
-                    "description": "來源帳戶名稱（扣款方）",
-                },
-                "to_account": {
-                    "type": "string",
-                    "description": "目標帳戶名稱（入帳方）",
-                },
-                "description": {
-                    "type": "string",
-                    "description": "交易說明",
-                },
-                "date": {
-                    "type": "string",
-                    "description": "交易日期，格式為 YYYY-MM-DD，預設為今天",
-                },
-                "notes": {
-                    "type": "string",
-                    "description": "備註（選填）",
-                },
-            },
-            "required": ["amount", "from_account", "to_account", "description"],
-        },
-    },
-    {
-        "name": "list_transactions",
-        "description": "查詢交易記錄，支援按帳戶、日期範圍篩選。",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "account_name": {
-                    "type": "string",
-                    "description": "按帳戶名稱篩選",
-                },
-                "start_date": {
-                    "type": "string",
-                    "description": "開始日期，格式為 YYYY-MM-DD",
-                },
-                "end_date": {
-                    "type": "string",
-                    "description": "結束日期，格式為 YYYY-MM-DD",
-                },
-                "limit": {
-                    "type": "integer",
-                    "description": "回傳數量上限，預設為 20",
-                },
+    ),
+    LLMToolDefinition(
+        name="get_account",
+        description="取得單一帳戶的詳細資訊，包括最近的交易記錄。",
+        parameters={
+            "account": {
+                "type": "string",
+                "description": "帳戶名稱或 UUID",
             },
         },
-    },
-    {
-        "name": "list_ledgers",
-        "description": "列出使用者的所有帳本。",
-        "parameters": {
-            "type": "object",
-            "properties": {},
+        required=["account"],
+    ),
+    LLMToolDefinition(
+        name="create_transaction",
+        description="建立一筆新的複式記帳交易。從來源帳戶扣款，記入目標帳戶。",
+        parameters={
+            "amount": {
+                "type": "number",
+                "description": "交易金額（正數）",
+            },
+            "from_account": {
+                "type": "string",
+                "description": "來源帳戶名稱（扣款方）",
+            },
+            "to_account": {
+                "type": "string",
+                "description": "目標帳戶名稱（入帳方）",
+            },
+            "description": {
+                "type": "string",
+                "description": "交易說明",
+            },
+            "date": {
+                "type": "string",
+                "description": "交易日期，格式為 YYYY-MM-DD，預設為今天",
+            },
+            "notes": {
+                "type": "string",
+                "description": "備註（選填）",
+            },
         },
-    },
+        required=["amount", "from_account", "to_account", "description"],
+    ),
+    LLMToolDefinition(
+        name="list_transactions",
+        description="查詢交易記錄，支援按帳戶、日期範圍篩選。",
+        parameters={
+            "account_name": {
+                "type": "string",
+                "description": "按帳戶名稱篩選",
+            },
+            "start_date": {
+                "type": "string",
+                "description": "開始日期，格式為 YYYY-MM-DD",
+            },
+            "end_date": {
+                "type": "string",
+                "description": "結束日期，格式為 YYYY-MM-DD",
+            },
+            "limit": {
+                "type": "integer",
+                "description": "回傳數量上限，預設為 20",
+            },
+        },
+    ),
+    LLMToolDefinition(
+        name="list_ledgers",
+        description="列出使用者的所有帳本。",
+        parameters={},
+    ),
 ]
 
 
 class ChatService:
-    """Service for handling chat interactions with Gemini AI."""
+    """Service for handling chat interactions with LLM providers."""
 
     def __init__(self, session: Session, user: User):
         """Initialize chat service.
@@ -148,12 +134,40 @@ class ChatService:
         self.session = session
         self.user = user
         self.settings = get_settings()
-        self._configure_genai()
+        self._provider: LLMProvider | None = None
 
-    def _configure_genai(self) -> None:
-        """Configure Google Generative AI."""
-        if self.settings.gemini_api_key:
-            genai.configure(api_key=self.settings.gemini_api_key)
+    def _get_provider(self) -> LLMProvider | None:
+        """Get or create the LLM provider based on configuration."""
+        if self._provider is not None:
+            return self._provider
+
+        provider_type = self.settings.llm_provider
+
+        try:
+            if provider_type == "gemini":
+                self._provider = LLMFactory.create(
+                    "gemini",
+                    api_key=self.settings.gemini_api_key,
+                    model_name=self.settings.gemini_model,
+                )
+            elif provider_type == "claude":
+                self._provider = LLMFactory.create(
+                    "claude",
+                    api_key=self.settings.claude_api_key,
+                    model_name=self.settings.claude_model,
+                )
+            elif provider_type == "ollama":
+                self._provider = LLMFactory.create(
+                    "ollama",
+                    base_url=self.settings.ollama_base_url,
+                    model_name=self.settings.ollama_model,
+                )
+            else:
+                return None
+        except ValueError:
+            return None
+
+        return self._provider
 
     def _execute_tool(self, tool_name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Execute an MCP tool and return its result.
@@ -225,69 +239,83 @@ class ChatService:
         Returns:
             ChatResponse with AI message and any tool results
         """
-        if not self.settings.gemini_api_key:
+        provider = self._get_provider()
+
+        if not provider:
             return ChatResponse(
                 id=str(uuid.uuid4()),
-                message="抱歉，AI 功能尚未設定。請在後端設定 GEMINI_API_KEY。",
+                message=f"抱歉，AI 功能尚未設定。請設定 LLM_PROVIDER 和相應的 API 金鑰。"
+                f"（目前設定：{self.settings.llm_provider}）",
                 tool_calls=[],
                 created_at=datetime.now(UTC),
             )
 
-        # Initialize model with tools
-        model = genai.GenerativeModel(
-            model_name="gemini-2.0-flash",
-            system_instruction=SYSTEM_PROMPT,
-            tools=TOOL_DECLARATIONS,
-        )
+        if not provider.is_configured:
+            provider_name = provider.provider_name
+            return ChatResponse(
+                id=str(uuid.uuid4()),
+                message=f"抱歉，{provider_name.upper()} 尚未正確設定。請檢查 API 金鑰或服務連線。",
+                tool_calls=[],
+                created_at=datetime.now(UTC),
+            )
 
         tool_calls: list[ToolCallResult] = []
+        messages: list[LLMMessage] = [
+            LLMMessage(role="user", content=message),
+        ]
 
         try:
-            # Start chat and send message
-            chat = model.start_chat()
-            response = chat.send_message(message)
+            # Initial request to LLM
+            response = provider.chat(
+                messages=messages,
+                tools=TOOL_DEFINITIONS,
+                system_prompt=SYSTEM_PROMPT,
+            )
 
-            # Handle function calling loop
-            while response.candidates and response.candidates[0].content.parts:
-                part = response.candidates[0].content.parts[0]
+            # Handle tool calling loop (max 10 iterations for safety)
+            iteration = 0
+            max_iterations = 10
 
-                # Check if there's a function call
-                if hasattr(part, "function_call") and part.function_call:
-                    fc = part.function_call
-                    tool_name = fc.name
-                    # Convert args to dict, handling ledger_id injection
-                    args = dict(fc.args) if fc.args else {}
+            while response.finish_reason == "tool_use" and iteration < max_iterations:
+                iteration += 1
+
+                # Execute all tool calls
+                tool_results = []
+                for tc in response.tool_calls:
+                    # Inject ledger_id if provided
+                    args = tc.arguments.copy()
                     if ledger_id:
                         args["ledger_id"] = ledger_id
 
-                    # Execute the tool
-                    result = self._execute_tool(tool_name, args)
-                    tool_calls.append(ToolCallResult(tool_name=tool_name, result=result))
-
-                    # Send result back to Gemini
-                    response = chat.send_message(
-                        genai.protos.Content(
-                            parts=[
-                                genai.protos.Part(
-                                    function_response=genai.protos.FunctionResponse(
-                                        name=tool_name,
-                                        response={"result": result},
-                                    )
-                                )
-                            ]
-                        )
+                    result = self._execute_tool(tc.name, args)
+                    tool_calls.append(ToolCallResult(tool_name=tc.name, result=result))
+                    tool_results.append(
+                        {
+                            "name": tc.name,
+                            "tool_use_id": f"tool_{tc.name}_{iteration}",
+                            "result": result,
+                        }
                     )
-                else:
-                    # No more function calls, we have the final response
-                    break
 
-            # Extract final text response
-            final_text = ""
-            if response.candidates and response.candidates[0].content.parts:
-                for part in response.candidates[0].content.parts:
-                    if hasattr(part, "text") and part.text:
-                        final_text += part.text
+                # Add assistant's tool call message to history
+                messages.append(
+                    LLMMessage(
+                        role="assistant",
+                        content=response.text,
+                        tool_calls=response.tool_calls,
+                    )
+                )
 
+                # Send tool results back to LLM
+                response = provider.send_tool_results(
+                    messages=messages,
+                    tool_results=tool_results,
+                    tools=TOOL_DEFINITIONS,
+                    system_prompt=SYSTEM_PROMPT,
+                )
+
+            # Extract final text
+            final_text = response.text
             if not final_text:
                 final_text = "抱歉，我無法處理您的請求。請再試一次。"
 
