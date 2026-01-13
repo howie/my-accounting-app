@@ -12,6 +12,7 @@ from src.api.routes import (
     tokens,
     transactions,
     users,
+    utils,
 )
 
 api_router = APIRouter()
@@ -39,4 +40,8 @@ api_router.include_router(import_routes.router, tags=["Import"])
 api_router.include_router(tokens.router)
 
 # AI Chat Assistant
+# AI Chat Assistant
 api_router.include_router(chat.router)
+
+# Utilities (Health Check)
+api_router.include_router(utils.router, tags=["Utils"])
