@@ -26,7 +26,8 @@ def myab_csv_file():
 class TestCsvParserUtils:
     def test_detect_encoding(self):
         content_utf8 = b"test"
-        assert CsvParser.detect_encoding(BytesIO(content_utf8)) == "utf-8"
+        # charset_normalizer returns 'ascii' for pure ASCII content, which is valid
+        assert CsvParser.detect_encoding(BytesIO(content_utf8)) in ["utf-8", "ascii"]
 
         content_big5 = "測試".encode("big5")
         assert CsvParser.detect_encoding(BytesIO(content_big5)) == "big5"
@@ -35,7 +36,8 @@ class TestCsvParserUtils:
 class TestMyAbCsvParser:
     def test_parse_valid_csv(self, myab_csv_file):
         parser = MyAbCsvParser()
-        transactions = parser.parse(myab_csv_file)
+        transactions, errors = parser.parse(myab_csv_file)
+        assert len(errors) == 0
 
         assert len(transactions) == 3
 
@@ -64,15 +66,17 @@ class TestMyAbCsvParser:
         content = """日期,交易類型,支出科目,收入科目,從科目,到科目,金額,明細,發票號碼
 invalid_date,支出,E-Food,,,A-Cash,100,Desc,""".encode()
         parser = MyAbCsvParser()
-        with pytest.raises(ValueError, match="Invalid date format"):
-            parser.parse(BytesIO(content))
+        transactions, errors = parser.parse(BytesIO(content))
+        assert len(errors) > 0
+        assert "Invalid date format" in errors[0].message
 
     def test_parse_invalid_amount(self):
         content = """日期,交易類型,支出科目,收入科目,從科目,到科目,金額,明細,發票號碼
 2024/01/01,支出,E-Food,,,A-Cash,invalid,Desc,""".encode()
         parser = MyAbCsvParser()
-        with pytest.raises(ValueError, match="Invalid amount format"):
-            parser.parse(BytesIO(content))
+        transactions, errors = parser.parse(BytesIO(content))
+        assert len(errors) > 0
+        assert "Invalid amount format" in errors[0].message
 
 
 # T043: Unit test for credit card CSV parser (multiple banks)
@@ -130,7 +134,8 @@ class TestCreditCardCsvParser:
         from src.services.csv_parser import CreditCardCsvParser
 
         parser = CreditCardCsvParser("CATHAY")
-        transactions = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
+        assert len(errors) == 0
 
         assert len(transactions) == 3
 
@@ -148,7 +153,8 @@ class TestCreditCardCsvParser:
         from src.services.csv_parser import CreditCardCsvParser
 
         parser = CreditCardCsvParser("CTBC")
-        transactions = parser.parse(BytesIO(SAMPLE_CTBC_CSV))
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CTBC_CSV))
+        assert len(errors) == 0
 
         assert len(transactions) == 2
 
@@ -172,5 +178,5 @@ data1,data2
 """
 
         parser = CreditCardCsvParser("CATHAY")
-        with pytest.raises(ValueError):
-            parser.parse(BytesIO(invalid_csv))
+        transactions, errors = parser.parse(BytesIO(invalid_csv))
+        assert len(errors) > 0

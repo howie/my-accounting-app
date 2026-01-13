@@ -5,7 +5,7 @@ Based on contracts/ledger_service.md
 
 import uuid
 from decimal import Decimal
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
@@ -52,11 +52,11 @@ def create_ledger(
     )
 
 
-@router.get("", response_model=dict)
+@router.get("", response_model=dict[str, Any])
 def list_ledgers(
     service: Annotated[LedgerService, Depends(get_ledger_service)],
     user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
-) -> dict:
+) -> dict[str, Any]:
     """List all ledgers for the authenticated user."""
     ledgers = service.get_ledgers(user_id)
     return {
@@ -137,3 +137,38 @@ def delete_ledger(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Ledger not found",
         )
+
+
+@router.post("/{ledger_id}/clear-transactions", response_model=dict[str, Any])
+def clear_transactions(
+    ledger_id: uuid.UUID,
+    service: Annotated[LedgerService, Depends(get_ledger_service)],
+    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
+) -> dict[str, Any]:
+    """Clear all transactions from a ledger, keeping accounts."""
+    count = service.clear_transactions(ledger_id, user_id)
+    if count == -1:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ledger not found",
+        )
+    return {"deleted_count": count}
+
+
+@router.post("/{ledger_id}/clear-accounts", response_model=dict[str, Any])
+def clear_accounts(
+    ledger_id: uuid.UUID,
+    service: Annotated[LedgerService, Depends(get_ledger_service)],
+    user_id: Annotated[uuid.UUID, Depends(get_current_user_id)],
+) -> dict[str, Any]:
+    """Clear all accounts and transactions from a ledger.
+
+    Recreates the default system accounts (Cash, Equity).
+    """
+    result = service.clear_accounts(ledger_id, user_id)
+    if "error" in result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ledger not found",
+        )
+    return result

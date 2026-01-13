@@ -68,6 +68,7 @@
 
 ### Edge Cases
 
+- CSV 格式偵測：系統自動偵測 MyAB CSV 格式（完整格式或簡化格式），根據欄位名稱（如「交易類型」vs「分類」）判斷並使用對應的解析邏輯
 - 重複匯入：使用者上傳 CSV 檔案時，系統以「同日期+同金額+同科目」比對現有交易，符合條件即顯示重複警告（忽略備註差異）
 - 大量資料：CSV 包含超過 1000 筆交易時，系統應顯示進度指示，避免使用者以為系統無回應
 - 金額格式：不同來源的 CSV 可能使用不同的金額格式（如 "1,000.00" vs "1000" vs "-1000"），系統應能正確解析
@@ -82,7 +83,7 @@
 ### Functional Requirements
 
 - **FR-001**: System MUST provide a "Batch Import" menu entry accessible from the sidebar navigation
-- **FR-002**: System MUST support importing MyAB CSV export files
+- **FR-002**: System MUST support importing MyAB CSV export files in both full format (跨科目時期匯出) and simple format (單一科目匯出), auto-detecting the format based on column headers
 - **FR-003**: System MUST parse and validate CSV files before import, showing clear error messages for invalid formats
 - **FR-004**: System MUST display an import preview showing: total transaction count, date range, accounts involved, and sample transactions
 - **FR-005**: System MUST allow users to map CSV accounts to existing system accounts or create new accounts
@@ -129,7 +130,10 @@
 
 ## Assumptions
 
-- MyAB CSV export format is documented and consistent (based on reference spec 5.3)
+- MyAB CSV export format supports two variants (based on reference spec 5.2-5.3):
+  - **Full format** (跨科目時期匯出): `日期,交易類型,支出科目,收入科目,從科目,到科目,金額,明細,發票號碼`
+  - **Simple format** (單一科目匯出): `日期,分類,科目,金額,明細,備註,發票`
+  - System auto-detects format by checking column headers
 - Initial supported banks for credit card import: 五家以上台灣主要發卡銀行（如國泰世華、中國信託、玉山、台新、富邦等），具體清單於 planning 階段確定
 - Category suggestion rules will be based on simple keyword matching initially, with potential for ML-based improvement in future
 - Import is per-ledger - users must select the target ledger before importing

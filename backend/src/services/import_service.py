@@ -7,10 +7,10 @@ from src.models.account import Account
 from src.models.transaction import Transaction
 from src.schemas.data_import import (
     AccountMapping,
-    AccountType,
+    CreatedAccount,
     DuplicateWarning,
     ImportResult,
-    ImportType,
+    ParsedAccountPath,
     ParsedTransaction,
 )
 from src.services.csv_parser import MyAbCsvParser
@@ -58,86 +58,122 @@ class ImportService:
         return duplicates
 
     @staticmethod
+    def _build_account_hierarchy_index(
+        accounts: list[Account],
+    ) -> dict[str, Account]:
+        """
+        Build an index mapping full hierarchical paths to accounts.
+
+        Example: If we have accounts:
+        - "信用卡" (id=1, parent=None)
+        - "國泰世華信用卡" (id=2, parent=1)
+        - "Cube卡" (id=3, parent=2)
+
+        The index will contain:
+        - "信用卡" -> Account(id=1)
+        - "信用卡.國泰世華信用卡" -> Account(id=2)
+        - "信用卡.國泰世華信用卡.Cube卡" -> Account(id=3)
+        """
+        # First, build parent lookup
+        id_to_account: dict[uuid.UUID, Account] = {a.id: a for a in accounts}
+
+        def get_full_path(account: Account) -> str:
+            """Recursively build full path for an account."""
+            path_parts = [account.name]
+            current = account
+            while current.parent_id:
+                parent = id_to_account.get(current.parent_id)
+                if parent:
+                    path_parts.insert(0, parent.name)
+                    current = parent
+                else:
+                    break
+            return ".".join(path_parts)
+
+        # Build index
+        path_index: dict[str, Account] = {}
+        for account in accounts:
+            full_path = get_full_path(account)
+            path_index[full_path] = account
+
+        return path_index
+
+    @staticmethod
     def auto_map_accounts(
         transactions: list[ParsedTransaction],
         existing_accounts: list[Account],
-        import_type: ImportType,
     ) -> tuple[list[ParsedTransaction], list[AccountMapping]]:
         """
-        Auto-map transactions to existing accounts by name.
+        Auto-map transactions to existing accounts by hierarchical path.
+
+        For MyAB CSV imports, accounts are matched by their full hierarchical path.
+        Example: "L-信用卡.國泰世華信用卡.Cube卡" matches the leaf account "Cube卡"
+        under "國泰世華信用卡" under "信用卡".
         """
-        # Extract unique account names involved
-        account_names: dict[str, AccountType | None] = {}
+        # Build hierarchical path index for existing accounts
+        path_index = ImportService._build_account_hierarchy_index(existing_accounts)
+
+        # Also index by simple name for fallback
+        name_index: dict[str, Account] = {a.name: a for a in existing_accounts}
+
+        # Extract unique account paths involved
+        account_paths: dict[str, ParsedAccountPath] = {}
 
         for tx in transactions:
-            # We need to guess type for the account name
-            # Only needed for AccountMapping creation (csv_account_type)
-
-            # From Name
-            if tx.from_account_name not in account_names:
-                ac_type = None
-                if import_type == ImportType.MYAB_CSV:
-                    ac_type = MyAbCsvParser.parse_account_prefix(tx.from_account_name)
-                    if not ac_type:
-                        ac_type = AccountType.ASSET  # Default fallback
-                elif import_type == ImportType.CREDIT_CARD:
-                    ac_type = AccountType.LIABILITY
+            # From account
+            if tx.from_account_name not in account_paths:
+                if tx.from_account_path:
+                    account_paths[tx.from_account_name] = tx.from_account_path
                 else:
-                    ac_type = AccountType.ASSET
+                    # Fallback: parse from name
+                    account_paths[tx.from_account_name] = MyAbCsvParser.parse_hierarchical_account(
+                        tx.from_account_name
+                    )
 
-                account_names[tx.from_account_name] = ac_type
-
-            # To Name
-            if tx.to_account_name not in account_names:
-                ac_type = None
-                if import_type == ImportType.MYAB_CSV:
-                    ac_type = MyAbCsvParser.parse_account_prefix(tx.to_account_name)
-                    if not ac_type:
-                        ac_type = AccountType.EXPENSE  # Default fallback
-                elif import_type == ImportType.CREDIT_CARD:
-                    # To account for credit card is expense category
-                    ac_type = AccountType.EXPENSE
+            # To account
+            if tx.to_account_name not in account_paths:
+                if tx.to_account_path:
+                    account_paths[tx.to_account_name] = tx.to_account_path
                 else:
-                    ac_type = AccountType.EXPENSE
-
-                account_names[tx.to_account_name] = ac_type
-
-        # Index existing accounts by name for quick lookup
-        existing_index: dict[str, Account] = {a.name: a for a in existing_accounts}
+                    # Fallback: parse from name
+                    account_paths[tx.to_account_name] = MyAbCsvParser.parse_hierarchical_account(
+                        tx.to_account_name
+                    )
 
         mappings: list[AccountMapping] = []
         name_to_id: dict[str, uuid.UUID] = {}
 
-        for name, ac_type in account_names.items():
-            system_account = existing_index.get(name)
-            system_id = system_account.id if system_account else None
+        for raw_name, parsed_path in account_paths.items():
+            system_id: uuid.UUID | None = None
 
-            # Try stripping prefix for MyAB if no exact match
-            suggested_name = name
-            if import_type == ImportType.MYAB_CSV and not system_id and "-" in name:
-                parts = name.split("-", 1)
-                if len(parts) == 2:
-                    stripped = parts[1]
-                # Check if stripped name exists
-                potential_account = existing_index.get(stripped)
-                if potential_account:
-                    system_id = potential_account.id
-                    suggested_name = stripped
+            # Try to match by full hierarchical path
+            full_path = parsed_path.full_path
+            if full_path in path_index:
+                system_id = path_index[full_path].id
+            else:
+                # Try matching by leaf name only (for backward compatibility)
+                leaf_name = parsed_path.leaf_name
+                if leaf_name in name_index:
+                    # Verify the type matches
+                    existing = name_index[leaf_name]
+                    if existing.type.value == parsed_path.account_type.value:
+                        system_id = existing.id
 
             mappings.append(
                 AccountMapping(
-                    csv_account_name=name,
-                    csv_account_type=ac_type if ac_type else AccountType.EXPENSE,
+                    csv_account_name=raw_name,
+                    csv_account_type=parsed_path.account_type,
+                    path_segments=parsed_path.path_segments,
                     system_account_id=system_id,
-                    create_new=not system_id,
-                    suggested_name=suggested_name,
+                    create_new=system_id is None,
+                    suggested_name=parsed_path.leaf_name,
                 )
             )
 
             if system_id:
-                name_to_id[name] = system_id
+                name_to_id[raw_name] = system_id
 
-        # Update transactions
+        # Update transactions with resolved IDs
         for tx in transactions:
             if tx.from_account_name in name_to_id:
                 tx.from_account_id = name_to_id[tx.from_account_name]
@@ -145,6 +181,105 @@ class ImportService:
                 tx.to_account_id = name_to_id[tx.to_account_name]
 
         return transactions, mappings
+
+    @staticmethod
+    def _create_hierarchical_accounts(
+        session: "Session",
+        ledger_id: uuid.UUID,
+        mappings: list[AccountMapping],
+        existing_accounts: list[Account],
+    ) -> tuple[dict[str, uuid.UUID], list[CreatedAccount]]:
+        """
+        Create hierarchical accounts from mappings.
+
+        This method creates accounts in the correct order (parents before children)
+        and properly sets parent_id and depth for each account.
+
+        Returns:
+            Tuple of (name_to_id mapping, list of created accounts)
+        """
+
+        name_to_id: dict[str, uuid.UUID] = {}
+        created_accounts_list: list[CreatedAccount] = []
+
+        # Build existing account index by (name, parent_id, type)
+        # This helps us find or create accounts at each level
+        existing_by_name_parent: dict[tuple[str, uuid.UUID | None, str], Account] = {}
+        for acc in existing_accounts:
+            key = (acc.name, acc.parent_id, acc.type.value)
+            existing_by_name_parent[key] = acc
+
+        # Also build path index for quick lookups
+        path_index = ImportService._build_account_hierarchy_index(existing_accounts)
+
+        # Track accounts we've created in this import (path -> account_id)
+        created_path_to_id: dict[str, uuid.UUID] = {}
+
+        # Process mappings that need new accounts
+        for m in mappings:
+            if m.system_account_id:
+                # Already mapped to existing account
+                name_to_id[m.csv_account_name] = m.system_account_id
+                continue
+
+            if not m.create_new:
+                continue
+
+            # Need to create account(s) for this path
+            path_segments = (
+                m.path_segments if m.path_segments else [m.suggested_name or m.csv_account_name]
+            )
+            account_type = m.csv_account_type
+
+            # Create accounts for each level in the path
+            current_parent_id: uuid.UUID | None = None
+            current_path_parts: list[str] = []
+
+            for depth_idx, segment_name in enumerate(path_segments):
+                current_path_parts.append(segment_name)
+                current_path = ".".join(current_path_parts)
+                depth = depth_idx + 1  # 1-indexed depth
+
+                # Check if this path already exists in DB or was created in this import
+                if current_path in path_index:
+                    # Already exists in DB
+                    existing_acc = path_index[current_path]
+                    current_parent_id = existing_acc.id
+                    continue
+
+                if current_path in created_path_to_id:
+                    # Already created in this import
+                    current_parent_id = created_path_to_id[current_path]
+                    continue
+
+                # Need to create this account
+                new_acc = Account(
+                    name=segment_name,
+                    type=account_type,
+                    ledger_id=ledger_id,
+                    parent_id=current_parent_id,
+                    depth=depth,
+                )
+                session.add(new_acc)
+                session.flush()  # Get ID
+                session.refresh(new_acc)
+
+                # Track the created account
+                created_path_to_id[current_path] = new_acc.id
+                current_parent_id = new_acc.id
+
+                # Only add leaf accounts to created_accounts_list for reporting
+                is_leaf = depth_idx == len(path_segments) - 1
+                if is_leaf:
+                    created_accounts_list.append(
+                        CreatedAccount(id=new_acc.id, name=new_acc.name, type=new_acc.type)
+                    )
+
+            # Map the original CSV name to the leaf account ID
+            if current_parent_id:
+                name_to_id[m.csv_account_name] = current_parent_id
+
+        return name_to_id, created_accounts_list
 
     @staticmethod
     def execute_import(
@@ -156,49 +291,33 @@ class ImportService:
     ) -> "ImportResult":
         from datetime import datetime
 
+        from sqlmodel import select
+
         from src.models.import_session import ImportStatus
-        from src.schemas.data_import import CreatedAccount
-
-        # 1. Process Mappings & Create Accounts
-        name_to_id = {}
-        created_accounts_list = []
-
-        # Load Ledger to get owner_id
-        # import_session might differ from session state, reload to be sure or use relation
-        # We assume import_session is attached to session
-        # If not loaded, we might need to fetch ledger.
-        # But import_session.ledger_id is available.
-        # We need user_id for Transaction.owner_id.
-        # Transaction model: owner_id: uuid.UUID = Field(foreign_key="users.id")
-        # We can fetch ledger owner.
-
-        # Avoid circular import if needed, but imported inside method is fine.
         from src.models.ledger import Ledger
 
+        # Verify ledger exists
         ledger = session.get(Ledger, import_session.ledger_id)
         if not ledger:
             raise ValueError("Ledger not found")
-        owner_id = ledger.user_id
 
+        # Load existing accounts for hierarchical creation
+        existing_accounts = list(
+            session.exec(select(Account).where(Account.ledger_id == import_session.ledger_id)).all()
+        )
+
+        # 1. Process Mappings & Create Hierarchical Accounts
+        name_to_id, created_accounts_list = ImportService._create_hierarchical_accounts(
+            session=session,
+            ledger_id=import_session.ledger_id,
+            mappings=mappings,
+            existing_accounts=existing_accounts,
+        )
+
+        # Add existing mappings to name_to_id
         for m in mappings:
-            # Map by CSV name
-            if m.system_account_id:
+            if m.system_account_id and m.csv_account_name not in name_to_id:
                 name_to_id[m.csv_account_name] = m.system_account_id
-            elif m.create_new:
-                # Create Account
-                new_acc = Account(
-                    name=m.suggested_name or m.csv_account_name,
-                    type=m.csv_account_type,
-                    ledger_id=import_session.ledger_id,
-                )
-                session.add(new_acc)
-                session.flush()  # Get ID
-                session.refresh(new_acc)
-                name_to_id[m.csv_account_name] = new_acc.id
-
-                created_accounts_list.append(
-                    CreatedAccount(id=new_acc.id, name=new_acc.name, type=new_acc.type)
-                )
 
         # 2. Process Transactions
         imported_count = 0
@@ -223,6 +342,11 @@ class ImportService:
                 )
 
             # Create Transaction
+            # Convert schema TransactionType to model TransactionType
+            from src.models.transaction import TransactionType as ModelTransactionType
+
+            model_tx_type = ModelTransactionType(tx.transaction_type.value)
+
             db_tx = Transaction(
                 ledger_id=import_session.ledger_id,
                 date=tx.date,
@@ -230,7 +354,7 @@ class ImportService:
                 description=tx.description,
                 from_account_id=from_id,
                 to_account_id=to_id,
-                owner_id=owner_id,
+                transaction_type=model_tx_type,
             )
             session.add(db_tx)
             imported_count += 1

@@ -3,12 +3,15 @@
 import { useTranslations } from 'next-intl'
 import { LanguageSelector } from '@/components/settings/LanguageSelector'
 import { ThemeToggle } from '@/components/settings/ThemeToggle'
+import { DangerZone } from '@/components/settings/DangerZone'
+import { useLedgerContext } from '@/lib/context/LedgerContext'
 
 /**
  * Settings page - displays language and theme preferences.
  */
 export default function SettingsPage() {
   const t = useTranslations('settings')
+  const { currentLedger } = useLedgerContext()
 
   return (
     <div className="space-y-8">
@@ -18,6 +21,12 @@ export default function SettingsPage() {
         <LanguageSelector />
         <ThemeToggle />
       </div>
+
+      {currentLedger && (
+        <div className="mt-8">
+          <DangerZone ledgerId={currentLedger.id} />
+        </div>
+      )}
     </div>
   )
 }

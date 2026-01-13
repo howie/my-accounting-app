@@ -102,9 +102,7 @@ async def create_import_preview(
 
     # 4. Generate Mappings
     existing_accounts = session.exec(select(Account).where(Account.ledger_id == ledger_id)).all()
-    mapped_txs, mappings = ImportService.auto_map_accounts(
-        parsed_txs, list(existing_accounts), import_type
-    )
+    mapped_txs, mappings = ImportService.auto_map_accounts(parsed_txs, list(existing_accounts))
 
     if len(mapped_txs) > 2000:
         raise HTTPException(

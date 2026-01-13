@@ -206,7 +206,7 @@ class DashboardService:
                     "date": txn.date.isoformat(),
                     "description": txn.description,
                     "amount": float(txn.amount),
-                    "type": txn.transaction_type.value,
+                    "type": txn.transaction_type.value if txn.transaction_type else "EXPENSE",
                     "other_account_name": other_account.name if other_account else "Unknown",
                 }
             )
