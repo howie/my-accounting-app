@@ -39,16 +39,38 @@ class GeminiProvider(LLMProvider):
     def is_configured(self) -> bool:
         return bool(self.api_key)
 
+    def _convert_schema(self, schema: dict[str, Any]) -> dict[str, Any]:
+        """Convert schema types to Gemini format (uppercase)."""
+        new_schema = schema.copy()
+        if "type" in new_schema and isinstance(new_schema["type"], str):
+            new_schema["type"] = new_schema["type"].upper()
+
+        if "properties" in new_schema:
+            new_props = {}
+            for k, v in new_schema["properties"].items():
+                new_props[k] = self._convert_schema(v)
+            new_schema["properties"] = new_props
+
+        if "items" in new_schema:
+            new_schema["items"] = self._convert_schema(new_schema["items"])
+
+        return new_schema
+
     def _convert_tools(self, tools: list[LLMToolDefinition]) -> list[dict[str, Any]]:
         """Convert standard tool definitions to Gemini format."""
         gemini_tools = []
         for tool in tools:
+            # Convert properties recursively
+            properties = {}
+            for name, prop in tool.parameters.items():
+                properties[name] = self._convert_schema(prop)
+
             gemini_tool = {
                 "name": tool.name,
                 "description": tool.description,
                 "parameters": {
-                    "type": "object",
-                    "properties": tool.parameters,
+                    "type": "OBJECT",
+                    "properties": properties,
                 },
             }
             if tool.required:

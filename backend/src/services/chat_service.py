@@ -1,5 +1,7 @@
 """Chat service with pluggable LLM provider support."""
 
+import logging
+import traceback
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -196,7 +198,7 @@ class ChatService:
             )
         elif tool_name == "create_transaction":
             return create_transaction(
-                amount=args.get("amount"),
+                amount=float(args.get("amount", 0)),
                 from_account=args.get("from_account", ""),
                 to_account=args.get("to_account", ""),
                 description=args.get("description", ""),
@@ -327,6 +329,10 @@ class ChatService:
             )
 
         except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error("Error in chat service:")
+            logger.error(traceback.format_exc())
+
             return ChatResponse(
                 id=str(uuid.uuid4()),
                 message=f"發生錯誤：{e!s}",

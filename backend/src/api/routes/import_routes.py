@@ -72,20 +72,22 @@ async def create_import_preview(
     file_hash = sha256.hexdigest()
 
     # 3. Parse
-    parsed_txs = []
+    parsed_txs: list[
+        Any
+    ] = []  # Use generic list to avoid union issues with different parsers for now
     with open(save_path, "rb") as f:
         try:
             if import_type == ImportType.MYAB_CSV:
-                parser = MyAbCsvParser()
-                parsed_txs = parser.parse(f)
+                parser_myab = MyAbCsvParser()
+                parsed_txs = parser_myab.parse(f)
             elif import_type == ImportType.CREDIT_CARD:
                 if not bank_code:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="bank_code is required for credit card import",
                     )
-                parser = CreditCardCsvParser(bank_code)
-                parsed_txs = parser.parse(f)
+                parser_cc = CreditCardCsvParser(bank_code)
+                parsed_txs = parser_cc.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -198,19 +200,19 @@ async def execute_import(
         )
 
     try:
-        parsed_txs = []
+        parsed_txs: list[Any] = []
         with open(save_path, "rb") as f:
             if import_session.import_type == ImportType.MYAB_CSV:
-                parser = MyAbCsvParser()
-                parsed_txs = parser.parse(f)
+                parser_myab = MyAbCsvParser()
+                parsed_txs = parser_myab.parse(f)
             elif import_session.import_type == ImportType.CREDIT_CARD:
                 if not import_session.bank_code:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Bank code not found in import session",
                     )
-                parser = CreditCardCsvParser(import_session.bank_code)
-                parsed_txs = parser.parse(f)
+                parser_cc = CreditCardCsvParser(import_session.bank_code)
+                parsed_txs = parser_cc.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
@@ -285,7 +287,7 @@ async def get_import_history(
     statement = (
         select(ImportSession)
         .where(ImportSession.ledger_id == ledger_id)
-        .order_by(ImportSession.created_at.desc())  # type: ignore[union-attr]
+        .order_by(ImportSession.created_at.desc())  # type: ignore[attr-defined]
         .offset(offset)
         .limit(limit)
     )

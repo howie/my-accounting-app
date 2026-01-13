@@ -1,5 +1,5 @@
 import uuid
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from sqlmodel import Session
 
@@ -33,7 +33,7 @@ class ImportService:
 
         # Build index for existing transactions
         # Key: (date, amount, from_acc_id, to_acc_id)
-        existing_index = {}
+        existing_index: dict[tuple[Any, ...], list[Transaction]] = {}
         for tx in existing_transactions:
             key = (tx.date, tx.amount, tx.from_account_id, tx.to_account_id)
             if key not in existing_index:
@@ -102,14 +102,15 @@ class ImportService:
 
                 account_names[tx.to_account_name] = ac_type
 
-        # Build map of Existing Accounts: Name -> ID
-        existing_map = {acc.name: acc.id for acc in existing_accounts}
+        # Index existing accounts by name for quick lookup
+        existing_index: dict[str, Account] = {a.name: a for a in existing_accounts}
 
         mappings: list[AccountMapping] = []
         name_to_id: dict[str, uuid.UUID] = {}
 
         for name, ac_type in account_names.items():
-            system_id = existing_map.get(name)
+            system_account = existing_index.get(name)
+            system_id = system_account.id if system_account else None
 
             # Try stripping prefix for MyAB if no exact match
             suggested_name = name
@@ -117,10 +118,10 @@ class ImportService:
                 parts = name.split("-", 1)
                 if len(parts) == 2:
                     stripped = parts[1]
-                    # Check if stripped name exists
-                    potential_id = existing_map.get(stripped)
-                    if potential_id:
-                        system_id = potential_id
+                # Check if stripped name exists
+                potential_account = existing_index.get(stripped)
+                if potential_account:
+                    system_id = potential_account.id
                     suggested_name = stripped
 
             mappings.append(

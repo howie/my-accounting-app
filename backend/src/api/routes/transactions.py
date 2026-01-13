@@ -83,7 +83,14 @@ def create_transaction(
         )
 
     # Return full transaction details
-    return service.get_transaction(transaction.id, ledger_id)
+    # Return full transaction details
+    created = service.get_transaction(transaction.id, ledger_id)
+    if not created:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve created transaction",
+        )
+    return created
 
 
 @router.get("", response_model=PaginatedTransactions)
