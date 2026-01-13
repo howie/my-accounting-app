@@ -25,8 +25,18 @@ class DashboardService:
         """Initialize service with database session."""
         self.session = session
 
-    def get_dashboard_summary(self, ledger_id: uuid.UUID) -> dict:
+    def get_dashboard_summary(
+        self,
+        ledger_id: uuid.UUID,
+        start_date: date | None = None,
+        end_date: date | None = None,
+    ) -> dict:
         """Get aggregated dashboard data.
+
+        Args:
+            ledger_id: The ledger UUID
+            start_date: Optional start date for summary and trends
+            end_date: Optional end date for summary, assets, and trends
 
         Returns:
             dict with total_assets, current_month, and trends
@@ -39,14 +49,36 @@ class DashboardService:
         if not ledger:
             raise ValueError(f"Ledger not found: {ledger_id}")
 
-        # Calculate total assets
-        total_assets = self._calculate_total_assets(ledger_id)
+        # Set default dates
+        today = date.today()
+        effective_end_date = end_date if end_date else today
 
-        # Get current month data
-        current_month = self._get_current_month_summary(ledger_id)
+        if start_date:
+            # Explicit range provided: use for both
+            summary_start = start_date
+            trend_start = start_date
+        else:
+            # Default behavior / No start date
+            # Summary: Current month (of effective_end_date)
+            summary_start = effective_end_date.replace(day=1)
 
-        # Get 6-month trends
-        trends = self._get_monthly_trends(ledger_id)
+            # Trends: Last 6 months (ending at effective_end_date)
+            # Calculate start date 5 months back
+            year = effective_end_date.year
+            month = effective_end_date.month - 5
+            while month <= 0:
+                month += 12
+                year -= 1
+            trend_start = date(year, month, 1)
+
+        # Calculate total assets (as of effective_end_date)
+        total_assets = self._calculate_total_assets(ledger_id, effective_end_date)
+
+        # Get period summary (income/expenses within range)
+        current_month = self._get_period_summary(ledger_id, summary_start, effective_end_date)
+
+        # Get trends
+        trends = self._get_monthly_trends(ledger_id, trend_start, effective_end_date)
 
         return {
             "total_assets": total_assets,
@@ -223,8 +255,8 @@ class DashboardService:
             "has_more": has_more,
         }
 
-    def _calculate_total_assets(self, ledger_id: uuid.UUID) -> Decimal:
-        """Calculate sum of all ASSET account balances."""
+    def _calculate_total_assets(self, ledger_id: uuid.UUID, end_date: date) -> Decimal:
+        """Calculate sum of all ASSET account balances as of end_date."""
         # Get all asset accounts
         accounts = self.session.exec(
             select(Account)
@@ -234,32 +266,43 @@ class DashboardService:
 
         total = Decimal("0")
         for account in accounts:
-            total += self._calculate_account_balance(account)
+            total += self._calculate_account_balance(account, end_date)
 
         return total
 
-    def _calculate_account_balance(self, account: Account) -> Decimal:
+    def _calculate_account_balance(self, account: Account, end_date: date | None = None) -> Decimal:
         """Calculate balance for a single account from transactions.
+
+        If end_date is provided, only consider transactions on or before that date.
 
         For Asset: SUM(incoming) - SUM(outgoing)
         For Liability: SUM(outgoing) - SUM(incoming)
         For Income: SUM(outgoing)
         For Expense: SUM(incoming)
         """
+        # Build date filter
+        date_filter = []
+        if end_date:
+            date_filter.append(Transaction.date <= end_date)
+
         # Get incoming sum (to this account)
-        incoming_result = self.session.exec(
-            select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
-                Transaction.to_account_id == account.id
-            )
-        ).one()
+        incoming_query = select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
+            Transaction.to_account_id == account.id
+        )
+        for condition in date_filter:
+            incoming_query = incoming_query.where(condition)
+
+        incoming_result = self.session.exec(incoming_query).one()
         incoming = Decimal(str(incoming_result)) if incoming_result else Decimal("0")
 
         # Get outgoing sum (from this account)
-        outgoing_result = self.session.exec(
-            select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
-                Transaction.from_account_id == account.id
-            )
-        ).one()
+        outgoing_query = select(func.coalesce(func.sum(Transaction.amount), Decimal("0"))).where(
+            Transaction.from_account_id == account.id
+        )
+        for condition in date_filter:
+            outgoing_query = outgoing_query.where(condition)
+
+        outgoing_result = self.session.exec(outgoing_query).one()
         outgoing = Decimal(str(outgoing_result)) if outgoing_result else Decimal("0")
 
         if account.type == AccountType.ASSET:
@@ -271,23 +314,15 @@ class DashboardService:
         else:  # EXPENSE
             return incoming
 
-    def _get_current_month_summary(self, ledger_id: uuid.UUID) -> dict:
-        """Get income and expenses for current month."""
-        today = date.today()
-        first_day = today.replace(day=1)
-        # Last day of month
-        if today.month == 12:
-            last_day = today.replace(year=today.year + 1, month=1, day=1) - timedelta(days=1)
-        else:
-            last_day = today.replace(month=today.month + 1, day=1) - timedelta(days=1)
-
+    def _get_period_summary(self, ledger_id: uuid.UUID, start_date: date, end_date: date) -> dict:
+        """Get income and expenses for the specified period."""
         # Sum income transactions
         income_result = self.session.exec(
             select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
             .where(Transaction.ledger_id == ledger_id)
             .where(Transaction.transaction_type == TransactionType.INCOME)
-            .where(Transaction.date >= first_day)
-            .where(Transaction.date <= last_day)
+            .where(Transaction.date >= start_date)
+            .where(Transaction.date <= end_date)
         ).one()
         income = Decimal(str(income_result)) if income_result else Decimal("0")
 
@@ -296,8 +331,8 @@ class DashboardService:
             select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
             .where(Transaction.ledger_id == ledger_id)
             .where(Transaction.transaction_type == TransactionType.EXPENSE)
-            .where(Transaction.date >= first_day)
-            .where(Transaction.date <= last_day)
+            .where(Transaction.date >= start_date)
+            .where(Transaction.date <= end_date)
         ).one()
         expenses = Decimal(str(expense_result)) if expense_result else Decimal("0")
 
@@ -307,32 +342,40 @@ class DashboardService:
             "net_cash_flow": float(income - expenses),
         }
 
-    def _get_monthly_trends(self, ledger_id: uuid.UUID, months: int = 6) -> list[dict]:
-        """Get income and expense totals for the last N months."""
-        today = date.today()
+    def _get_monthly_trends(
+        self, ledger_id: uuid.UUID, start_date: date, end_date: date
+    ) -> list[dict]:
+        """Get income and expense totals for each month in the range."""
         trends = []
 
-        for i in range(months - 1, -1, -1):
-            # Calculate the month to query
-            year = today.year
-            month = today.month - i
-            while month <= 0:
-                month += 12
-                year -= 1
+        # Start from the first day of the start_date month
+        current = start_date.replace(day=1)
+        # End at the last day of the end_date month
+        end_limit = (
+            end_date.replace(year=end_date.year + 1, month=1, day=1)
+            if end_date.month == 12
+            else end_date.replace(month=end_date.month + 1, day=1)
+        ) - timedelta(days=1)
 
-            first_day = date(year, month, 1)
-            if month == 12:
-                last_day = date(year + 1, 1, 1) - timedelta(days=1)
+        while current <= end_limit:
+            # Range for this month
+            month_start = current
+            if current.month == 12:
+                month_end = current.replace(year=current.year + 1, month=1, day=1) - timedelta(
+                    days=1
+                )
+                next_month = current.replace(year=current.year + 1, month=1, day=1)
             else:
-                last_day = date(year, month + 1, 1) - timedelta(days=1)
+                month_end = current.replace(month=current.month + 1, day=1) - timedelta(days=1)
+                next_month = current.replace(month=current.month + 1, day=1)
 
             # Sum income
             income_result = self.session.exec(
                 select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
                 .where(Transaction.ledger_id == ledger_id)
                 .where(Transaction.transaction_type == TransactionType.INCOME)
-                .where(Transaction.date >= first_day)
-                .where(Transaction.date <= last_day)
+                .where(Transaction.date >= month_start)
+                .where(Transaction.date <= month_end)
             ).one()
             income = Decimal(str(income_result)) if income_result else Decimal("0")
 
@@ -341,21 +384,20 @@ class DashboardService:
                 select(func.coalesce(func.sum(Transaction.amount), Decimal("0")))
                 .where(Transaction.ledger_id == ledger_id)
                 .where(Transaction.transaction_type == TransactionType.EXPENSE)
-                .where(Transaction.date >= first_day)
-                .where(Transaction.date <= last_day)
+                .where(Transaction.date >= month_start)
+                .where(Transaction.date <= month_end)
             ).one()
             expenses = Decimal(str(expense_result)) if expense_result else Decimal("0")
 
-            # Month name abbreviation
-            month_name = first_day.strftime("%b")
-
             trends.append(
                 {
-                    "month": month_name,
-                    "year": year,
+                    "month": month_start.strftime("%b"),
+                    "year": month_start.year,
                     "income": float(income),
                     "expenses": float(expenses),
                 }
             )
+
+            current = next_month
 
         return trends

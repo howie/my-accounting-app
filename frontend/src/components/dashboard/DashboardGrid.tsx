@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useDashboard } from '@/lib/hooks/useDashboard'
 import { BalanceCard } from './BalanceCard'
 import { IncomeExpenseChart } from './IncomeExpenseChart'
@@ -7,6 +8,7 @@ import { TrendChart } from './TrendChart'
 import { QuickEntryPanel } from '@/components/templates'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { AlertCircle } from 'lucide-react'
+import { DateRangePicker } from '@/components/ui/DateRangePicker'
 
 /**
  * Main dashboard grid layout.
@@ -14,7 +16,10 @@ import { AlertCircle } from 'lucide-react'
  */
 export function DashboardGrid() {
   const { currentLedger } = useLedgerContext()
-  const { data, isLoading, error } = useDashboard()
+  const [startDate, setStartDate] = useState<Date | undefined>()
+  const [endDate, setEndDate] = useState<Date | undefined>()
+
+  const { data, isLoading, error } = useDashboard({ startDate, endDate })
 
   // No ledger selected
   if (!currentLedger) {
@@ -41,11 +46,19 @@ export function DashboardGrid() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Financial overview for {currentLedger.name}
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Financial overview for {currentLedger.name}
+          </p>
+        </div>
+        <DateRangePicker
+          startDate={startDate}
+          endDate={endDate}
+          onStartDateChange={setStartDate}
+          onEndDateChange={setEndDate}
+        />
       </div>
 
       {/* Main Grid */}

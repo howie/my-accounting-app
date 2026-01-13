@@ -177,6 +177,74 @@ class TestGetDashboardSummary:
         with pytest.raises(ValueError, match="Ledger not found"):
             service.get_dashboard_summary(fake_id)
 
+    def test_calculates_summary_for_custom_range(
+        self, session: Session, ledger: Ledger, accounts: dict[str, Account]
+    ):
+        """Should calculate summary only for the specified range."""
+        today = date.today()
+        last_month = today.replace(day=1) - timedelta(days=1)
+        last_month_start = last_month.replace(day=1)
+
+        # Transaction last month
+        txn1 = Transaction(
+            ledger_id=ledger.id,
+            date=last_month,
+            description="Last Month Income",
+            amount=Decimal("1000.00"),
+            from_account_id=accounts["salary"].id,
+            to_account_id=accounts["cash"].id,
+            transaction_type=TransactionType.INCOME,
+        )
+
+        # Transaction this month
+        txn2 = Transaction(
+            ledger_id=ledger.id,
+            date=today,
+            description="This Month Income",
+            amount=Decimal("500.00"),
+            from_account_id=accounts["salary"].id,
+            to_account_id=accounts["cash"].id,
+            transaction_type=TransactionType.INCOME,
+        )
+
+        session.add(txn1)
+        session.add(txn2)
+        session.commit()
+
+        service = DashboardService(session)
+
+        # Test Last Month Range
+        result = service.get_dashboard_summary(
+            ledger.id, start_date=last_month_start, end_date=last_month
+        )
+
+        assert result["current_month"]["income"] == 1000.0
+        assert len(result["trends"]) == 1
+        assert result["trends"][0]["income"] == 1000.0
+        assert result["total_assets"] == Decimal("1000.00")  # As of end of last month
+
+    def test_calculates_trends_for_custom_range(
+        self, session: Session, ledger: Ledger, accounts: dict[str, Account]
+    ):
+        """Should return trend bars for each month in the custom range."""
+        today = date.today()
+        # Create range of 3 months ending today
+        # Month 1, Month 2, Month 3 (Today)
+        month3_start = today.replace(day=1)
+        month2_end = month3_start - timedelta(days=1)
+        month2_start = month2_end.replace(day=1)
+        month1_end = month2_start - timedelta(days=1)
+        month1_start = month1_end.replace(day=1)
+
+        service = DashboardService(session)
+        result = service.get_dashboard_summary(ledger.id, start_date=month1_start, end_date=today)
+
+        assert len(result["trends"]) == 3
+        assert result["trends"][0]["year"] == month1_start.year
+        assert result["trends"][0]["month"] == month1_start.strftime("%b")
+        assert result["trends"][2]["year"] == today.year
+        assert result["trends"][2]["month"] == today.strftime("%b")
+
 
 class TestGetAccountsByCategory:
     """Tests for get_accounts_by_category method."""
