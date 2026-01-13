@@ -169,6 +169,23 @@
     "themeLight": "淺色",
     "themeDark": "深色",
     "themeSystem": "系統",
+    "dangerZone": {
+      "title": "危險區域",
+      "description": "以下操作無法復原，請謹慎操作",
+      "clearTransactions": "清除交易資料",
+      "clearTransactionsDesc": "刪除所有交易記錄，但保留科目結構",
+      "clearTransactionsConfirm": "確定要清除所有交易資料嗎？此操作無法復原。",
+      "clearTransactionsSuccess": "已清除 {count} 筆交易",
+      "clearAccounts": "清除所有科目",
+      "clearAccountsDesc": "刪除所有科目和交易，僅保留系統預設科目（現金、權益）",
+      "clearAccountsConfirm": "確定要清除所有科目嗎？這將同時刪除所有交易記錄，此操作無法復原。",
+      "clearAccountsSuccess": "已清除 {accounts} 個科目和 {transactions} 筆交易",
+      "deleteLedger": "刪除帳本",
+      "deleteLedgerDesc": "永久刪除此帳本及所有相關資料",
+      "deleteLedgerConfirm": "確定要刪除此帳本嗎？所有科目和交易都將被永久刪除，此操作無法復原。",
+      "deleteLedgerSuccess": "帳本已刪除",
+      "processing": "處理中..."
+    },
     "tokens": {
       "title": "API 金鑰",
       "description": "建立 API 金鑰以允許 AI 助理存取您的帳本資料",

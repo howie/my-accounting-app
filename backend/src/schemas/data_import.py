@@ -40,6 +40,7 @@ class ValidationErrorType(str, Enum):
     INVALID_AMOUNT = "INVALID_AMOUNT"
     MISSING_COLUMN = "MISSING_COLUMN"
     UNKNOWN_ACCOUNT_TYPE = "UNKNOWN_ACCOUNT_TYPE"
+    INVALID_FORMAT = "INVALID_FORMAT"
 
 
 class CategorySuggestion(BaseModel):
@@ -47,6 +48,30 @@ class CategorySuggestion(BaseModel):
     suggested_account_name: str
     confidence: float = Field(ge=0.0, le=1.0)
     matched_keyword: str | None = None
+
+
+class ParsedAccountPath(BaseModel):
+    """Parsed hierarchical account path from CSV.
+
+    Example: "L-信用卡.國泰世華信用卡.Cube卡" parses to:
+    - account_type: LIABILITY
+    - path_segments: ["信用卡", "國泰世華信用卡", "Cube卡"]
+    - raw_name: "L-信用卡.國泰世華信用卡.Cube卡"
+    """
+
+    account_type: AccountType
+    path_segments: list[str]  # Hierarchical path, e.g. ["信用卡", "國泰世華信用卡", "Cube卡"]
+    raw_name: str  # Original name from CSV
+
+    @property
+    def leaf_name(self) -> str:
+        """Return the leaf (deepest) account name."""
+        return self.path_segments[-1] if self.path_segments else self.raw_name
+
+    @property
+    def full_path(self) -> str:
+        """Return the full path as a dot-separated string without type prefix."""
+        return ".".join(self.path_segments)
 
 
 class ParsedTransaction(BaseModel):
@@ -61,11 +86,15 @@ class ParsedTransaction(BaseModel):
     category_suggestion: CategorySuggestion | None = None
     from_account_id: UUID | None = None
     to_account_id: UUID | None = None
+    # Hierarchical account paths (parsed from account names)
+    from_account_path: ParsedAccountPath | None = None
+    to_account_path: ParsedAccountPath | None = None
 
 
 class AccountMapping(BaseModel):
     csv_account_name: str
     csv_account_type: AccountType
+    path_segments: list[str] = Field(default_factory=list)  # Hierarchical path
     system_account_id: UUID | None = None
     create_new: bool = False
     suggested_name: str | None = None

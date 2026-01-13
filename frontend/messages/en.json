@@ -169,6 +169,23 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "themeSystem": "System",
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "These actions are irreversible. Please proceed with caution.",
+      "clearTransactions": "Clear Transactions",
+      "clearTransactionsDesc": "Delete all transaction records while keeping account structure",
+      "clearTransactionsConfirm": "Are you sure you want to clear all transactions? This action cannot be undone.",
+      "clearTransactionsSuccess": "Cleared {count} transactions",
+      "clearAccounts": "Clear All Accounts",
+      "clearAccountsDesc": "Delete all accounts and transactions, keeping only default system accounts (Cash, Equity)",
+      "clearAccountsConfirm": "Are you sure you want to clear all accounts? This will also delete all transactions. This action cannot be undone.",
+      "clearAccountsSuccess": "Cleared {accounts} accounts and {transactions} transactions",
+      "deleteLedger": "Delete Ledger",
+      "deleteLedgerDesc": "Permanently delete this ledger and all associated data",
+      "deleteLedgerConfirm": "Are you sure you want to delete this ledger? All accounts and transactions will be permanently deleted. This action cannot be undone.",
+      "deleteLedgerSuccess": "Ledger deleted",
+      "processing": "Processing..."
+    },
     "tokens": {
       "title": "API Tokens",
       "description": "Create API tokens to allow AI assistants to access your ledger data",

@@ -60,7 +60,7 @@ dev-db:
 dev-backend:
 	@echo "Starting backend server (requires database on localhost:5433)..."
 	@echo "Run 'make dev-db' first if database is not running."
-	cd backend && PYTHONPATH=. .venv/bin/python -m uvicorn src.api.main:app --host 127.0.0.1 --port 8000 --reload --reload-dir src
+	cd backend && PYTHONPATH=. .venv/bin/python -m uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir src
 
 dev-frontend:
 	@echo "Starting frontend with hot reload..."

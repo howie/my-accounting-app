@@ -18,6 +18,7 @@ from src.schemas.data_import import (
     ImportPreviewResponse,
     ImportResult,
     ImportType,
+    ValidationError,
 )
 from src.services.csv_parser import CreditCardCsvParser, MyAbCsvParser
 from src.services.import_service import ImportService
@@ -75,11 +76,13 @@ async def create_import_preview(
     parsed_txs: list[
         Any
     ] = []  # Use generic list to avoid union issues with different parsers for now
+    validation_errors: list[ValidationError] = []
+
     with open(save_path, "rb") as f:
         try:
             if import_type == ImportType.MYAB_CSV:
                 parser_myab = MyAbCsvParser()
-                parsed_txs = parser_myab.parse(f)
+                parsed_txs, validation_errors = parser_myab.parse(f)
             elif import_type == ImportType.CREDIT_CARD:
                 if not bank_code:
                     raise HTTPException(
@@ -87,21 +90,19 @@ async def create_import_preview(
                         detail="bank_code is required for credit card import",
                     )
                 parser_cc = CreditCardCsvParser(bank_code)
-                parsed_txs = parser_cc.parse(f)
+                parsed_txs, validation_errors = parser_cc.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
                     detail="Import type not supported yet",
                 )
         except ValueError as e:
-            # Parsing error
+            # Fatal parsing error (e.g. file encoding, fundamental format)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     # 4. Generate Mappings
     existing_accounts = session.exec(select(Account).where(Account.ledger_id == ledger_id)).all()
-    mapped_txs, mappings = ImportService.auto_map_accounts(
-        parsed_txs, list(existing_accounts), import_type
-    )
+    mapped_txs, mappings = ImportService.auto_map_accounts(parsed_txs, list(existing_accounts))
 
     if len(mapped_txs) > 2000:
         raise HTTPException(
@@ -157,8 +158,8 @@ async def create_import_preview(
         transactions=mapped_txs[:50],  # Return first 50 as sample
         duplicates=duplicates,
         account_mappings=mappings,
-        validation_errors=[],
-        is_valid=True,
+        validation_errors=validation_errors,
+        is_valid=len(validation_errors) == 0,
     )
 
 
@@ -204,7 +205,7 @@ async def execute_import(
         with open(save_path, "rb") as f:
             if import_session.import_type == ImportType.MYAB_CSV:
                 parser_myab = MyAbCsvParser()
-                parsed_txs = parser_myab.parse(f)
+                parsed_txs, _ = parser_myab.parse(f)
             elif import_session.import_type == ImportType.CREDIT_CARD:
                 if not import_session.bank_code:
                     raise HTTPException(
@@ -212,7 +213,7 @@ async def execute_import(
                         detail="Bank code not found in import session",
                     )
                 parser_cc = CreditCardCsvParser(import_session.bank_code)
-                parsed_txs = parser_cc.parse(f)
+                parsed_txs, _ = parser_cc.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
