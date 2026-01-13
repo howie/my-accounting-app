@@ -5,6 +5,7 @@ Provides read-only endpoints for dashboard and sidebar data.
 """
 
 import uuid
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -19,6 +20,8 @@ router = APIRouter(tags=["dashboard"])
 def get_dashboard(
     ledger_id: uuid.UUID,
     session: SessionDep,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> dict:
     """Get aggregated dashboard data for a ledger.
 
@@ -26,7 +29,7 @@ def get_dashboard(
     """
     service = DashboardService(session)
     try:
-        return service.get_dashboard_summary(ledger_id)
+        return service.get_dashboard_summary(ledger_id, start_date, end_date)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
