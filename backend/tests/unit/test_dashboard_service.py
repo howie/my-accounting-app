@@ -105,7 +105,7 @@ class TestGetDashboardSummary:
         assert result["current_month"]["income"] == 0.0
         assert result["current_month"]["expenses"] == 0.0
         assert result["current_month"]["net_cash_flow"] == 0.0
-        assert len(result["trends"]) == 6
+        assert len(result["trends"]) == 12
 
     def test_calculates_total_assets(
         self, session: Session, ledger: Ledger, accounts: dict[str, Account]
