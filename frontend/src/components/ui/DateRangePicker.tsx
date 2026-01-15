@@ -26,7 +26,7 @@ export function DateRangePicker({
             <div className="relative">
                 <Input
                     type="date"
-                    value={startDate ? format(startDate, 'yyyy-MM-dd') : ''}
+                    value={startDate && !isNaN(startDate.getTime()) ? format(startDate, 'yyyy-MM-dd') : ''}
                     onChange={(e) => {
                         const date = e.target.value ? new Date(e.target.value) : undefined
                         onStartDateChange(date)
@@ -38,7 +38,7 @@ export function DateRangePicker({
             <div className="relative">
                 <Input
                     type="date"
-                    value={endDate ? format(endDate, 'yyyy-MM-dd') : ''}
+                    value={endDate && !isNaN(endDate.getTime()) ? format(endDate, 'yyyy-MM-dd') : ''}
                     onChange={(e) => {
                         const date = e.target.value ? new Date(e.target.value) : undefined
                         onEndDateChange(date)

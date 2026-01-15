@@ -101,7 +101,7 @@ export function Sidebar() {
           <Link
             href="/"
             className={cn(
-              'mb-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+              'mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
               'transition-colors duration-150',
               pathname === '/'
                 ? 'bg-sidebar-accent text-sidebar-accent-foreground'
@@ -110,6 +110,51 @@ export function Sidebar() {
           >
             <Home className="h-4 w-4" />
             <span>{t('dashboard')}</span>
+          </Link>
+
+          {/* Quick Actions (Import, Chat, Settings) */}
+          {currentLedger && (
+            <>
+              <Link
+                href={`/ledgers/${currentLedger.id}/import`}
+                className={cn(
+                  'mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+                  'transition-colors duration-150',
+                  pathname.includes('/import')
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+                )}
+              >
+                <Upload className="h-4 w-4" />
+                <span>{t('import')}</span>
+              </Link>
+            </>
+          )}
+
+          <button
+            onClick={openChat}
+            className={cn(
+              'mb-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+              'transition-colors duration-150',
+              'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+            )}
+          >
+            <MessageCircle className="h-4 w-4" />
+            <span>{t('chat')}</span>
+          </button>
+
+          <Link
+            href="/settings"
+            className={cn(
+              'mb-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+              'transition-colors duration-150',
+              pathname.startsWith('/settings')
+                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            <span>{t('settings')}</span>
           </Link>
 
           {/* Category Divider */}
@@ -151,57 +196,6 @@ export function Sidebar() {
             </div>
           )}
         </nav>
-
-        {/* Import Link */}
-        {currentLedger && (
-          <div className="px-2 pb-2">
-            <Link
-              href={`/ledgers/${currentLedger.id}/import`}
-              className={cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-                'transition-colors duration-150',
-                pathname.includes('/import')
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
-              )}
-            >
-              <Upload className="h-4 w-4" />
-              <span>{t('import')}</span>
-            </Link>
-          </div>
-        )}
-
-        {/* AI Chat Button */}
-        <div className="px-2 pb-2">
-          <button
-            onClick={openChat}
-            className={cn(
-              'flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-              'transition-colors duration-150',
-              'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
-            )}
-          >
-            <MessageCircle className="h-4 w-4" />
-            <span>{t('chat')}</span>
-          </button>
-        </div>
-
-        {/* Settings Link */}
-        <div className="mt-auto px-2 pb-2">
-          <Link
-            href="/settings"
-            className={cn(
-              'flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-              'transition-colors duration-150',
-              pathname.startsWith('/settings')
-                ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground'
-            )}
-          >
-            <Settings className="h-4 w-4" />
-            <span>{t('settings')}</span>
-          </Link>
-        </div>
 
         {/* Footer */}
         <div className="border-t border-sidebar-border px-4 py-3">

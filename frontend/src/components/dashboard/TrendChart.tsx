@@ -45,7 +45,7 @@ export function TrendChart({ trends, isLoading }: TrendChartProps) {
   return (
     <Card className="p-6">
       <h3 className="mb-4 text-sm font-medium text-gray-500 dark:text-gray-400">
-        Monthly Trends (Last 6 Months)
+        Monthly Trends (Last 12 Months)
       </h3>
 
       {hasData ? (
@@ -53,13 +53,13 @@ export function TrendChart({ trends, isLoading }: TrendChartProps) {
           data={chartData}
           index="month"
           categories={['Income', 'Expenses']}
-          colors={['emerald', 'fuchsia']}
+          colors={['amber', 'rose']}
           className="h-64"
           showAnimation
           showLegend
           showGridLines={false}
           valueFormatter={formatCurrency}
-          yAxisWidth={60}
+          yAxisWidth={80}
         />
       ) : (
         <div className="flex h-64 items-center justify-center text-gray-400">

@@ -49,27 +49,43 @@ class DashboardService:
         if not ledger:
             raise ValueError(f"Ledger not found: {ledger_id}")
 
-        # Set default dates
-        today = date.today()
-        effective_end_date = end_date if end_date else today
+        # Validate explicitly provided date range
+        if start_date and end_date and start_date > end_date:
+            raise ValueError("Start date cannot be after end date")
 
-        if start_date:
-            # Explicit range provided: use for both
+        # Determine effective date range
+        if start_date and end_date:
+            # Explicit range provided
             summary_start = start_date
+            effective_end_date = end_date
             trend_start = start_date
         else:
-            # Default behavior / No start date
-            # Summary: Current month (of effective_end_date)
-            summary_start = effective_end_date.replace(day=1)
+            # Default behavior: Use range of all transactions
+            # Get min and max date from transactions
+            date_range_query = select(func.min(Transaction.date), func.max(Transaction.date)).where(
+                Transaction.ledger_id == ledger_id
+            )
 
-            # Trends: Last 6 months (ending at effective_end_date)
-            # Calculate start date 5 months back
-            year = effective_end_date.year
-            month = effective_end_date.month - 5
-            while month <= 0:
-                month += 12
-                year -= 1
-            trend_start = date(year, month, 1)
+            min_date, max_date = self.session.exec(date_range_query).one()
+
+            if min_date and max_date:
+                # Use transaction range if available
+                # For summary and trends, use the full range
+                summary_start = min_date
+                effective_end_date = max_date
+                trend_start = min_date
+            else:
+                # No transactions, fallback to current month
+                today = date.today()
+                effective_end_date = today
+                summary_start = today.replace(day=1)
+                # Trend start 11 months back for empty state
+                year = today.year
+                month = today.month - 11
+                while month <= 0:
+                    month += 12
+                    year -= 1
+                trend_start = date(year, month, 1)
 
         # Calculate total assets (as of effective_end_date)
         total_assets = self._calculate_total_assets(ledger_id, effective_end_date)
@@ -84,6 +100,10 @@ class DashboardService:
             "total_assets": total_assets,
             "current_month": current_month,
             "trends": trends,
+            "date_range": {
+                "start": summary_start.isoformat(),
+                "end": effective_end_date.isoformat(),
+            },
         }
 
     def get_accounts_by_category(self, ledger_id: uuid.UUID) -> dict:
