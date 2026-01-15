@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDashboard } from '@/lib/hooks/useDashboard'
-import { BalanceCard } from './BalanceCard'
+import { SummaryCards } from './SummaryCards'
 import { IncomeExpenseChart } from './IncomeExpenseChart'
 import { TrendChart } from './TrendChart'
 import { QuickEntryPanel } from '@/components/templates'
@@ -18,8 +18,18 @@ export function DashboardGrid() {
   const { currentLedger } = useLedgerContext()
   const [startDate, setStartDate] = useState<Date | undefined>()
   const [endDate, setEndDate] = useState<Date | undefined>()
+  const [hasInitialized, setHasInitialized] = useState(false)
 
   const { data, isLoading, error } = useDashboard({ startDate, endDate })
+
+  // Initialize date range from server default if not set
+  useEffect(() => {
+    if (data?.dateRange && !hasInitialized) {
+      setStartDate(new Date(data.dateRange.start))
+      setEndDate(new Date(data.dateRange.end))
+      setHasInitialized(true)
+    }
+  }, [data, hasInitialized])
 
   // No ledger selected
   if (!currentLedger) {
@@ -61,24 +71,26 @@ export function DashboardGrid() {
         />
       </div>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Balance Card - Full width on mobile, half on desktop */}
-        <BalanceCard totalAssets={data?.totalAssets ?? 0} isLoading={isLoading} />
+      {/* Summary Cards Row */}
+      <SummaryCards
+        totalAssets={data?.totalAssets ?? 0}
+        income={data?.currentMonth.income ?? 0}
+        expenses={data?.currentMonth.expenses ?? 0}
+        isLoading={isLoading}
+      />
 
-        {/* Income/Expense Chart */}
+      {/* Trend Chart - Full Width */}
+      <TrendChart trends={data?.trends ?? []} isLoading={isLoading} />
+
+      {/* Bottom Row: Income/Expense Split & Quick Entry */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <IncomeExpenseChart
           income={data?.currentMonth.income ?? 0}
           expenses={data?.currentMonth.expenses ?? 0}
           isLoading={isLoading}
         />
+        <QuickEntryPanel ledgerId={currentLedger.id} />
       </div>
-
-      {/* Quick Entry Panel */}
-      <QuickEntryPanel ledgerId={currentLedger.id} />
-
-      {/* Trend Chart - Full width */}
-      <TrendChart trends={data?.trends ?? []} isLoading={isLoading} />
     </div>
   )
 }

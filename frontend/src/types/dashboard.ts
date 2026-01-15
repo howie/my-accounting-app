@@ -56,6 +56,10 @@ export interface DashboardSummary {
   totalAssets: number
   currentMonth: CurrentMonthSummary
   trends: MonthlyTrend[]
+  dateRange?: {
+    start: string
+    end: string
+  }
 }
 
 /**
@@ -74,6 +78,10 @@ export interface DashboardResponse {
     income: number
     expenses: number
   }>
+  date_range?: {
+    start: string
+    end: string
+  }
 }
 
 /**
@@ -152,6 +160,7 @@ export function transformDashboardResponse(response: DashboardResponse): Dashboa
       income: t.income,
       expenses: t.expenses,
     })),
+    dateRange: response.date_range,
   }
 }
 
