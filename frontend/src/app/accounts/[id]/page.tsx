@@ -9,7 +9,9 @@ import { AccountTransactionList } from '@/components/tables/AccountTransactionLi
 import { TransactionModal } from '@/components/transactions/TransactionModal'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { useAccount } from '@/lib/hooks/useAccounts'
+import { useRecentAccounts } from '@/lib/hooks/useRecentAccounts'
 import { useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 interface AccountPageProps {
   params: Promise<{ id: string }>
@@ -24,9 +26,21 @@ export default function AccountPage({ params }: AccountPageProps) {
   const router = useRouter()
   const queryClient = useQueryClient()
   const { currentLedger, isLoading } = useLedgerContext()
+  const { addRecent } = useRecentAccounts()
 
   // Fetch account data for pre-selection
   const { data: account } = useAccount(currentLedger?.id ?? '', id)
+
+  // Update recent accounts when account data is loaded
+  useEffect(() => {
+    if (account) {
+      addRecent({
+        id: account.id,
+        name: account.name,
+        type: account.type,
+      })
+    }
+  }, [account, addRecent])
 
   // Refresh transaction list after creating a new transaction
   const handleTransactionCreated = () => {

@@ -1,6 +1,6 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { vi, describe, it, expect } from 'vitest'
+import { vi, describe, it, expect, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { TokenList } from '@/components/settings/TokenManagement/TokenList'
 import { CreateTokenDialog } from '@/components/settings/TokenManagement/CreateTokenDialog'

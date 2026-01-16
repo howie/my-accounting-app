@@ -20,6 +20,7 @@ interface SidebarItemProps {
   isExpanded: boolean
   onToggle: () => void
   selectedAccountId?: string
+  iconOnly?: boolean
 }
 
 /**
@@ -33,10 +34,15 @@ export function SidebarItem({
   isExpanded,
   onToggle,
   selectedAccountId,
+  iconOnly = false,
 }: SidebarItemProps) {
   const Icon = iconMap[category.type]
   const pathname = usePathname()
   const { isExpanded: isAccountExpanded, toggleExpanded } = useExpandedAccounts()
+
+  if (iconOnly) {
+    return <Icon className="h-4 w-4" />
+  }
 
   return (
     <div className="mb-1">
