@@ -54,6 +54,7 @@ export interface CurrentMonthSummary {
  */
 export interface DashboardSummary {
   totalAssets: number
+  totalLiabilities: number
   currentMonth: CurrentMonthSummary
   trends: MonthlyTrend[]
   dateRange?: {
@@ -67,6 +68,7 @@ export interface DashboardSummary {
  */
 export interface DashboardResponse {
   total_assets: number
+  total_liabilities: number
   current_month: {
     income: number
     expenses: number
@@ -149,6 +151,7 @@ export const CATEGORY_CONFIG: Record<AccountType, { label: string; icon: string 
 export function transformDashboardResponse(response: DashboardResponse): DashboardSummary {
   return {
     totalAssets: response.total_assets,
+    totalLiabilities: response.total_liabilities,
     currentMonth: {
       income: response.current_month.income,
       expenses: response.current_month.expenses,

@@ -6,6 +6,7 @@ from src.api.routes import (
     accounts,
     chat,
     dashboard,
+    export,
     import_routes,
     ledgers,
     templates,
@@ -35,6 +36,9 @@ api_router.include_router(users.router)
 
 # Feature 006: Data Import
 api_router.include_router(import_routes.router, tags=["Import"])
+
+# Feature 008: Data Export
+api_router.include_router(export.router, prefix="/export", tags=["Export"])
 
 # Feature 007: API Tokens for MCP
 api_router.include_router(tokens.router)

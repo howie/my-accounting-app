@@ -74,6 +74,7 @@ export function DashboardGrid() {
       {/* Summary Cards Row */}
       <SummaryCards
         totalAssets={data?.totalAssets ?? 0}
+        totalLiabilities={data?.totalLiabilities ?? 0}
         income={data?.currentMonth.income ?? 0}
         expenses={data?.currentMonth.expenses ?? 0}
         isLoading={isLoading}

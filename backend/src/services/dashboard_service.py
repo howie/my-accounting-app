@@ -90,6 +90,9 @@ class DashboardService:
         # Calculate total assets (as of effective_end_date)
         total_assets = self._calculate_total_assets(ledger_id, effective_end_date)
 
+        # Calculate total liabilities (as of effective_end_date)
+        total_liabilities = self._calculate_total_liabilities(ledger_id, effective_end_date)
+
         # Get period summary (income/expenses within range)
         current_month = self._get_period_summary(ledger_id, summary_start, effective_end_date)
 
@@ -98,6 +101,7 @@ class DashboardService:
 
         return {
             "total_assets": total_assets,
+            "total_liabilities": total_liabilities,
             "current_month": current_month,
             "trends": trends,
             "date_range": {
@@ -282,6 +286,21 @@ class DashboardService:
             select(Account)
             .where(Account.ledger_id == ledger_id)
             .where(Account.type == AccountType.ASSET)
+        ).all()
+
+        total = Decimal("0")
+        for account in accounts:
+            total += self._calculate_account_balance(account, end_date)
+
+        return total
+
+    def _calculate_total_liabilities(self, ledger_id: uuid.UUID, end_date: date) -> Decimal:
+        """Calculate sum of all LIABILITY account balances as of end_date."""
+        # Get all liability accounts
+        accounts = self.session.exec(
+            select(Account)
+            .where(Account.ledger_id == ledger_id)
+            .where(Account.type == AccountType.LIABILITY)
         ).all()
 
         total = Decimal("0")

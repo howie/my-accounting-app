@@ -56,6 +56,7 @@ export function useDashboard(dateRange?: DateRange) {
 function transformDashboardResponse(response: DashboardResponse): DashboardSummary {
   return {
     totalAssets: response.total_assets,
+    totalLiabilities: response.total_liabilities,
     currentMonth: {
       income: response.current_month.income,
       expenses: response.current_month.expenses,
