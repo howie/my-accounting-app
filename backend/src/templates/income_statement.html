@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Income Statement</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; }
+        .total { font-weight: bold; }
+        .indent-0 { padding-left: 0; font-weight: bold; }
+        .indent-1 { padding-left: 20px; }
+        .indent-2 { padding-left: 40px; }
+    </style>
+</head>
+<body>
+    <h1>Income Statement</h1>
+    <p>{{ report.start_date }} to {{ report.end_date }}</p>
+    <p>Generated at: {{ generated_at }}</p>
+
+    {% macro render_entries(entries) %}
+        {% for entry in entries recursive %}
+            <tr>
+                <td class="indent-{{ entry.level }}">{{ entry.name }}</td>
+                <td class="amount">{{ entry.amount }}</td>
+            </tr>
+            {% if entry.children %}
+                {{ loop(entry.children) }}
+            {% endif %}
+        {% endfor %}
+    {% endmacro %}
+
+    <h2>Income</h2>
+    <table>
+        {{ render_entries(report.income) }}
+        <tr class="total">
+            <td>Total Income</td>
+            <td class="amount">{{ report.total_income }}</td>
+        </tr>
+    </table>
+
+    <h2>Expenses</h2>
+    <table>
+        {{ render_entries(report.expenses) }}
+        <tr class="total">
+            <td>Total Expenses</td>
+            <td class="amount">{{ report.total_expenses }}</td>
+        </tr>
+    </table>
+
+    <h2>Net Income</h2>
+    <table>
+        <tr class="total">
+            <td>Net Income</td>
+            <td class="amount">{{ report.net_income }}</td>
+        </tr>
+    </table>
+</body>
+</html>

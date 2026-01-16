@@ -1,0 +1,171 @@
+openapi: 3.1.0
+info:
+  title: Accounting Reports API
+  version: 1.0.0
+paths:
+  /reports/balance-sheet:
+    get:
+      summary: Get Balance Sheet
+      operationId: getBalanceSheet
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+          description: The date for the snapshot (YYYY-MM-DD)
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceSheet"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /reports/income-statement:
+    get:
+      summary: Get Income Statement
+      operationId: getIncomeStatement
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncomeStatement"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+components:
+  responses:
+    BadRequest:
+      description: Invalid input parameters
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: Server error or calculation failure
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Invalid date range: start_date must be before end_date"
+    Decimal:
+      type: string
+      format: decimal
+      example: "1234.56"
+
+    ReportEntry:
+      type: object
+      required:
+        - name
+        - amount
+        - level
+      properties:
+        account_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+        amount:
+          $ref: "#/components/schemas/Decimal"
+        level:
+          type: integer
+        children:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+
+    BalanceSheet:
+      type: object
+      required:
+        - date
+        - assets
+        - liabilities
+        - equity
+        - total_assets
+        - total_liabilities
+        - total_equity
+      properties:
+        date:
+          type: string
+          format: date
+        assets:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+        liabilities:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+        equity:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+        total_assets:
+          $ref: "#/components/schemas/Decimal"
+        total_liabilities:
+          $ref: "#/components/schemas/Decimal"
+        total_equity:
+          $ref: "#/components/schemas/Decimal"
+
+    IncomeStatement:
+      type: object
+      required:
+        - start_date
+        - end_date
+        - income
+        - expenses
+        - total_income
+        - total_expenses
+        - net_income
+      properties:
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        income:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+        expenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportEntry"
+        total_income:
+          $ref: "#/components/schemas/Decimal"
+        total_expenses:
+          $ref: "#/components/schemas/Decimal"
+        net_income:
+          $ref: "#/components/schemas/Decimal"

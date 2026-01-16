@@ -10,6 +10,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from src.models.account import Account
 from src.models.transaction import Transaction, TransactionType
+from src.schemas.report import BalanceSheet, IncomeStatement, ReportEntry
 
 
 class ExportFormat(str, Enum):
@@ -26,6 +27,135 @@ class ExportService:
         template_dir = os.path.join(base_dir, "templates")
         self.jinja_env = Environment(
             loader=FileSystemLoader(template_dir), autoescape=select_autoescape(["html", "xml"])
+        )
+
+    def generate_balance_sheet_csv(self, report: BalanceSheet) -> Generator[str, None, None]:
+        """Generate CSV content for Balance Sheet."""
+        yield "\ufeff"
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(["Balance Sheet", f"As of {report.date}"])
+        writer.writerow([])
+        writer.writerow(["Account", "Amount"])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+        # Recursive helper
+        def write_entries(entries: list[ReportEntry]):
+            for entry in entries:
+                indent = "  " * entry.level
+                writer.writerow([f"{indent}{entry.name}", str(entry.amount)])
+                yield output.getvalue()
+                output.seek(0)
+                output.truncate(0)
+                if entry.children:
+                    yield from write_entries(entry.children)
+
+        # Assets
+        writer.writerow(["Assets", ""])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        yield from write_entries(report.assets)
+        writer.writerow(["Total Assets", str(report.total_assets)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        writer.writerow([])
+
+        # Liabilities
+        writer.writerow(["Liabilities", ""])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        yield from write_entries(report.liabilities)
+        writer.writerow(["Total Liabilities", str(report.total_liabilities)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        writer.writerow([])
+
+        # Equity
+        writer.writerow(["Equity", ""])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        yield from write_entries(report.equity)
+        writer.writerow(["Total Equity", str(report.total_equity)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+    def generate_income_statement_csv(self, report: IncomeStatement) -> Generator[str, None, None]:
+        """Generate CSV content for Income Statement."""
+        yield "\ufeff"
+        output = io.StringIO()
+        writer = csv.writer(output)
+
+        # Header
+        writer.writerow(["Income Statement", f"{report.start_date} to {report.end_date}"])
+        writer.writerow([])
+        writer.writerow(["Account", "Amount"])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+        # Recursive helper
+        def write_entries(entries: list[ReportEntry]):
+            for entry in entries:
+                indent = "  " * entry.level
+                writer.writerow([f"{indent}{entry.name}", str(entry.amount)])
+                yield output.getvalue()
+                output.seek(0)
+                output.truncate(0)
+                if entry.children:
+                    yield from write_entries(entry.children)
+
+        # Income
+        writer.writerow(["Income", ""])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        yield from write_entries(report.income)
+        writer.writerow(["Total Income", str(report.total_income)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        writer.writerow([])
+
+        # Expenses
+        writer.writerow(["Expenses", ""])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        yield from write_entries(report.expenses)
+        writer.writerow(["Total Expenses", str(report.total_expenses)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+        writer.writerow([])
+
+        # Net Income
+        writer.writerow(["Net Income", str(report.net_income)])
+        yield output.getvalue()
+        output.seek(0)
+        output.truncate(0)
+
+    def generate_balance_sheet_html(self, report: BalanceSheet) -> str:
+        """Generate HTML content for Balance Sheet."""
+        template = self.jinja_env.get_template("balance_sheet.html")
+        return template.render(
+            report=report, generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        )
+
+    def generate_income_statement_html(self, report: IncomeStatement) -> str:
+        """Generate HTML content for Income Statement."""
+        template = self.jinja_env.get_template("income_statement.html")
+        return template.render(
+            report=report, generated_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         )
 
     def generate_csv_content(

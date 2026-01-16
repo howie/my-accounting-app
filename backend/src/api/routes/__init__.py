@@ -9,6 +9,7 @@ from src.api.routes import (
     export,
     import_routes,
     ledgers,
+    reports,
     templates,
     tokens,
     transactions,
@@ -27,6 +28,9 @@ api_router.include_router(accounts.router)
 
 # Phase 4 (US2): Transactions
 api_router.include_router(transactions.router)
+
+# Feature 009: Reports
+api_router.include_router(reports.router)
 
 # Feature 004: Transaction Templates
 api_router.include_router(templates.router)

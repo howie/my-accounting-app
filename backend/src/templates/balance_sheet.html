@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Balance Sheet</title>
+    <style>
+        body { font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; text-align: left; border-bottom: 1px solid #ddd; }
+        .amount { text-align: right; }
+        .total { font-weight: bold; }
+        .indent-0 { padding-left: 0; font-weight: bold; }
+        .indent-1 { padding-left: 20px; }
+        .indent-2 { padding-left: 40px; }
+    </style>
+</head>
+<body>
+    <h1>Balance Sheet</h1>
+    <p>As of {{ report.date }}</p>
+    <p>Generated at: {{ generated_at }}</p>
+
+    {% macro render_entries(entries) %}
+        {% for entry in entries recursive %}
+            <tr>
+                <td class="indent-{{ entry.level }}">{{ entry.name }}</td>
+                <td class="amount">{{ entry.amount }}</td>
+            </tr>
+            {% if entry.children %}
+                {{ loop(entry.children) }}
+            {% endif %}
+        {% endfor %}
+    {% endmacro %}
+
+    <h2>Assets</h2>
+    <table>
+        {{ render_entries(report.assets) }}
+        <tr class="total">
+            <td>Total Assets</td>
+            <td class="amount">{{ report.total_assets }}</td>
+        </tr>
+    </table>
+
+    <h2>Liabilities</h2>
+    <table>
+        {{ render_entries(report.liabilities) }}
+        <tr class="total">
+            <td>Total Liabilities</td>
+            <td class="amount">{{ report.total_liabilities }}</td>
+        </tr>
+    </table>
+
+    <h2>Equity</h2>
+    <table>
+        {{ render_entries(report.equity) }}
+        <tr class="total">
+            <td>Total Equity</td>
+            <td class="amount">{{ report.total_equity }}</td>
+        </tr>
+    </table>
+</body>
+</html>
