@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Home, Menu, X, BookOpen, Settings, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen, Library, Clock, Wallet, CreditCard, TrendingUp, Receipt, Download } from 'lucide-react'
+import { Home, Menu, X, BookOpen, Settings, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen, Library, Clock, Wallet, CreditCard, TrendingUp, Receipt, Download, BarChart3, PieChart } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
 import { useRecentAccounts } from '@/lib/hooks/useRecentAccounts'
@@ -142,6 +142,54 @@ export function Sidebar() {
             <Home className="h-4 w-4 flex-shrink-0" />
             <span className={cn(isCollapsed && 'hidden')}>{t('dashboard')}</span>
           </Link>
+
+          {/* Reports */}
+          {currentLedger && (
+            <>
+              {!isCollapsed && (
+                <div className="mb-2 px-3 mt-2">
+                  <p className="text-xs uppercase tracking-wider text-sidebar-foreground/50">
+                    Reports
+                  </p>
+                </div>
+              )}
+              {isCollapsed && (
+                <div className="my-2 h-px bg-sidebar-border w-full" />
+              )}
+
+              <Link
+                href="/reports/balance-sheet"
+                title="Balance Sheet"
+                className={cn(
+                  'mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+                  'transition-colors duration-150',
+                  pathname === '/reports/balance-sheet'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground',
+                  isCollapsed && 'justify-center px-0'
+                )}
+              >
+                <PieChart className="h-4 w-4 flex-shrink-0" />
+                <span className={cn(isCollapsed && 'hidden')}>Balance Sheet</span>
+              </Link>
+
+              <Link
+                href="/reports/income-statement"
+                title="Income Statement"
+                className={cn(
+                  'mb-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
+                  'transition-colors duration-150',
+                  pathname === '/reports/income-statement'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground',
+                  isCollapsed && 'justify-center px-0'
+                )}
+              >
+                <BarChart3 className="h-4 w-4 flex-shrink-0" />
+                <span className={cn(isCollapsed && 'hidden')}>Income Statement</span>
+              </Link>
+            </>
+          )}
 
           {/* Quick Actions (Import, Chat, Settings) */}
           {currentLedger && (

@@ -139,7 +139,7 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 ---
 
-### 008-data-export
+### 008-data-export (DONE)
 
 **Priority: Medium**
 
@@ -147,11 +147,11 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 **Scope:**
 
-- [ ] 匯出入口
-- [ ] CSV 匯出（完整格式，可再匯入）
-- [ ] HTML 匯出（列印用）
-- [ ] 按科目匯出
-- [ ] 按日期範圍匯出
+- [x] 匯出入口
+- [x] CSV 匯出（完整格式，可再匯入）
+- [x] HTML 匯出（列印用）
+- [x] 按科目匯出
+- [x] 按日期範圍匯出
 
 **Reference:** MyAB spec 5.2
 
@@ -243,11 +243,11 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 001-core-accounting (DONE)
     └── 002-ui-layout-dashboard (DONE)
             ├── 003-settings-account-management (DONE)
-            │       └── 005-ui-navigation-v2
+            │       └── 005-ui-navigation-v2 (DONE)
             ├── 004-transaction-entry (DONE)
             ├── 006-data-import (DONE)
             ├── 007-api-for-mcp (DONE)
-            ├── 008-data-export
+            ├── 008-data-export (DONE)
             └── 009-reports
                     ├── 010-advanced-transactions
                     └── 011-budget
@@ -267,7 +267,7 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 4. ~~006-data-import~~ ✅ DONE (MyAB CSV 完成)
 5. ~~007-api-for-mcp~~ ✅ DONE (MCP API + Token 管理 UI)
-6. 008-data-export
+6. ~~008-data-export~~ ✅ DONE (CSV/HTML 匯出)
 7. 009-reports
 
 **Phase 3 - Advanced Features (Low Priority)**

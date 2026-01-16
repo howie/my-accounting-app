@@ -8,11 +8,29 @@ from sqlmodel import Session
 
 from src.db.session import get_session
 from src.models.user import User
+from src.services.export_service import ExportService
+from src.services.report_service import ReportService
 
-__all__ = ["get_session", "get_current_user", "get_current_user_id"]
+__all__ = [
+    "get_session",
+    "get_current_user",
+    "get_current_user_id",
+    "get_report_service",
+    "get_export_service",
+]
 
 # Database session dependency
 SessionDep = Annotated[Session, Depends(get_session)]
+
+
+def get_report_service(session: SessionDep) -> ReportService:
+    """Get report service instance."""
+    return ReportService(session)
+
+
+def get_export_service(session: SessionDep) -> ExportService:
+    """Get export service instance."""
+    return ExportService(session)
 
 
 def get_current_user(session: SessionDep) -> User:
