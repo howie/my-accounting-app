@@ -28,7 +28,7 @@ export default function ImportHistoryPage() {
     const params = useParams()
     const router = useRouter()
     const t = useTranslations('import')
-    const ledgerId = params.id as string
+    const ledgerId = (params?.id ?? '') as string
 
     const [history, setHistory] = useState<ImportHistoryItem[]>([])
     const [total, setTotal] = useState(0)

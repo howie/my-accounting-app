@@ -23,7 +23,7 @@ export function AppShell({ children }: AppShellProps) {
 
   // Check if current route should hide sidebar
   // Only exact matches - /ledgers/[id]/* routes should show sidebar
-  const shouldHideSidebar = NO_SIDEBAR_ROUTES.includes(pathname)
+  const shouldHideSidebar = pathname ? NO_SIDEBAR_ROUTES.includes(pathname) : false
 
   // No sidebar for setup/ledger pages
   if (shouldHideSidebar) {

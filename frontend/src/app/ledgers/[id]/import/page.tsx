@@ -12,7 +12,7 @@ export default function ImportPage() {
     const params = useParams()
     const router = useRouter()
     const t = useTranslations('import')
-    const ledgerId = params.id as string
+    const ledgerId = (params?.id ?? '') as string
     const idValue = Array.isArray(ledgerId) ? ledgerId[0] : ledgerId
 
     const [previewData, setPreviewData] = useState<ImportPreviewResponse | null>(null)
