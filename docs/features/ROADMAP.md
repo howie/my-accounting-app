@@ -180,7 +180,7 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 ---
 
-### 010-advanced-transactions
+### 010-advanced-transactions (IN PROGRESS)
 
 **Priority: Low**
 
@@ -188,16 +188,14 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 **Scope:**
 
-- [ ] 分期付款記錄
-  - [ ] 輸入單期金額 + 期數
-  - [ ] 一次產生多筆交易
-- [ ] 定期記錄
-  - [ ] 設定週期（每日/週/月/年）
-  - [ ] 自動產生交易
-  - [ ] 逾期補登提示
-- [ ] 標記功能
-  - [ ] 交易標記（待對帳、可報稅等）
-  - [ ] 按標記篩選
+- [x] Backend API & Logic (DONE)
+- [x] Tags CRUD & Filtering (Backend)
+- [x] Recurring Transactions (Backend)
+- [x] Installment Plans (Backend)
+- [ ] Frontend UI (Pending)
+  - [ ] Tag Management UI
+  - [ ] Recurring Settings UI
+  - [ ] Installment UI
 
 **Reference:** MyAB spec 3.1, 3.2, 3.3
 
@@ -272,6 +270,6 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 
 **Phase 3 - Advanced Features (Low Priority)**
 
-8. 010-advanced-transactions
+8. 010-advanced-transactions (In Progress)
 9. 011-budget
 10. 012-backup-sync

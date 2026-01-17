@@ -18,7 +18,7 @@ import { useLedgerContext } from '@/lib/context/LedgerContext'
 export default function LedgerDetailPage() {
   const params = useParams()
   const router = useRouter()
-  const ledgerId = params.id as string
+  const ledgerId = (params?.id ?? '') as string
   const t = useTranslations()
 
   const { data: ledger, isLoading, error } = useLedger(ledgerId)

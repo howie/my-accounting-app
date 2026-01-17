@@ -113,7 +113,7 @@ interface AccountRowProps {
   account: SidebarAccountItem
   isSelected: boolean
   selectedAccountId?: string
-  pathname: string
+  pathname: string | null
   isAccountExpanded: (id: string) => boolean
   toggleAccountExpanded: (id: string) => void
 }

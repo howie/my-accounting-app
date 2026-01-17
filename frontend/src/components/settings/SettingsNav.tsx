@@ -32,7 +32,9 @@ export function SettingsNav() {
       <ul className="space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon
-          const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
+          const isActive = item.exact
+            ? pathname === item.href
+            : (pathname ?? '').startsWith(item.href)
           return (
             <li key={item.href}>
               <Link

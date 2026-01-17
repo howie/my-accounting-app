@@ -12,7 +12,7 @@ export function Header() {
   const { currentLedger } = useLedgerContext()
 
   // Generate breadcrumbs
-  const pathSegments = pathname.split('/').filter((segment) => segment !== '')
+  const pathSegments = (pathname ?? '').split('/').filter((segment) => segment !== '')
   const breadcrumbs = pathSegments.map((segment, index) => {
     const href = `/${pathSegments.slice(0, index + 1).join('/')}`
     const isLast = index === pathSegments.length - 1
