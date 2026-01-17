@@ -84,6 +84,41 @@ Standard Python virtual environment practices apply:
 - PostgreSQL 16 (existing data model from 001-core-accounting) (002-ui-layout-dashboard)
 - PostgreSQL 16 (accounts, transactions), Browser localStorage (user preferences) (003-settings-account-management)
 
+## Code Style Guidelines
+
+When writing code, follow these formatting rules to match project linting configuration:
+
+### Python (Ruff)
+
+- Line length: 100 characters max
+- Use double quotes for strings
+- Use 4-space indentation
+- Import order: standard library → third-party → local (sorted alphabetically within each group)
+- No trailing whitespace
+- One blank line between functions, two blank lines between classes
+
+### TypeScript/JavaScript (ESLint + Prettier)
+
+- Use single quotes for strings
+- Use semicolons
+- Use 2-space indentation
+- Prefer `const` over `let`
+- No unused variables (prefix with `_` if intentionally unused)
+- No `console.log` (use `console.warn` or `console.error` if needed)
+- No explicit `any` types when avoidable
+
+### After Writing Code
+
+After writing or editing Python/TypeScript files, Claude Code hooks will automatically run formatters. If not, manually run:
+
+```bash
+# Python
+ruff check --fix <file> && ruff format <file>
+
+# TypeScript/JavaScript (from frontend directory)
+npx eslint --fix <file> && npx prettier --write <file>
+```
+
 ## Recent Changes
 
 - 004-transaction-entry: Feature complete - transaction entry from account page, amount calculator, templates, QuickEntryPanel
