@@ -1,6 +1,15 @@
 """SQLModel models for LedgerOne."""
 
 from src.models.account import Account, AccountType
+
+# Add Advanced models
+from src.models.advanced import (
+    Frequency,
+    InstallmentPlan,
+    RecurringTransaction,
+    Tag,
+    TransactionTagLink,
+)
 from src.models.api_token import ApiToken
 from src.models.audit_log import AuditAction, AuditLog
 from src.models.import_session import ImportSession, ImportStatus
@@ -28,4 +37,9 @@ __all__ = [
     "ImportStatus",
     "ImportType",
     "ApiToken",
+    "Tag",
+    "TransactionTagLink",
+    "RecurringTransaction",
+    "InstallmentPlan",
+    "Frequency",
 ]

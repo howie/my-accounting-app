@@ -1,0 +1,306 @@
+openapi: 3.0.0
+info:
+  title: Advanced Transactions API
+  version: 1.0.0
+paths:
+  /tags:
+    get:
+      summary: List all tags
+      tags: [Tags]
+      responses:
+        "200":
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+    post:
+      summary: Create a new tag
+      tags: [Tags]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagCreate"
+      responses:
+        "201":
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+
+  /tags/{tag_id}:
+    put:
+      summary: Update a tag
+      tags: [Tags]
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TagUpdate"
+      responses:
+        "200":
+          description: Tag updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+    delete:
+      summary: Delete a tag
+      tags: [Tags]
+      parameters:
+        - name: tag_id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Tag deleted
+
+  /recurring-transactions:
+    get:
+      summary: List recurring transactions
+      tags: [Recurring]
+      responses:
+        "200":
+          description: List of recurring transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecurringTransaction"
+    post:
+      summary: Create a recurring transaction template
+      tags: [Recurring]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecurringTransactionCreate"
+      responses:
+        "201":
+          description: Recurring transaction created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecurringTransaction"
+
+  /recurring-transactions/due:
+    get:
+      summary: Check for due recurring transactions
+      tags: [Recurring]
+      responses:
+        "200":
+          description: List of due instances requiring approval
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RecurringTransactionDue"
+
+  /recurring-transactions/{id}/approve:
+    post:
+      summary: Approve a due recurring transaction instance
+      tags: [Recurring]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                  description: The specific due date being approved
+      responses:
+        "201":
+          description: Transaction created in ledger
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+
+  /installment-plans:
+    post:
+      summary: Create an installment plan
+      tags: [Installments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InstallmentPlanCreate"
+      responses:
+        "201":
+          description: Installment plan created and transactions generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstallmentPlan"
+
+components:
+  schemas:
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+
+    TagCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+
+    TagUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+
+    RecurringTransaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: integer
+        frequency:
+          type: string
+          enum: [DAILY, WEEKLY, MONTHLY, YEARLY]
+        start_date:
+          type: string
+          format: date
+        next_due_date:
+          type: string
+          format: date
+
+    RecurringTransactionCreate:
+      type: object
+      required:
+        [
+          name,
+          amount,
+          frequency,
+          start_date,
+          source_account_id,
+          dest_account_id,
+        ]
+      properties:
+        name:
+          type: string
+        amount:
+          type: integer
+        frequency:
+          type: string
+          enum: [DAILY, WEEKLY, MONTHLY, YEARLY]
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        source_account_id:
+          type: integer
+        dest_account_id:
+          type: integer
+
+    RecurringTransactionDue:
+      type: object
+      properties:
+        template_id:
+          type: integer
+        name:
+          type: string
+        amount:
+          type: integer
+        due_date:
+          type: string
+          format: date
+
+    InstallmentPlan:
+      type: object
+      properties:
+        id:
+          type: integer
+        total_amount:
+          type: integer
+        installment_count:
+          type: integer
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+
+    InstallmentPlanCreate:
+      type: object
+      required:
+        [
+          name,
+          total_amount,
+          installment_count,
+          start_date,
+          source_account_id,
+          dest_account_id,
+        ]
+      properties:
+        name:
+          type: string
+        total_amount:
+          type: integer
+        installment_count:
+          type: integer
+        start_date:
+          type: string
+          format: date
+        source_account_id:
+          type: integer
+        dest_account_id:
+          type: integer
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+        amount:
+          type: integer
+        description:
+          type: string
+        tags:
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"

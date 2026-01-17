@@ -8,8 +8,11 @@ from src.api.routes import (
     dashboard,
     export,
     import_routes,
+    installments,  # Added
     ledgers,
+    recurring,
     reports,
+    tags,
     templates,
     tokens,
     transactions,
@@ -35,6 +38,15 @@ api_router.include_router(reports.router)
 # Feature 004: Transaction Templates
 api_router.include_router(templates.router)
 
+# Feature 010: Tags
+api_router.include_router(tags.router, prefix="/tags", tags=["Tags"])
+
+# Feature 010: Recurring Transactions
+api_router.include_router(recurring.router, prefix="/recurring", tags=["Recurring"])
+
+# Feature 010: Installments
+api_router.include_router(installments.router, prefix="/installments", tags=["Installments"])
+
 # Phase 6 (US4): Users
 api_router.include_router(users.router)
 
@@ -47,7 +59,6 @@ api_router.include_router(export.router, prefix="/export", tags=["Export"])
 # Feature 007: API Tokens for MCP
 api_router.include_router(tokens.router)
 
-# AI Chat Assistant
 # AI Chat Assistant
 api_router.include_router(chat.router)
 

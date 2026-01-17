@@ -12,6 +12,7 @@ from sqlmodel import SQLModel
 
 from src.models.account import AccountType
 from src.models.transaction import TransactionType
+from src.schemas.advanced import TagRead
 
 
 class TransactionCreate(SQLModel):
@@ -25,6 +26,7 @@ class TransactionCreate(SQLModel):
     transaction_type: TransactionType
     notes: str | None = Field(default=None, max_length=500)
     amount_expression: str | None = Field(default=None, max_length=100)
+    tag_ids: list[uuid.UUID] = Field(default_factory=list)
 
     @field_validator("description")
     @classmethod
@@ -64,6 +66,7 @@ class TransactionUpdate(SQLModel):
     transaction_type: TransactionType
     notes: str | None = Field(default=None, max_length=500)
     amount_expression: str | None = Field(default=None, max_length=100)
+    tag_ids: list[uuid.UUID] | None = None
 
     @field_validator("description")
     @classmethod
@@ -117,6 +120,7 @@ class TransactionRead(SQLModel):
     updated_at: datetime
     from_account: AccountSummary | None = None
     to_account: AccountSummary | None = None
+    tags: list[TagRead] = Field(default_factory=list)
 
 
 class TransactionListItem(SQLModel):
@@ -129,6 +133,7 @@ class TransactionListItem(SQLModel):
     transaction_type: TransactionType
     from_account: AccountSummary
     to_account: AccountSummary
+    tags: list[TagRead] = Field(default_factory=list)
 
 
 class PaginatedTransactions(SQLModel):
@@ -136,4 +141,5 @@ class PaginatedTransactions(SQLModel):
 
     data: list[TransactionListItem]
     cursor: str | None = None
+    has_more: str | None = None
     has_more: bool = False

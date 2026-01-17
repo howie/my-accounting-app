@@ -9,7 +9,9 @@ from datetime import UTC, date, datetime
 from sqlmodel import Session, or_, select
 
 from src.models.account import Account, AccountType
+from src.models.advanced import Tag
 from src.models.transaction import Transaction, TransactionType
+from src.schemas.advanced import TagRead
 from src.schemas.transaction import (
     AccountSummary,
     PaginatedTransactions,
@@ -65,6 +67,11 @@ class TransactionService:
             amount_expression=data.amount_expression,
         )
 
+        # Link tags if provided
+        if data.tag_ids:
+            tags = self.session.exec(select(Tag).where(Tag.id.in_(data.tag_ids))).all()
+            transaction.tags = tags
+
         self.session.add(transaction)
         self.session.commit()
         self.session.refresh(transaction)
@@ -80,6 +87,7 @@ class TransactionService:
         to_date: date | None = None,
         account_id: uuid.UUID | None = None,
         transaction_type: TransactionType | None = None,
+        tag_ids: list[uuid.UUID] | None = None,
     ) -> PaginatedTransactions:
         """Get paginated list of transactions for a ledger with optional filters.
 
@@ -92,6 +100,7 @@ class TransactionService:
             to_date: Filter transactions on or before this date
             account_id: Filter transactions involving this account (from or to)
             transaction_type: Filter by transaction type (EXPENSE, INCOME, TRANSFER)
+            tag_ids: Filter by list of tag IDs (OR logic - match any)
 
         Returns transactions in descending order by date, then created_at.
         """
@@ -121,6 +130,13 @@ class TransactionService:
         # Apply transaction type filter
         if transaction_type:
             statement = statement.where(Transaction.transaction_type == transaction_type)
+
+        # Apply tag filter
+        if tag_ids:
+            # Join with link table/Tags to filter
+            # Since Transaction.tags is a relationship, we can join it.
+            # Use distinct to avoid duplicates if multiple tags match same txn
+            statement = statement.join(Transaction.tags).where(Tag.id.in_(tag_ids)).distinct()
 
         # Apply ordering
         statement = statement.order_by(Transaction.date.desc(), Transaction.created_at.desc())
@@ -158,6 +174,9 @@ class TransactionService:
             from_account = self.session.get(Account, tx.from_account_id)
             to_account = self.session.get(Account, tx.to_account_id)
 
+            # Convert tags to TagRead
+            tags_read = [TagRead.model_validate(t) for t in tx.tags]
+
             items.append(
                 TransactionListItem(
                     id=tx.id,
@@ -175,6 +194,7 @@ class TransactionService:
                         name=to_account.name,
                         type=to_account.type,
                     ),
+                    tags=tags_read,
                 )
             )
 
@@ -203,6 +223,8 @@ class TransactionService:
         from_account = self.session.get(Account, transaction.from_account_id)
         to_account = self.session.get(Account, transaction.to_account_id)
 
+        tags_read = [TagRead.model_validate(t) for t in transaction.tags]
+
         return TransactionRead(
             id=transaction.id,
             ledger_id=transaction.ledger_id,
@@ -230,6 +252,7 @@ class TransactionService:
             )
             if to_account
             else None,
+            tags=tags_read,
         )
 
     def update_transaction(
@@ -275,34 +298,16 @@ class TransactionService:
         transaction.amount_expression = data.amount_expression
         transaction.updated_at = datetime.now(UTC)
 
+        # Update tags if provided
+        if data.tag_ids is not None:
+            tags = self.session.exec(select(Tag).where(Tag.id.in_(data.tag_ids))).all()
+            transaction.tags = tags
+
         self.session.add(transaction)
         self.session.commit()
         self.session.refresh(transaction)
 
-        return TransactionRead(
-            id=transaction.id,
-            ledger_id=transaction.ledger_id,
-            date=transaction.date,
-            description=transaction.description,
-            amount=transaction.amount,
-            from_account_id=transaction.from_account_id,
-            to_account_id=transaction.to_account_id,
-            transaction_type=transaction.transaction_type,
-            notes=transaction.notes,
-            amount_expression=transaction.amount_expression,
-            created_at=transaction.created_at,
-            updated_at=transaction.updated_at,
-            from_account=AccountSummary(
-                id=from_account.id,
-                name=from_account.name,
-                type=from_account.type,
-            ),
-            to_account=AccountSummary(
-                id=to_account.id,
-                name=to_account.name,
-                type=to_account.type,
-            ),
-        )
+        return self.get_transaction(transaction_id, ledger_id)  # Reuse get logic for simplicity
 
     def delete_transaction(self, transaction_id: uuid.UUID, ledger_id: uuid.UUID) -> bool:
         """Delete a transaction.
