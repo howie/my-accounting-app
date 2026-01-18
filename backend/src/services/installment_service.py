@@ -84,3 +84,17 @@ class InstallmentService:
 
     def list_installment_plans(self) -> list[InstallmentPlan]:
         return self.session.exec(select(InstallmentPlan)).all()
+
+    def get_installment_plan(self, plan_id: str) -> InstallmentPlan:
+        plan = self.session.get(InstallmentPlan, plan_id)
+        if not plan:
+            raise ValueError("Installment plan not found")
+        return plan
+
+    def get_plan_transactions(self, plan_id: str) -> list[Transaction]:
+        query = (
+            select(Transaction)
+            .where(Transaction.installment_plan_id == plan_id)
+            .order_by(Transaction.date, Transaction.installment_number)
+        )
+        return self.session.exec(query).all()
