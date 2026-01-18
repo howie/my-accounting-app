@@ -132,7 +132,8 @@
     "account": "科目",
     "allAccounts": "所有科目",
     "type": "類型",
-    "allTypes": "所有類型"
+    "allTypes": "所有類型",
+    "allTags": "所有標籤"
   },
   "table": {
     "date": "日期",
@@ -163,6 +164,9 @@
     "title": "設定",
     "preferences": "偏好設定",
     "accounts": "科目管理",
+    "tags": "標籤管理",
+    "recurring": "定期規則",
+    "installments": "分期付款計畫",
     "apiTokens": "API 金鑰",
     "language": "語言",
     "theme": "主題",
@@ -348,5 +352,63 @@
     "templateNameExists": "此名稱已被使用",
     "accountNotFound": "帳戶不存在",
     "accountDeleted": "此模板使用的帳戶已被刪除"
+  },
+  "tags": {
+    "title": "標籤",
+    "description": "管理交易標籤以分類交易",
+    "newTag": "新增標籤",
+    "noTags": "尚無標籤",
+    "form": {
+      "nameLabel": "標籤名稱",
+      "namePlaceholder": "例如：旅遊、專案 X",
+      "nameRequired": "請輸入標籤名稱",
+      "colorLabel": "顏色",
+      "create": "建立標籤",
+      "update": "更新標籤",
+      "creating": "建立中...",
+      "updating": "更新中...",
+      "failedToSave": "儲存標籤失敗"
+    },
+    "table": {
+      "name": "名稱",
+      "color": "顏色",
+      "actions": "操作"
+    },
+    "delete": {
+      "title": "刪除標籤",
+      "confirm": "確定要刪除此標籤嗎？此操作無法復原。",
+      "deleting": "刪除中..."
+    }
+  },
+  "recurring": {
+    "title": "定期交易",
+    "description": "管理預定執行的交易",
+    "new": "新增規則",
+    "noData": "尚無定期規則",
+    "frequency": "頻率",
+    "amount": "金額",
+    "nextDue": "下次執行",
+    "table": {
+      "name": "名稱",
+      "frequency": "頻率",
+      "amount": "金額",
+      "actions": "操作"
+    },
+    "frequencies": {
+      "DAILY": "每日",
+      "WEEKLY": "每週",
+      "MONTHLY": "每月",
+      "YEARLY": "每年"
+    },
+    "alerts": {
+      "dueMessage": "您有 {count} 筆定期交易需處理",
+      "review": "審核"
+    },
+    "approval": {
+      "title": "審核定期交易",
+      "description": "請確認要建立的交易",
+      "approve": "批准",
+      "allDone": "所有項目已完成！"
+    }
   }
 }

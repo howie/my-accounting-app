@@ -6,7 +6,11 @@ from sqlmodel import Session, select
 
 from src.models.advanced import Frequency, RecurringTransaction
 from src.models.transaction import Transaction
-from src.schemas.advanced import RecurringTransactionCreate, RecurringTransactionDue
+from src.schemas.advanced import (
+    RecurringTransactionCreate,
+    RecurringTransactionDue,
+    RecurringTransactionUpdate,
+)
 
 
 class RecurringService:
@@ -21,6 +25,35 @@ class RecurringService:
         self.session.commit()
         self.session.refresh(rt)
         return rt
+
+    def list_recurring_transactions(self) -> list[RecurringTransaction]:
+        return self.session.exec(select(RecurringTransaction)).all()
+
+    def get_recurring_transaction(self, recurring_id: UUID) -> RecurringTransaction | None:
+        return self.session.get(RecurringTransaction, recurring_id)
+
+    def update_recurring_transaction(
+        self, recurring_id: UUID, data: RecurringTransactionUpdate
+    ) -> RecurringTransaction:
+        rt = self.session.get(RecurringTransaction, recurring_id)
+        if not rt:
+            raise ValueError("Recurring Transaction not found")
+
+        rt_data = data.model_dump(exclude_unset=True)
+        for key, value in rt_data.items():
+            setattr(rt, key, value)
+
+        self.session.add(rt)
+        self.session.commit()
+        self.session.refresh(rt)
+        return rt
+
+    def delete_recurring_transaction(self, recurring_id: UUID) -> None:
+        rt = self.session.get(RecurringTransaction, recurring_id)
+        if not rt:
+            raise ValueError("Recurring Transaction not found")
+        self.session.delete(rt)
+        self.session.commit()
 
     def _calculate_next_date(self, base_date: date, frequency: Frequency) -> date:
         if frequency == Frequency.DAILY:

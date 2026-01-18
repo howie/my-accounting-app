@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Users, Settings, Key } from 'lucide-react'
+import { Users, Settings, Key, Tag, Repeat, Calculator } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -16,6 +16,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { href: '/settings', labelKey: 'preferences', icon: Settings, exact: true },
   { href: '/settings/accounts', labelKey: 'accounts', icon: Users },
+  { href: '/settings/tags', labelKey: 'tags', icon: Tag },
+  { href: '/settings/recurring', labelKey: 'recurring', icon: Repeat },
+  { href: '/settings/installments', labelKey: 'installments', icon: Calculator },
   { href: '/settings/tokens', labelKey: 'apiTokens', icon: Key },
 ]
 

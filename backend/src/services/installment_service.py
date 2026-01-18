@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from src.models.advanced import InstallmentPlan
 from src.models.transaction import Transaction, TransactionType
@@ -81,3 +81,6 @@ class InstallmentService:
         self.session.commit()
         self.session.refresh(plan)
         return plan
+
+    def list_installment_plans(self) -> list[InstallmentPlan]:
+        return self.session.exec(select(InstallmentPlan)).all()

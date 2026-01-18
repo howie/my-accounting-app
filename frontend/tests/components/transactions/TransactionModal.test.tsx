@@ -106,6 +106,18 @@ vi.mock('@/lib/hooks/useTemplates', () => ({
   }),
 }))
 
+// Mock useTags hook
+vi.mock('@/lib/hooks/useTags', () => ({
+  useTags: () => ({
+    data: [],
+    isLoading: false,
+  }),
+  useCreateTag: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}))
+
 // Import after mocks
 import { TransactionModal } from '@/components/transactions/TransactionModal'
 

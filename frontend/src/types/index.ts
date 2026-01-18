@@ -6,6 +6,12 @@
 export type AccountType = 'ASSET' | 'LIABILITY' | 'INCOME' | 'EXPENSE'
 export type TransactionType = 'EXPENSE' | 'INCOME' | 'TRANSFER'
 
+export interface Tag {
+  id: string
+  name: string
+  color: string
+}
+
 // User
 export interface User {
   id: string
@@ -98,6 +104,7 @@ export interface Transaction {
   transaction_type: TransactionType
   notes: string | null
   amount_expression: string | null
+  tags?: Tag[]
   created_at: string
   updated_at: string
 }
@@ -111,6 +118,7 @@ export interface TransactionCreate {
   transaction_type: TransactionType
   notes?: string | null
   amount_expression?: string | null
+  tag_ids?: string[]
 }
 
 export interface TransactionUpdate {
@@ -122,6 +130,7 @@ export interface TransactionUpdate {
   transaction_type: TransactionType
   notes?: string | null
   amount_expression?: string | null
+  tag_ids?: string[]
 }
 
 export interface AccountSummary {
@@ -138,6 +147,7 @@ export interface TransactionListItem {
   from_account: AccountSummary
   to_account: AccountSummary
   transaction_type: TransactionType
+  tags?: Tag[]
 }
 
 // Pagination

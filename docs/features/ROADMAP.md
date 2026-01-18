@@ -49,140 +49,85 @@
 - i18n 支援（zh-TW, en）
 - Dark/Light mode 支援
 
+### 005-ui-navigation-v2 (DONE)
+
+- Sidebar menu 調整
+  - 「回到帳本清單」移到最上方
+  - 新增 Settings 入口
+  - 新增批次匯入入口（已在 006 實作）
+  - 可收合的 Sidebar（Icon-only mode）
+  - 最近瀏覽科目（Recent Accounts）
+- Top bar 改進
+  - 帳本選擇器（右上角）
+  - 設定選單（i18n、主題切換）
+  - 麵包屑導覽（Breadcrumbs）
+- Dashboard 卡片改進
+  - 第一行：總資產、總負債、當月收入、當月支出
+  - 總資產圖表：數值 + 一年趨勢折線圖 (Deferred)
+  - Income vs Expense：每月長條圖
+- 快速搜尋（Command Palette）
+  - Cmd/Ctrl+K 開啟搜尋
+  - 搜尋科目與頁面
+  - 鍵盤導覽結果
+- 鍵盤快捷鍵
+  - g+d 前往 Dashboard
+  - g+s 前往 Settings
+  - ? 顯示快捷鍵說明 (Added in Command Palette footer)
+
+### 006-data-import (DONE)
+
+- 批次匯入入口（Menu）
+- MyAB CSV 匯入
+  - 解析 MyAB 匯出格式
+  - 科目自動對應/建立
+  - 預覽匯入資料
+  - 確認匯入
+- 信用卡帳單匯入（Future）
+- 對話式匯入（AI）- Future
+
+### 007-api-for-mcp (DONE)
+
+- MCP 基礎建設
+  - FastMCP 伺服器設定
+  - Bearer Token 認證
+  - API Token 管理（建立、撤銷、列表）
+- MCP 工具
+  - create_transaction - 建立交易（支援科目模糊比對）
+  - list_accounts - 列出科目（支援類型篩選、餘額篩選）
+  - get_account - 查詢單一科目餘額與近期交易
+  - list_transactions - 查詢交易紀錄（分頁、日期篩選）
+  - list_ledgers - 列出帳本
+- 前端 Token 管理 UI
+  - Settings → API Tokens 頁面
+  - 建立新 Token
+  - 撤銷 Token
+  - i18n 支援（zh-TW, en）
+
+### 008-data-export (DONE)
+
+- 匯出入口
+- CSV 匯出（完整格式，可再匯入）
+- HTML 匯出（列印用）
+- 按科目匯出
+- 按日期範圍匯出
+
+### 009-reports (DONE)
+
+- 資產負債表 (Balance Sheet)
+  - 資產小計、負債小計、淨資產計算
+- 損益表 (Income Statement)
+  - 收入小計、支出小計、淨收益計算
+- 期間選擇器（支援自定義日期範圍）
+- 匯出報表（CSV, HTML）
+- 視覺化圖表（資產結構、收支趨勢）
+
 ---
 
 ## Planned Features
 
-### 005-ui-navigation-v2 (DONE)
-
-**Priority: High**
-
-UI 導航改進與進階導覽功能。
-
-**Scope:**
-
-- [x] Sidebar menu 調整
-  - [x] 「回到帳本清單」移到最上方
-  - [x] 新增 Settings 入口
-  - [x] 新增批次匯入入口（已在 006 實作）
-  - [x] 可收合的 Sidebar（Icon-only mode）
-  - [x] 最近瀏覽科目（Recent Accounts）
-- [x] Top bar 改進
-  - [x] 帳本選擇器（右上角）
-  - [x] 設定選單（i18n、主題切換）
-  - [x] 麵包屑導覽（Breadcrumbs）
-- [x] Dashboard 卡片改進
-  - [x] 第一行：總資產、總負債、當月收入、當月支出
-  - [ ] 總資產圖表：數值 + 一年趨勢折線圖 (Deferred)
-  - [x] Income vs Expense：每月長條圖
-- [x] 快速搜尋（Command Palette）
-  - [x] Cmd/Ctrl+K 開啟搜尋
-  - [x] 搜尋科目與頁面
-  - [x] 鍵盤導覽結果
-- [x] 鍵盤快捷鍵
-  - [x] g+d 前往 Dashboard
-  - [x] g+s 前往 Settings
-  - [ ] ? 顯示快捷鍵說明 (Added in Command Palette footer)
-
----
-
-### 006-data-import (DONE)
-
-**Priority: Medium**
-
-資料匯入功能。
-
-**Scope:**
-
-- [x] 批次匯入入口（Menu）
-- [x] MyAB CSV 匯入
-  - [x] 解析 MyAB 匯出格式
-  - [x] 科目自動對應/建立
-  - [x] 預覽匯入資料
-  - [x] 確認匯入
-- [ ] 信用卡帳單匯入（Future）
-  - [ ] 支援常見銀行 CSV/PDF 格式
-  - [ ] 自動分類支出科目
-- [ ] 對話式匯入（AI）- Future
-  - [ ] 自然語言輸入
-  - [ ] AI 解析並產生交易
-
-**Reference:** MyAB spec 5.3
-
----
-
-### 007-api-for-mcp (DONE)
-
-**Priority: Medium**
-
-MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可透過自然語言協助記帳。
-
-**Scope:**
-
-- [x] MCP 基礎建設
-  - [x] FastMCP 伺服器設定
-  - [x] Bearer Token 認證
-  - [x] API Token 管理（建立、撤銷、列表）
-- [x] MCP 工具
-  - [x] create_transaction - 建立交易（支援科目模糊比對）
-  - [x] list_accounts - 列出科目（支援類型篩選、餘額篩選）
-  - [x] get_account - 查詢單一科目餘額與近期交易
-  - [x] list_transactions - 查詢交易紀錄（分頁、日期篩選）
-  - [x] list_ledgers - 列出帳本
-- [x] 前端 Token 管理 UI
-  - [x] Settings → API Tokens 頁面
-  - [x] 建立新 Token
-  - [x] 撤銷 Token
-  - [x] i18n 支援（zh-TW, en）
-
-**Reference:** [docs/features/007-api-for-mcp/](./007-api-for-mcp/)
-
----
-
-### 008-data-export (DONE)
-
-**Priority: Medium**
-
-資料匯出功能。
-
-**Scope:**
-
-- [x] 匯出入口
-- [x] CSV 匯出（完整格式，可再匯入）
-- [x] HTML 匯出（列印用）
-- [x] 按科目匯出
-- [x] 按日期範圍匯出
-
-**Reference:** MyAB spec 5.2
-
----
-
-### 009-reports
-
-**Priority: Medium**
-
-報表與分析功能。
-
-**Scope:**
-
-- [ ] 資產負債表 (Balance Sheet)
-  - [ ] 資產小計
-  - [ ] 負債小計
-  - [ ] 淨資產計算
-- [ ] 損益表 (Income Statement)
-  - [ ] 收入小計
-  - [ ] 支出小計
-  - [ ] 淨收益計算
-- [ ] 期間選擇器
-- [ ] 匯出報表
-
-**Reference:** MyAB spec 4.1
-
----
-
 ### 010-advanced-transactions (IN PROGRESS)
 
-**Priority: Low**
+**Priority: High**
 
 進階交易功能。
 
@@ -192,12 +137,25 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 - [x] Tags CRUD & Filtering (Backend)
 - [x] Recurring Transactions (Backend)
 - [x] Installment Plans (Backend)
+- [x] Frontend API Client (DONE)
 - [ ] Frontend UI (Pending)
-  - [ ] Tag Management UI
-  - [ ] Recurring Settings UI
+  - [x] Tag Management UI
+  - [x] Recurring Settings UI
   - [ ] Installment UI
 
 **Reference:** MyAB spec 3.1, 3.2, 3.3
+
+### 003-1-ci-agent-autofix
+
+**Priority: Medium**
+
+CI 流程自動修復工具。
+
+**Scope:**
+
+- [ ] 自動修復 Lint 錯誤
+- [ ] 自動修復型別錯誤
+- [ ] 測試失敗分析與建議
 
 ---
 
@@ -246,7 +204,7 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
             ├── 006-data-import (DONE)
             ├── 007-api-for-mcp (DONE)
             ├── 008-data-export (DONE)
-            └── 009-reports
+            └── 009-reports (DONE)
                     ├── 010-advanced-transactions
                     └── 011-budget
 ```
@@ -261,15 +219,16 @@ MCP API 對話式記帳介面，讓 AI 助手（Claude Desktop、ChatGPT）可�
 2. ~~004-transaction-entry~~ ✅ DONE
 3. ~~005-ui-navigation-v2~~ ✅ DONE
 
-**Phase 2 - Data Management (Medium Priority)**
+**Phase 2 - Data Management & Reporting (Medium Priority)**
 
 4. ~~006-data-import~~ ✅ DONE (MyAB CSV 完成)
 5. ~~007-api-for-mcp~~ ✅ DONE (MCP API + Token 管理 UI)
 6. ~~008-data-export~~ ✅ DONE (CSV/HTML 匯出)
-7. 009-reports
+7. ~~009-reports~~ ✅ DONE (Balance Sheet, Income Statement)
 
-**Phase 3 - Advanced Features (Low Priority)**
+**Phase 3 - Advanced Features & Automation (Low Priority)**
 
-8. 010-advanced-transactions (In Progress)
-9. 011-budget
-10. 012-backup-sync
+8. 010-advanced-transactions (In Progress: Frontend UI Pending)
+9. 003-1-ci-agent-autofix (Planned)
+10. 011-budget
+11. 012-backup-sync

@@ -45,6 +45,17 @@ class RecurringTransactionCreate(RecurringTransactionBase):
     pass
 
 
+class RecurringTransactionUpdate(BaseModel):
+    name: str | None = None
+    amount: Decimal | None = None
+    transaction_type: TransactionType | None = None
+    source_account_id: UUID | None = None
+    dest_account_id: UUID | None = None
+    frequency: Frequency | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+
+
 class RecurringTransactionRead(RecurringTransactionBase):
     id: UUID
     last_generated_date: date | None = None

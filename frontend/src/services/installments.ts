@@ -1,4 +1,4 @@
-import { apiPost } from '@/lib/api'
+import { apiPost, apiGet } from '@/lib/api'
 
 export interface InstallmentPlan {
   id: string
@@ -23,5 +23,9 @@ export interface InstallmentPlanCreate {
 export const installmentService = {
   create: async (data: InstallmentPlanCreate): Promise<InstallmentPlan> => {
     return apiPost<InstallmentPlan, InstallmentPlanCreate>('/installments', data)
+  },
+
+  list: async (): Promise<InstallmentPlan[]> => {
+    return apiGet<InstallmentPlan[]>('/installments')
   },
 }

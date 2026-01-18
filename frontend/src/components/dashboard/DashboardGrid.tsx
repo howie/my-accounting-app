@@ -9,6 +9,7 @@ import { QuickEntryPanel } from '@/components/templates'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { AlertCircle } from 'lucide-react'
 import { DateRangePicker } from '@/components/ui/DateRangePicker'
+import { RecurringAlerts } from './RecurringAlerts'
 
 /**
  * Main dashboard grid layout.
@@ -70,6 +71,8 @@ export function DashboardGrid() {
           onEndDateChange={setEndDate}
         />
       </div>
+
+      <RecurringAlerts />
 
       {/* Summary Cards Row */}
       <SummaryCards
