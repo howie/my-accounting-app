@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { AccountSelect } from '@/components/transactions/AccountSelect'
 import { AmountInput } from '@/components/transactions/AmountInput'
+import { TagSelect } from '@/components/transactions/TagSelect'
 import { SaveTemplateDialog } from '@/components/templates/SaveTemplateDialog'
 import { useAccounts } from '@/lib/hooks/useAccounts'
 import { useCreateTransaction } from '@/lib/hooks/useTransactions'
@@ -96,6 +97,7 @@ export function TransactionForm({
   const [amountExpression, setAmountExpression] = useState<string | null>(null)
   const [fromAccountId, setFromAccountId] = useState('')
   const [toAccountId, setToAccountId] = useState('')
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [showZeroAmountConfirm, setShowZeroAmountConfirm] = useState(false)
@@ -171,6 +173,7 @@ export function TransactionForm({
         transaction_type: transactionType,
         notes: notes.trim() || null,
         amount_expression: amountExpression,
+        tag_ids: selectedTagIds,
       }
 
       await createTransaction.mutateAsync(transactionData)
@@ -372,6 +375,12 @@ export function TransactionForm({
         <div className="mt-1 text-xs text-muted-foreground">
           {notes.length}/500
         </div>
+      </div>
+
+      {/* Tags */}
+      <div>
+        <label className="mb-2 block text-sm font-medium">{t('tags.title')}</label>
+        <TagSelect selectedTagIds={selectedTagIds} onChange={setSelectedTagIds} />
       </div>
 
       {/* Actions */}

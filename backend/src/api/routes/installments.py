@@ -15,3 +15,9 @@ def create_installment_plan(data: InstallmentPlanCreate, session: Session = Depe
         return service.create_installment_plan(data)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("", response_model=list[InstallmentPlanRead])
+def list_installment_plans(session: Session = Depends(get_session)):
+    service = InstallmentService(session)
+    return service.list_installment_plans()

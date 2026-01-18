@@ -132,7 +132,8 @@
     "account": "Account",
     "allAccounts": "All Accounts",
     "type": "Type",
-    "allTypes": "All Types"
+    "allTypes": "All Types",
+    "allTags": "All Tags"
   },
   "table": {
     "date": "Date",
@@ -163,6 +164,9 @@
     "title": "Settings",
     "preferences": "Preferences",
     "accounts": "Account Management",
+    "tags": "Tag Management",
+    "recurring": "Recurring Rules",
+    "installments": "Installment Plans",
     "apiTokens": "API Tokens",
     "language": "Language",
     "theme": "Theme",
@@ -348,5 +352,63 @@
     "templateNameExists": "This name is already in use",
     "accountNotFound": "Account not found",
     "accountDeleted": "An account used by this template has been deleted"
+  },
+  "tags": {
+    "title": "Tags",
+    "description": "Manage tags for categorizing transactions",
+    "newTag": "New Tag",
+    "noTags": "No tags yet",
+    "form": {
+      "nameLabel": "Tag Name",
+      "namePlaceholder": "e.g., Vacation, Project X",
+      "nameRequired": "Name is required",
+      "colorLabel": "Color",
+      "create": "Create Tag",
+      "update": "Update Tag",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "failedToSave": "Failed to save tag"
+    },
+    "table": {
+      "name": "Name",
+      "color": "Color",
+      "actions": "Actions"
+    },
+    "delete": {
+      "title": "Delete Tag",
+      "confirm": "Are you sure you want to delete this tag? This action cannot be undone.",
+      "deleting": "Deleting..."
+    }
+  },
+  "recurring": {
+    "title": "Recurring Transactions",
+    "description": "Manage scheduled transactions",
+    "new": "New Rule",
+    "noData": "No recurring rules yet",
+    "frequency": "Frequency",
+    "amount": "Amount",
+    "nextDue": "Next Due",
+    "table": {
+      "name": "Name",
+      "frequency": "Frequency",
+      "amount": "Amount",
+      "actions": "Actions"
+    },
+    "frequencies": {
+      "DAILY": "Daily",
+      "WEEKLY": "Weekly",
+      "MONTHLY": "Monthly",
+      "YEARLY": "Yearly"
+    },
+    "alerts": {
+      "dueMessage": "You have {count} recurring transactions due",
+      "review": "Review"
+    },
+    "approval": {
+      "title": "Approve Recurring Transactions",
+      "description": "Review and confirm the transactions to be created",
+      "approve": "Approve",
+      "allDone": "All items approved!"
+    }
   }
 }

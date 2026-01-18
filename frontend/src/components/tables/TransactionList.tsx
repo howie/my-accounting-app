@@ -83,7 +83,26 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
               {transactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-muted/50">
                   <td className="px-4 py-3 text-sm">{tx.date}</td>
-                  <td className="px-4 py-3 text-sm font-medium">{tx.description}</td>
+                  <td className="px-4 py-3 text-sm font-medium">
+                    <div>{tx.description}</div>
+                    {tx.tags && tx.tags.length > 0 && (
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {tx.tags.map((tag) => (
+                          <span
+                            key={tag.id}
+                            className="inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px]"
+                            style={{
+                              backgroundColor: tag.color + '20',
+                              borderColor: tag.color,
+                              color: tag.color,
+                            }}
+                          >
+                            {tag.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-block rounded px-2 py-1 text-xs font-medium ${

@@ -156,6 +156,21 @@ vi.mock('@/lib/hooks/useTemplates', () => ({
   }),
 }))
 
+// Mock useTags hook
+vi.mock('@/lib/hooks/useTags', () => ({
+  useTags: () => ({
+    data: [
+      { id: 'tag-1', name: 'Vacation', color: '#ff0000' },
+      { id: 'tag-2', name: 'Work', color: '#00ff00' },
+    ],
+    isLoading: false,
+  }),
+  useCreateTag: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+}))
+
 // Import after mocks
 import { TransactionForm } from '@/components/transactions/TransactionForm'
 

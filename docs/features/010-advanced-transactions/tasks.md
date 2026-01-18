@@ -39,9 +39,9 @@
 - [x] T017 [US1] Implement OR-based tag filtering logic in backend Transaction list endpoint in backend/src/services/transaction_service.py
 - [x] T018 [US1] Verify Tag API integration tests PASS (Green Phase)
 - [x] T019 [P] [US1] Create frontend API client functions for Tags in frontend/src/services/api.ts
-- [ ] T020 [US1] Create Tag management UI (List/Edit/Delete) in frontend/src/components/tags/TagManager.tsx
-- [ ] T021 [US1] Update Transaction Entry form to support tag selection/creation in frontend/src/components/transactions/TransactionForm.tsx
-- [ ] T022 [US1] Add tag filter controls to Transaction List UI in frontend/src/pages/transactions/index.tsx
+- [x] T020 [US1] Create Tag management UI (List/Edit/Delete) in frontend/src/components/tags/TagManager.tsx
+- [x] T021 [US1] Update Transaction Entry form to support tag selection/creation in frontend/src/components/transactions/TransactionForm.tsx
+- [x] T022 [US1] Add tag filter controls to Transaction List UI in frontend/src/pages/transactions/index.tsx
 
 ## Phase 4: Recurring Transactions (Priority: P2)
 
@@ -55,9 +55,9 @@
 - [x] T027 [US2] Create API endpoint to list "Due" items and "Approve" (create transaction) in backend/src/api/recurring.py
 - [x] T028 [US2] Verify Recurring API integration tests PASS (Green Phase)
 - [x] T029 [P] [US2] Create frontend API client functions for Recurring Transactions in frontend/src/services/api.ts
-- [ ] T030 [US2] Create Recurring Transaction Template management UI in frontend/src/pages/settings/recurring.tsx
-- [ ] T031 [US2] Implement Dashboard notification component for Overdue items in frontend/src/components/dashboard/RecurringAlerts.tsx
-- [ ] T032 [US2] Create Approval Modal for verifying and submitting due transactions in frontend/src/components/recurring/ApprovalModal.tsx
+- [x] T030 [US2] Create Recurring Transaction Template management UI in frontend/src/pages/settings/recurring.tsx
+- [x] T031 [US2] Implement Dashboard notification component for Overdue items in frontend/src/components/dashboard/RecurringAlerts.tsx
+- [x] T032 [US2] Create Approval Modal for verifying and submitting due transactions in frontend/src/components/recurring/ApprovalModal.tsx
 
 ## Phase 5: Installment Records (Priority: P3)
 
@@ -71,8 +71,8 @@
 - [x] T037 [US3] Implement audit linking logic (DI-002) connecting transactions to parent plan in backend/src/services/installment_service.py
 - [x] T038 [US3] Verify Installment integration tests PASS (Green Phase)
 - [x] T039 [P] [US3] Create frontend API client functions for Installment Plans in frontend/src/services/api.ts
-- [ ] T040 [US3] Create Installment Plan Entry form in frontend/src/components/installments/InstallmentForm.tsx
-- [ ] T041 [US3] Add "Installment Plan" view to Transaction List or separate page in frontend/src/pages/installments/index.tsx
+- [x] T040 [US3] Create Installment Plan Entry form in frontend/src/components/installments/InstallmentForm.tsx
+- [x] T041 [US3] Add "Installment Plan" view to Transaction List or separate page in frontend/src/pages/installments/index.tsx
 
 ## Phase 6: Polish & Cross-Cutting
 
@@ -82,7 +82,7 @@
 - [x] T043 Verify double-entry constraints are enforced for all generated transactions in backend/src/services/transaction_service.py
 - [ ] T044 Update Dashboard to reflect future liabilities from installments (if applicable) in frontend/src/components/dashboard/SummaryCards.tsx
 - [x] T045 Run full backend test suite and fix regressions
-- [ ] T046 Run frontend test suite and fix regressions
+- [x] T046 Run frontend test suite and fix regressions
 - [x] T047 Update user documentation and `quickstart.md` with new feature guides
 
 ## Implementation Strategy

@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useTags } from '@/lib/hooks/useTags'
 import type { TransactionFilters } from '@/lib/hooks/useTransactions'
 import type { AccountListItem, TransactionType } from '@/types'
 
@@ -22,6 +23,7 @@ export function TransactionFiltersComponent({
   onFiltersChange,
 }: TransactionFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '')
+  const { data: tags = [] } = useTags()
   const t = useTranslations()
 
   const transactionTypes = transactionTypeKeys.map((value) => ({
@@ -58,6 +60,13 @@ export function TransactionFiltersComponent({
     [filters, onFiltersChange]
   )
 
+  const handleTagChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      onFiltersChange({ ...filters, tagId: e.target.value || undefined })
+    },
+    [filters, onFiltersChange]
+  )
+
   const handleTypeChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const value = e.target.value as TransactionType | ''
@@ -79,7 +88,8 @@ export function TransactionFiltersComponent({
     filters.fromDate ||
     filters.toDate ||
     filters.accountId ||
-    filters.transactionType
+    filters.transactionType ||
+    filters.tagId
 
   return (
     <div className="mb-6 rounded-lg border p-4">
@@ -167,6 +177,26 @@ export function TransactionFiltersComponent({
             {transactionTypes.map((type) => (
               <option key={type.value} value={type.value}>
                 {type.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Tag Filter */}
+        <div>
+          <label htmlFor="tag" className="mb-1 block text-xs text-muted-foreground">
+            {t('tags.title')}
+          </label>
+          <select
+            id="tag"
+            value={filters.tagId || ''}
+            onChange={handleTagChange}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <option value="">{t('filters.allTags')}</option>
+            {tags.map((tag) => (
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
               </option>
             ))}
           </select>

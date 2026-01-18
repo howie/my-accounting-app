@@ -20,6 +20,7 @@ export interface TransactionFilters {
   toDate?: string
   accountId?: string
   transactionType?: TransactionType
+  tagId?: string
 }
 
 export function useTransactions(ledgerId: string, filters?: TransactionFilters) {
@@ -45,6 +46,9 @@ export function useTransactions(ledgerId: string, filters?: TransactionFilters) 
       }
       if (filters?.transactionType) {
         params.set('transaction_type', filters.transactionType)
+      }
+      if (filters?.tagId) {
+        params.set('tag_id', filters.tagId)
       }
 
       const queryString = params.toString()
