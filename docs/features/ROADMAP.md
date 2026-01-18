@@ -138,10 +138,10 @@
 - [x] Recurring Transactions (Backend)
 - [x] Installment Plans (Backend)
 - [x] Frontend API Client (DONE)
-- [ ] Frontend UI (Pending)
+- [x] Frontend UI (DONE)
   - [x] Tag Management UI
   - [x] Recurring Settings UI
-  - [ ] Installment UI
+  - [x] Installment UI
 
 **Reference:** MyAB spec 3.1, 3.2, 3.3
 

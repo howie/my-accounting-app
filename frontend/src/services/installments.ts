@@ -1,4 +1,5 @@
 import { apiPost, apiGet } from '@/lib/api'
+import type { Transaction } from '@/types'
 
 export interface InstallmentPlan {
   id: string
@@ -27,5 +28,13 @@ export const installmentService = {
 
   list: async (): Promise<InstallmentPlan[]> => {
     return apiGet<InstallmentPlan[]>('/installments')
+  },
+
+  get: async (id: string): Promise<InstallmentPlan> => {
+    return apiGet<InstallmentPlan>(`/installments/${id}`)
+  },
+
+  getTransactions: async (id: string): Promise<Transaction[]> => {
+    return apiGet<Transaction[]>(`/installments/${id}/transactions`)
   },
 }

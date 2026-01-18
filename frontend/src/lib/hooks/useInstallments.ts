@@ -14,6 +14,22 @@ export function useInstallmentPlans() {
   })
 }
 
+export function useInstallmentPlan(id: string) {
+  return useQuery({
+    queryKey: [...INSTALLMENTS_KEY, id],
+    queryFn: () => installmentService.get(id),
+    enabled: !!id,
+  })
+}
+
+export function useInstallmentTransactions(id: string) {
+  return useQuery({
+    queryKey: [...INSTALLMENTS_KEY, id, 'transactions'],
+    queryFn: () => installmentService.getTransactions(id),
+    enabled: !!id,
+  })
+}
+
 export function useCreateInstallmentPlan() {
   const queryClient = useQueryClient()
 
