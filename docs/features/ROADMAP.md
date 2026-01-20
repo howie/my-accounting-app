@@ -121,43 +121,28 @@
 - 匯出報表（CSV, HTML）
 - 視覺化圖表（資產結構、收支趨勢）
 
----
+### 010-advanced-transactions (DONE)
 
-## Planned Features
-
-### 010-advanced-transactions (IN PROGRESS)
-
-**Priority: High**
-
-進階交易功能。
-
-**Scope:**
-
-- [x] Backend API & Logic (DONE)
-- [x] Tags CRUD & Filtering (Backend)
-- [x] Recurring Transactions (Backend)
-- [x] Installment Plans (Backend)
-- [x] Frontend API Client (DONE)
-- [x] Frontend UI (DONE)
-  - [x] Tag Management UI
-  - [x] Recurring Settings UI
-  - [x] Installment UI
+- Tags CRUD & Filtering
+- Recurring Transactions
+- Installment Plans
+- Frontend UI (Tag Management, Recurring Settings, Installment)
 
 **Reference:** MyAB spec 3.1, 3.2, 3.3
 
-### 003-1-ci-agent-autofix
+---
 
-**Priority: Medium**
+### 003-1-ci-agent-autofix (DONE)
 
-CI 流程自動修復工具。
-
-**Scope:**
-
-- [ ] 自動修復 Lint 錯誤
-- [ ] 自動修復型別錯誤
-- [ ] 測試失敗分析與建議
+- CI Agent 自動修復工具
+  - 自動修復 Lint 錯誤 (ruff/eslint)
+  - 自動修復型別錯誤 (mypy/TypeScript)
+  - 測試失敗分析與建議
+  - 使用 Claude Code Action 整合
 
 ---
+
+## Planned Features
 
 ### 011-budget
 
@@ -205,7 +190,7 @@ CI 流程自動修復工具。
             ├── 007-api-for-mcp (DONE)
             ├── 008-data-export (DONE)
             └── 009-reports (DONE)
-                    ├── 010-advanced-transactions
+                    ├── 010-advanced-transactions (DONE)
                     └── 011-budget
 ```
 
@@ -228,7 +213,7 @@ CI 流程自動修復工具。
 
 **Phase 3 - Advanced Features & Automation (Low Priority)**
 
-8. 010-advanced-transactions (In Progress: Frontend UI Pending)
-9. 003-1-ci-agent-autofix (Planned)
+8. ~~010-advanced-transactions~~ ✅ DONE
+9. ~~003-1-ci-agent-autofix~~ ✅ DONE
 10. 011-budget
 11. 012-backup-sync

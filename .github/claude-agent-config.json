@@ -1,0 +1,12 @@
+{
+  "model": "claude-sonnet-4-20250514",
+  "max_tokens": 4096,
+  "allowed_tools": ["Read", "Edit", "Bash"],
+  "allowed_commands": ["npm", "git", "ruff", "mypy", "pytest", "eslint", "tsc"],
+  "forbidden_commands": ["rm -rf", "chmod", "chown", "curl", "wget"],
+  "safety_limits": {
+    "max_edits_per_run": 50,
+    "max_commits_per_run": 1,
+    "max_execution_time": 600
+  }
+}
