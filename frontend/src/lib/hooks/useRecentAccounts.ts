@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { AccountType } from '@/types/dashboard'
 
 const STORAGE_KEY = 'ledgerone-recent-accounts'
@@ -26,10 +26,10 @@ export function useRecentAccounts() {
     setIsHydrated(true)
   }, [])
 
-  const addRecent = (account: RecentAccount) => {
-    setRecents(prev => {
+  const addRecent = useCallback((account: RecentAccount) => {
+    setRecents((prev) => {
       // Remove existing entry for this account if any
-      const filtered = prev.filter(a => a.id !== account.id)
+      const filtered = prev.filter((a) => a.id !== account.id)
       // Add to top
       const newRecents = [account, ...filtered].slice(0, MAX_RECENT)
 
@@ -39,7 +39,7 @@ export function useRecentAccounts() {
 
       return newRecents
     })
-  }
+  }, [])
 
   return { recents, addRecent, isHydrated }
 }
