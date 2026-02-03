@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useEffect } from 'react'
+import { useCallback, useRef, useEffect, useState } from 'react'
 import { MessageCircle, Trash2 } from 'lucide-react'
 import {
   Sheet,
@@ -15,6 +15,7 @@ import { useLedgerContext } from '@/lib/context/LedgerContext'
 import { chatApi } from '@/lib/api/chat'
 import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
+import { VoiceChatPanel } from './VoiceChatPanel'
 
 export function ChatPanel() {
   const {
@@ -28,6 +29,7 @@ export function ChatPanel() {
   } = useChatContext()
   const { currentLedger } = useLedgerContext()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [isVoiceOpen, setIsVoiceOpen] = useState(false)
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -141,8 +143,18 @@ export function ChatPanel() {
         </div>
 
         {/* Input area */}
-        <ChatInput onSend={handleSend} disabled={isLoading || !currentLedger} />
+        <ChatInput
+          onSend={handleSend}
+          onVoiceClick={() => setIsVoiceOpen(true)}
+          disabled={isLoading || !currentLedger}
+        />
       </SheetContent>
+
+      {/* Voice chat panel */}
+      <VoiceChatPanel
+        isOpen={isVoiceOpen}
+        onClose={() => setIsVoiceOpen(false)}
+      />
     </Sheet>
   )
 }

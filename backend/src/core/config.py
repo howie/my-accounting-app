@@ -32,6 +32,8 @@ class Settings(BaseSettings):
     # Gemini AI
     gemini_api_key: str = ""
     gemini_model: str = "gemini-2.0-flash"
+    gemini_live_model: str = "gemini-2.0-flash-live-001"
+    gemini_voice_name: str = "Aoede"
 
     # Claude AI
     claude_api_key: str = ""

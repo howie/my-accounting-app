@@ -18,6 +18,7 @@ from src.api.routes import (
     transactions,
     users,
     utils,
+    voice,
 )
 
 api_router = APIRouter()
@@ -61,6 +62,9 @@ api_router.include_router(tokens.router)
 
 # AI Chat Assistant
 api_router.include_router(chat.router)
+
+# Voice Chat (Gemini Live API v2v)
+api_router.include_router(voice.router)
 
 # Utilities (Health Check)
 api_router.include_router(utils.router, tags=["Utils"])
