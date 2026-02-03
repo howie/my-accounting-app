@@ -34,54 +34,61 @@
 
 ## 二、部署方案（以免費/最低成本為目標）
 
-### 推薦方案：分離式部署
+> **詳細平台比較分析見 [research.md](./research.md)**
+
+### 推薦方案（修訂版）：Fly.io + Vercel + Supabase
 
 | 元件 | 平台 | 費用 | 說明 |
 |------|------|------|------|
-| **Frontend** | **Vercel** | **$0/月** | Next.js 原生支援，全球 CDN，自動 HTTPS |
-| **Backend + MCP** | **Render.com** | **$0/月** (Free tier) | Docker 部署，自動 Git deploy，免費 SSL |
-| **PostgreSQL** | **Supabase** | **$0/月** (Free tier) | 500MB 儲存空間，PostgreSQL 16，自動備份 |
-| **總計** | | **$0/月** | |
+| **Frontend** | **Vercel Hobby** | **$0/月** | Next.js 原生支援，全球 CDN，zero config |
+| **Backend + MCP** | **Fly.io** | **~$4-6/月** | MCP 一級支援，東京節點，冷啟動 2-5 秒 |
+| **PostgreSQL** | **Supabase Free** | **$0/月** | 500MB 儲存，PostgreSQL 16，自動備份 |
+| **總計** | | **~$4-6/月** | |
+
+#### 為何改推 Fly.io 而非 Render？
+
+經深入分析後發現 Render 免費方案有**兩個致命問題**：
+1. **POST 請求無法喚醒休眠服務**——只有 GET 能喚醒，POST 會被丟棄。MCP 和 Bot Webhook 都是 POST，這直接導致核心功能不可用
+2. **冷啟動 30-60 秒** vs Fly.io 的 2-5 秒
+
+此外，Fly.io 對 MCP 有**官方一級支援**，含 SSE 和 Streamable HTTP 的專門文件。
+
+#### 為何不用 Cloudflare 取代 Vercel？
+
+Cloudflare Workers 在成本上更有優勢（免費 + 無限 bandwidth），但：
+1. Next.js 需透過 `@opennextjs/cloudflare` adapter，**地雷很多**（Turbopack 不能用、Edge runtime 不支援、build cache 差導致每次 ~15 分鐘）
+2. Vercel 是 Next.js 的開發者，零配置直接部署
+3. 個人記帳 app 的 Vercel Hobby 免費方案完全夠用
+4. 未來若需商業化，再遷移到 Cloudflare（$5/月）即可
+
+### 方案比較表
+
+| 方案 | Frontend | Backend | Database | 月費 | 適用情境 |
+|------|----------|---------|----------|------|----------|
+| **A (推薦)** | Vercel | Fly.io | Supabase | ~$4-6 | 個人使用，MCP 核心需求 |
+| **B (純免費)** | Cloudflare | Render | Supabase | $0 | 測試/開發，可接受各種限制 |
+| **C (最佳平衡)** | Cloudflare $5 | Fly.io | Supabase | ~$9-11 | 長期運行，有商業化可能 |
+| **D (最簡運維)** | Vercel Pro $20 | Fly.io | Supabase | ~$24-26 | 重視開發效率 |
 
 ### 各平台 Free Tier 限制
 
-#### Vercel (Frontend)
-- 100GB bandwidth/月
-- Serverless Function 10秒 timeout
-- 自動 HTTPS + 自訂域名
-- Git push 自動部署
-- **限制**：商用需升級 ($20/月 Pro)，個人使用完全免費
+#### Vercel Hobby (Frontend)
+- 100GB bandwidth/月，150K function requests/月
+- 自動 HTTPS + 自訂域名，Git push 自動部署
+- **限制**：禁止商業使用（個人記帳 app 不受影響）
 
-#### Render.com (Backend)
-- 750 小時/月 free instance hours
-- **限制**：閒置 15 分鐘後 spin down，冷啟動約 30-50 秒
-- 自動 HTTPS + 自訂域名
-- Docker & Git deploy 支援
-- **替代方案**：若冷啟動不可接受，Fly.io 提供 always-on 的免費方案 (3 shared VMs)
+#### Fly.io (Backend)
+- 新用戶無免費方案，Pay As You Go
+- shared-cpu-1x + 512MB RAM ≈ $3.57/月（24/7 運行）
+- 冷啟動 2-5 秒，可設定 auto-stop 節省費用
+- **18 個區域**含東京（台灣延遲最低）
+- **MCP Streamable HTTP 一級支援**
+- IPv4 $2/月/app（可用 IPv6 免費）
 
-#### Supabase (PostgreSQL)
-- 500MB 資料庫儲存
-- 2 個免費專案
+#### Supabase Free (PostgreSQL)
+- 500MB 資料庫儲存，2 個免費專案
 - 自動每日備份（7天保留）
-- 50,000 monthly active users
-- 500MB file storage
-- **限制**：7天未活動會暫停（需手動重啟），可透過 cron ping 保持活躍
-
-### 替代方案比較
-
-| 方案 | Frontend | Backend | Database | 月費 | 優缺點 |
-|------|----------|---------|----------|------|--------|
-| **A (推薦)** | Vercel | Render | Supabase | $0 | 最佳免費組合，各平台專精 |
-| **B** | Vercel | Fly.io | Neon | $0 | 無冷啟動，Neon 0.5GB free |
-| **C** | Vercel | Railway | Supabase | ~$5 | Railway 更穩定，$5 credits |
-| **D** | Render | Render | Render | $0-7 | 全在 Render，管理簡單 |
-| **E (省錢進階)** | Vercel | Fly.io | Supabase | $0 | Fly.io always-on + Supabase |
-
-### 選擇建議
-
-1. **純免費首選** → 方案 A（Vercel + Render + Supabase）
-2. **需要 always-on** → 方案 E（Vercel + Fly.io + Supabase）
-3. **願意付少量費用** → 方案 C（Vercel + Railway + Supabase），Railway 更穩定可靠
+- **限制**：7天未活動會暫停（需 cron ping 保持活躍）
 
 ---
 
@@ -106,7 +113,7 @@ gunicorn src.api.main:app -w 2 -k uvicorn.workers.UvicornWorker \
 ```
 
 #### 0.2 Frontend 生產環境配置
-- [ ] 設定 `NEXT_PUBLIC_API_URL` 指向 Render backend URL
+- [ ] 設定 `NEXT_PUBLIC_API_URL` 指向 Fly.io backend URL
 - [ ] 確保 `next.config.js` 有 `output: 'standalone'` (Docker 部署用)
 - [ ] 新增 Vercel 配置 (`vercel.json`) 或使用預設 Next.js 設定
 
@@ -118,28 +125,41 @@ gunicorn src.api.main:app -w 2 -k uvicorn.workers.UvicornWorker \
 
 #### 0.4 CI/CD Pipeline 調整
 - [ ] GitHub Actions 新增 deploy job（push to main → auto deploy）
-- [ ] Render 設定 auto-deploy from `main` branch
+- [ ] Fly.io 設定 `fly deploy` 自動部署（可透過 GitHub Actions）
 - [ ] Vercel 連接 GitHub repo auto-deploy
 - [ ] 新增 production environment secrets 管理
 
-#### 0.5 Render 配置檔
-```yaml
-# render.yaml
-services:
-  - type: web
-    name: ledgerone-backend
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    envVars:
-      - key: DATABASE_URL
-        sync: false  # manually set
-      - key: ENVIRONMENT
-        value: production
-      - key: CORS_ORIGINS
-        sync: false
-      - key: LLM_PROVIDER
-        sync: false
-    healthCheckPath: /health
+#### 0.5 Fly.io 配置檔
+```toml
+# fly.toml
+app = "ledgerone-backend"
+primary_region = "nrt"  # Tokyo - 對台灣延遲最低
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  ENVIRONMENT = "production"
+  PORT = "8000"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = "stop"     # 閒置時自動停止，節省費用
+  auto_start_machines = true      # 收到請求時自動啟動
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+[checks]
+  [checks.health]
+    type = "http"
+    port = 8000
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
 ```
 
 **預估工作量**：修改約 5-8 個檔案，新增 2-3 個配置檔
@@ -160,7 +180,7 @@ services:
   "mcpServers": {
     "ledgerone": {
       "type": "streamable-http",
-      "url": "https://ledgerone-backend.onrender.com/mcp",
+      "url": "https://ledgerone-backend.fly.dev/mcp",
       "headers": {
         "Authorization": "Bearer <your-api-token>"
       }
@@ -171,8 +191,8 @@ services:
 
 #### 1.2 確保 MCP 在生產環境正常運作
 - [ ] 驗證 Bearer token 認證在 HTTPS 下正常
-- [ ] 測試 Streamable HTTP transport 穿透 Render proxy
-- [ ] 設定適當的 timeout（Render free tier 限制）
+- [ ] 測試 Streamable HTTP transport 穿透 Fly.io proxy（Fly.io 有一級 MCP 支援）
+- [ ] 設定適當的 timeout 和 auto-stop 策略
 
 **預估工作量**：主要是配置和測試，少量程式碼修改
 
@@ -193,7 +213,7 @@ info:
   title: "LedgerOne Accounting API"
   version: "1.0"
 servers:
-  - url: "https://ledgerone-backend.onrender.com/api/v1"
+  - url: "https://ledgerone-backend.fly.dev/api/v1"
 paths:
   /ledgers/{ledger_id}/transactions:
     post:
@@ -430,7 +450,7 @@ GEMINI_API_KEY=your-key
 
 ```
 Phase 0 ─── 雲端部署基礎（最高優先）
-   │        • Backend → Render
+   │        • Backend → Fly.io (東京節點)
    │        • Frontend → Vercel
    │        • Database → Supabase
    │        • CI/CD pipeline
@@ -458,45 +478,48 @@ Phase 4 ─── Email 帳單匯入（較高工作量）
 
 ## 七、成本總結
 
-### 完全免費方案
+### 推薦方案成本（Fly.io + Vercel + Supabase）
 
 | 項目 | 平台 | 月費 |
 |------|------|------|
-| Frontend hosting | Vercel Free | $0 |
-| Backend hosting | Render Free | $0 |
+| Frontend hosting | Vercel Hobby | $0 |
+| Backend hosting | Fly.io (shared-cpu-1x, 512MB) | ~$3.57 |
+| IPv4 (optional) | Fly.io | $2（可用 IPv6 免費） |
 | PostgreSQL | Supabase Free (500MB) | $0 |
 | Telegram Bot | Telegram API | $0 |
 | LINE Bot | LINE Free (500 msg/月) | $0 |
 | Slack Bot | Slack Free | $0 |
 | Gmail API | Google Free Tier | $0 |
 | LLM (Gemini) | Gemini Free Tier | $0 |
-| **合計** | | **$0/月** |
+| **合計（有 IPv4）** | | **~$5.57/月** |
+| **合計（純 IPv6）** | | **~$3.57/月** |
 
-### 免費方案的限制與因應
+> 啟用 auto-stop 可進一步降低費用——閒置時不計費，可能降至 ~$1-2/月
+
+### 方案限制與因應
 
 | 限制 | 影響 | 因應措施 |
 |------|------|----------|
-| Render 冷啟動 30-50s | 閒置後首次請求慢 | 設定 cron job 每 14 分鐘 ping `/health` |
-| Supabase 7天未活動暫停 | DB 連不上 | 同上 cron ping 保持活躍 |
+| Fly.io auto-stop 冷啟動 | 閒置後首次請求慢 2-5 秒 | 可接受；或設 min_machines=1 保持 always-on |
+| Supabase 7天未活動暫停 | DB 連不上 | 設定 cron ping 保持活躍 |
 | Supabase 500MB | 大量交易可能不夠 | 個人記帳 5 年內通常 < 100MB |
 | LINE 500 msg/月 | 大量使用會超 | 個人記帳通常 < 100 msg/月 |
-| Render 750 hr/月 | 連續運行只夠 31 天 | 剛好夠用，一個月 744 小時 |
+| Vercel Hobby 禁止商業使用 | 未來商業化受限 | 遷移到 Cloudflare Workers ($5/月) |
 
-### 升級方案（如需要）
+### 如果需要進一步省錢
 
-| 升級項目 | 費用 | 獲得 |
-|----------|------|------|
-| Render Starter | $7/月 | Always-on, 無冷啟動 |
-| Supabase Pro | $25/月 | 8GB 儲存, 無暫停 |
-| Fly.io (替代 Render) | $0-5/月 | Always-on, 3 shared VMs |
-| Railway (替代 Render) | $5/月 | 更穩定，用量制費 |
+| 節省方式 | 效果 |
+|----------|------|
+| 啟用 auto-stop | 閒置不計費，月費可能 < $2 |
+| 使用 IPv6 only | 省 $2/月 |
+| Frontend 改 Cloudflare | 同為 $0，但建置較慢 |
 
 ---
 
 ## 八、安全性考量
 
 1. **API Token**：所有外部存取都透過 Bearer Token，已實作
-2. **HTTPS**：Vercel / Render / Supabase 都自動提供 SSL
+2. **HTTPS**：Vercel / Fly.io / Supabase 都自動提供 SSL
 3. **Webhook 驗證**：各 Bot 平台都有 signature 驗證機制
 4. **環境變數**：敏感資訊存在各平台的 Environment Variables（不進 Git）
 5. **CORS**：僅允許 Frontend domain
@@ -514,14 +537,26 @@ Phase 4 ─── Email 帳單匯入（較高工作量）
 # 3. 記下 DATABASE_URL
 ```
 
-### Step 2: Render Backend
+### Step 2: Fly.io Backend
 ```bash
-# 1. 到 render.com 建立帳號
-# 2. New → Web Service → Connect GitHub repo
-# 3. Root Directory: backend
-# 4. Build Command: pip install .
-# 5. Start Command: bash start.sh
-# 6. 設定環境變數 (DATABASE_URL, CORS_ORIGINS, etc.)
+# 1. 安裝 flyctl CLI
+curl -L https://fly.io/install.sh | sh
+
+# 2. 登入 Fly.io
+fly auth login
+
+# 3. 從專案根目錄 launch（會自動偵測 Dockerfile）
+fly launch --region nrt  # nrt = 東京
+
+# 4. 設定環境變數（secrets）
+fly secrets set DATABASE_URL="postgresql://..." \
+  CORS_ORIGINS="https://ledgerone.vercel.app" \
+  ENVIRONMENT="production" \
+  LLM_PROVIDER="gemini" \
+  GEMINI_API_KEY="..."
+
+# 5. 部署
+fly deploy
 ```
 
 ### Step 3: Vercel Frontend
@@ -530,7 +565,7 @@ Phase 4 ─── Email 帳單匯入（較高工作量）
 # 2. Import GitHub repo
 # 3. Root Directory: frontend
 # 4. Framework Preset: Next.js
-# 5. 設定 NEXT_PUBLIC_API_URL = Render backend URL
+# 5. 設定 NEXT_PUBLIC_API_URL = https://ledgerone-backend.fly.dev
 ```
 
 ### Step 4: 測試 MCP 連線
