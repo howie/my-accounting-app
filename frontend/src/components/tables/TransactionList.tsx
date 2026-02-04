@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -28,7 +28,7 @@ export function TransactionList({ ledgerId, filters }: TransactionListProps) {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, error } =
     useTransactions(ledgerId, filters)
   const deleteTransaction = useDeleteTransaction(ledgerId)
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const handleDelete = async (id: string) => {
     try {

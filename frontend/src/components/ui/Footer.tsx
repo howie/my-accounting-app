@@ -1,4 +1,4 @@
-'use client'
+
 
 import { useVersion } from '@/lib/hooks/useVersion'
 

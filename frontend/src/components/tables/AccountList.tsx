@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { useDeleteAccount } from '@/lib/hooks/useAccounts'
@@ -43,7 +43,7 @@ function AccountRow({
   onDelete,
   isDeleting,
 }: AccountRowProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const hasChildren = account.children && account.children.length > 0
   const isExpanded = expandedIds.has(account.id)
   const indentPx = depth * 24
@@ -149,7 +149,7 @@ export function AccountList({ accounts, ledgerId }: AccountListProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set())
   const deleteAccount = useDeleteAccount(ledgerId)
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const handleDelete = async (id: string) => {
     try {

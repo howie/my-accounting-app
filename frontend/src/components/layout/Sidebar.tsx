@@ -1,9 +1,8 @@
-'use client'
+
 
 import { useEffect } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Home, Menu, X, BookOpen, Settings, Upload, MessageCircle, PanelLeftClose, PanelLeftOpen, Library, Clock, Wallet, CreditCard, TrendingUp, Receipt, Download, BarChart3, PieChart } from 'lucide-react'
 import { useSidebarAccounts } from '@/lib/hooks/useSidebarAccounts'
 import { useSidebarState } from '@/lib/hooks/useSidebarState'
@@ -28,12 +27,12 @@ const iconMap: Record<AccountType, React.ComponentType<{ className?: string }>> 
  * Desktop: Collapsible to icon-only mode.
  */
 export function Sidebar() {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   const { currentLedger } = useLedgerContext()
   const { openChat } = useChatContext()
   const { data: categories, isLoading, error } = useSidebarAccounts()
   const { recents, isHydrated: recentsHydrated } = useRecentAccounts()
-  const t = useTranslations('sidebar')
+  const { t } = useTranslation()
   const {
     isCollapsed,
     toggleCollapsed,
@@ -113,7 +112,7 @@ export function Sidebar() {
 
           {/* Switch Ledger (Moved to top) */}
           <Link
-            href="/ledgers"
+            to="/ledgers"
             title={t('switchLedger')}
             className={cn(
               'mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -128,7 +127,7 @@ export function Sidebar() {
 
           {/* Dashboard Link */}
           <Link
-            href="/"
+            to="/"
             title={t('dashboard')}
             className={cn(
               'mb-2 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -158,7 +157,7 @@ export function Sidebar() {
               )}
 
               <Link
-                href="/reports/balance-sheet"
+                to="/reports/balance-sheet"
                 title="Balance Sheet"
                 className={cn(
                   'mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -174,7 +173,7 @@ export function Sidebar() {
               </Link>
 
               <Link
-                href="/reports/income-statement"
+                to="/reports/income-statement"
                 title="Income Statement"
                 className={cn(
                   'mb-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -195,7 +194,7 @@ export function Sidebar() {
           {currentLedger && (
             <>
               <Link
-                href={`/ledgers/${currentLedger.id}/import`}
+                to={`/ledgers/${currentLedger.id}/import`}
                 title={t('import')}
                 className={cn(
                   'mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -243,7 +242,7 @@ export function Sidebar() {
           </button>
 
           <Link
-            href="/settings"
+            to="/settings"
             title={t('settings')}
             className={cn(
               'mb-4 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
@@ -277,7 +276,7 @@ export function Sidebar() {
                     return (
                         <Link
                             key={account.id}
-                            href={`/accounts/${account.id}`}
+                            to={`/accounts/${account.id}`}
                             title={account.name}
                             className={cn(
                               'mb-1 flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',

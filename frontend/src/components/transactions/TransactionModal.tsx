@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { X, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -42,7 +42,7 @@ export function TransactionModal({
   triggerText,
   triggerVariant = 'default',
 }: TransactionModalProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
 
   const handleOpen = useCallback(() => {

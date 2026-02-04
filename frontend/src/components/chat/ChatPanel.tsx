@@ -1,4 +1,4 @@
-'use client'
+
 
 import { useCallback, useRef, useEffect } from 'react'
 import { MessageCircle, Trash2 } from 'lucide-react'

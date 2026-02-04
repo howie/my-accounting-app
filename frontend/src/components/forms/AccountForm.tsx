@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,7 +21,7 @@ export function AccountForm({ ledgerId, onSuccess, onCancel }: AccountFormProps)
   const [type, setType] = useState<AccountType>('EXPENSE')
   const [parentId, setParentId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const { data: accounts } = useAccounts(ledgerId)
   const createAccount = useCreateAccount(ledgerId)

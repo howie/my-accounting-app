@@ -12,7 +12,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { NextIntlClientProvider } from 'next-intl'
+import { I18nextProvider } from 'react-i18next'
+import i18n from '@/i18n'
 
 import BankSelector from '@/components/import/BankSelector'
 import zhTW from '../../../messages/zh-TW.json'
@@ -28,9 +29,9 @@ vi.mock('@/lib/api/import', () => ({
 function createWrapper() {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <NextIntlClientProvider locale="zh-TW" messages={zhTW}>
+      <I18nextProvider i18n={i18n}>
         {children}
-      </NextIntlClientProvider>
+      </I18nextProvider>
     )
   }
 }

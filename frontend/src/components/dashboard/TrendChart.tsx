@@ -1,4 +1,4 @@
-'use client'
+
 
 import { Card, BarChart } from '@tremor/react'
 import type { MonthlyTrend } from '@/types/dashboard'

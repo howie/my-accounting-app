@@ -1,8 +1,8 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Trash2, Database, FileX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,8 +22,8 @@ interface DangerZoneProps {
 type ActionType = 'clearTransactions' | 'clearAccounts' | 'deleteLedger' | null
 
 export function DangerZone({ ledgerId }: DangerZoneProps) {
-  const t = useTranslations('settings.dangerZone')
-  const router = useRouter()
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.dangerZone' })
+  const navigate = useNavigate()
   const [confirmAction, setConfirmAction] = useState<ActionType>(null)
   const [isProcessing, setIsProcessing] = useState(false)
   const [result, setResult] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export function DangerZone({ ledgerId }: DangerZoneProps) {
       )
       setResult(t('clearTransactionsSuccess', { count: response.deleted_count }))
       setConfirmAction(null)
-      router.refresh()
+      navigate(0)
     } catch (err) {
       console.error('Failed to clear transactions:', err)
     } finally {
@@ -59,7 +59,7 @@ export function DangerZone({ ledgerId }: DangerZoneProps) {
         })
       )
       setConfirmAction(null)
-      router.refresh()
+      navigate(0)
     } catch (err) {
       console.error('Failed to clear accounts:', err)
     } finally {
@@ -72,7 +72,7 @@ export function DangerZone({ ledgerId }: DangerZoneProps) {
     try {
       await apiDelete(`/ledgers/${ledgerId}`)
       setConfirmAction(null)
-      router.push('/ledgers')
+      navigate('/ledgers')
     } catch (err) {
       console.error('Failed to delete ledger:', err)
     } finally {

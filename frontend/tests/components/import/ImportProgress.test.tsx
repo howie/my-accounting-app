@@ -10,7 +10,8 @@
 
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
-import { NextIntlClientProvider } from 'next-intl'
+import { I18nextProvider } from 'react-i18next'
+import i18n from '@/i18n'
 
 import ImportProgress from '@/components/import/ImportProgress'
 import zhTW from '../../../messages/zh-TW.json'
@@ -18,9 +19,9 @@ import zhTW from '../../../messages/zh-TW.json'
 function createWrapper() {
   return function Wrapper({ children }: { children: React.ReactNode }) {
     return (
-      <NextIntlClientProvider locale="zh-TW" messages={zhTW}>
+      <I18nextProvider i18n={i18n}>
         {children}
-      </NextIntlClientProvider>
+      </I18nextProvider>
     )
   }
 }
@@ -226,9 +227,9 @@ describe('ImportProgress', () => {
       expect(screen.getByText('25%')).toBeInTheDocument()
 
       rerender(
-        <NextIntlClientProvider locale="zh-TW" messages={zhTW}>
+        <I18nextProvider i18n={i18n}>
           <ImportProgress current={75} total={100} status="processing" />
-        </NextIntlClientProvider>
+        </I18nextProvider>
       )
 
       expect(screen.getByText('75%')).toBeInTheDocument()
@@ -243,9 +244,9 @@ describe('ImportProgress', () => {
       expect(screen.getByText(zhTW.import.statusProcessing)).toBeInTheDocument()
 
       rerender(
-        <NextIntlClientProvider locale="zh-TW" messages={zhTW}>
+        <I18nextProvider i18n={i18n}>
           <ImportProgress current={100} total={100} status="completed" />
-        </NextIntlClientProvider>
+        </I18nextProvider>
       )
 
       expect(screen.getByText(zhTW.import.statusCompleted)).toBeInTheDocument()
