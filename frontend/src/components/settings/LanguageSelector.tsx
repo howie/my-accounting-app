@@ -1,43 +1,31 @@
-'use client'
-
-import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
-import { locales, localeNames, type Locale } from '@/i18n/config'
-import { useUserPreferences } from '@/lib/hooks/useUserPreferences'
-
-const LOCALE_COOKIE = 'NEXT_LOCALE'
+import { useTranslation } from 'react-i18next';
+import { locales, localeNames, type Locale } from '@/i18n/config';
+import { useUserPreferences } from '@/lib/hooks/useUserPreferences';
 
 /**
  * Language selector component for Settings page.
- * Changes locale via cookie and persists preference to localStorage.
+ * Changes locale via i18next and persists preference to localStorage.
  */
 export function LanguageSelector() {
-  const t = useTranslations('settings')
-  const router = useRouter()
-  const { preferences, setLanguage, isLoaded } = useUserPreferences()
+  const { t, i18n } = useTranslation();
+  const { preferences, setLanguage, isLoaded } = useUserPreferences();
 
   const handleLocaleChange = (newLocale: Locale) => {
-    // Update localStorage preference
-    setLanguage(newLocale)
-
-    // Set cookie for next-intl server-side reading
-    document.cookie = `${LOCALE_COOKIE}=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
-
-    // Refresh the page to apply new locale
-    router.refresh()
-  }
+    setLanguage(newLocale);
+    i18n.changeLanguage(newLocale);
+  };
 
   if (!isLoaded) {
     return (
       <div className="animate-pulse">
         <div className="h-10 w-48 rounded-md bg-muted" />
       </div>
-    )
+    );
   }
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">{t('language')}</label>
+      <label className="text-sm font-medium">{t('settings.language')}</label>
       <div className="flex gap-2">
         {locales.map((locale) => (
           <button
@@ -55,5 +43,5 @@ export function LanguageSelector() {
         ))}
       </div>
     </div>
-  )
+  );
 }

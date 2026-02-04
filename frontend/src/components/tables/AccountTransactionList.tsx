@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, ChevronLeft, ChevronRight, Inbox } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -34,7 +34,7 @@ const transactionTypePrefix: Record<TransactionType, string> = {
 export function AccountTransactionList({ accountId, accountName }: AccountTransactionListProps) {
   const [page, setPage] = useState(1)
   const pageSize = 20
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const { data, isLoading, error } = useAccountTransactions({
     accountId,

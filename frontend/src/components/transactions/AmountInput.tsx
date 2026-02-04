@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useCallback, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Input } from '@/components/ui/input'
 import {
@@ -53,7 +53,7 @@ export function AmountInput({
   error: externalError,
   'data-testid': testId,
 }: AmountInputProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null)
   const [internalError, setInternalError] = useState<string | null>(null)
   const [showCalculated, setShowCalculated] = useState(false)

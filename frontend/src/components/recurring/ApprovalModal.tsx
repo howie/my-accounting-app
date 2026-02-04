@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Check, X, Calendar } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ interface ApprovalModalProps {
 }
 
 export function ApprovalModal({ open, onOpenChange, dueItems }: ApprovalModalProps) {
-  const t = useTranslations('recurring')
+  const { t } = useTranslation(undefined, { keyPrefix: 'recurring' })
   const approveMutation = useApproveRecurringTransaction()
   const [approvingId, setApprovingId] = useState<string | null>(null)
 

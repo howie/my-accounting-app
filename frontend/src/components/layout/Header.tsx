@@ -1,13 +1,12 @@
-'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+
+import { Link, useLocation } from 'react-router-dom'
 import { ChevronRight, Home } from 'lucide-react'
 import { AccountMenu } from '@/components/layout/AccountMenu'
 import { useLedgerContext } from '@/lib/context/LedgerContext'
 
 export function Header() {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   const { currentLedger } = useLedgerContext()
 
   // Generate breadcrumbs
@@ -27,7 +26,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b bg-background px-6 transition-all">
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Link href="/" className="flex items-center hover:text-foreground">
+        <Link to="/" className="flex items-center hover:text-foreground">
           <Home className="h-4 w-4" />
         </Link>
         {breadcrumbs.length > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground/50" />}
@@ -37,7 +36,7 @@ export function Header() {
             {crumb.isLast ? (
               <span className="font-medium text-foreground">{crumb.label}</span>
             ) : (
-              <Link href={crumb.href} className="hover:text-foreground">
+              <Link to={crumb.href} className="hover:text-foreground">
                 {crumb.label}
               </Link>
             )}
@@ -52,7 +51,7 @@ export function Header() {
           <div className="hidden items-center gap-2 text-sm font-medium md:flex">
             <span className="text-muted-foreground">Ledger:</span>
             <Link
-              href="/ledgers"
+              to="/ledgers"
               className="flex items-center gap-1 rounded-md px-2 py-1 transition-colors hover:bg-muted"
               title="Switch Ledger"
             >

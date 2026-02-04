@@ -1,7 +1,7 @@
-'use client'
+
 
 import * as React from 'react'
-import { useRouter } from 'next/navigation'
+import { useNavigate } from 'react-router-dom'
 import { Search, Home, Settings, FileText, CreditCard, Wallet, TrendingUp, Receipt } from 'lucide-react'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ export function CommandPalette() {
   const [open, setOpen] = React.useState(false)
   const [query, setQuery] = React.useState('')
   const [selectedIndex, setSelectedIndex] = React.useState(0)
-  const router = useRouter()
+  const navigate = useNavigate()
   const { data: categories } = useSidebarAccounts()
 
   // Flatten accounts for search
@@ -92,10 +92,10 @@ export function CommandPalette() {
           }
           if (lastKey === 'g') {
               if (e.key === 'd') {
-                  router.push('/')
+                  navigate('/')
                   lastKey = ''
               } else if (e.key === 's') {
-                  router.push('/settings')
+                  navigate('/settings')
                   lastKey = ''
               }
           }
@@ -107,7 +107,7 @@ export function CommandPalette() {
         document.removeEventListener('keydown', down)
         clearTimeout(timeout)
     }
-  }, [open, router])
+  }, [open, navigate])
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false)
@@ -117,7 +117,7 @@ export function CommandPalette() {
   const handleSelect = (index: number) => {
       const item = filteredItems[index]
       if (item) {
-          runCommand(() => router.push(item.href))
+          runCommand(() => navigate(item.href))
       }
   }
 

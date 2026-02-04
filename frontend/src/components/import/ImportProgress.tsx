@@ -1,6 +1,6 @@
-'use client'
 
-import { useTranslations } from 'next-intl'
+
+import { useTranslation } from 'react-i18next'
 
 interface ImportProgressProps {
     current: number
@@ -9,7 +9,7 @@ interface ImportProgressProps {
 }
 
 export default function ImportProgress({ current, total, status }: ImportProgressProps) {
-    const t = useTranslations('import')
+    const { t } = useTranslation(undefined, { keyPrefix: 'import' })
 
     const percentage = total > 0 ? Math.round((current / total) * 100) : 0
 

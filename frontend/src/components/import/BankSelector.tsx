@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useEffect, useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { importApi, BankConfig } from '@/lib/api/import'
 
 interface BankSelectorProps {
@@ -11,7 +11,7 @@ interface BankSelectorProps {
 }
 
 export default function BankSelector({ value, onChange, disabled }: BankSelectorProps) {
-    const t = useTranslations('import')
+    const { t } = useTranslation(undefined, { keyPrefix: 'import' })
     const [banks, setBanks] = useState<BankConfig[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
