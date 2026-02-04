@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ export function TagForm({ initialData, onSuccess, onCancel }: TagFormProps) {
   const [name, setName] = useState(initialData?.name || '')
   const [color, setColor] = useState(initialData?.color || '#000000')
   const [error, setError] = useState<string | null>(null)
-  const t = useTranslations('tags')
+  const { t } = useTranslation(undefined, { keyPrefix: 'tags' })
 
   const createTag = useCreateTag()
   const updateTag = useUpdateTag()

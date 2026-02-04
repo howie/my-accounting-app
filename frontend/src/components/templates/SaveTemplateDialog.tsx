@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -37,7 +37,7 @@ export function SaveTemplateDialog({
   templateData,
   onSuccess,
 }: SaveTemplateDialogProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
 

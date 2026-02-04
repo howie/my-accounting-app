@@ -1,6 +1,6 @@
-'use client'
 
-import { usePathname } from 'next/navigation'
+
+import { useLocation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Header } from './Header'
 import { MainContent } from './MainContent'
@@ -19,7 +19,7 @@ const NO_SIDEBAR_ROUTES = ['/setup', '/ledgers']
  * Shows sidebar for main app pages, hides for setup/ledger selection.
  */
 export function AppShell({ children }: AppShellProps) {
-  const pathname = usePathname()
+  const { pathname } = useLocation()
 
   // Check if current route should hide sidebar
   // Only exact matches - /ledgers/[id]/* routes should show sidebar

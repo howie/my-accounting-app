@@ -1,6 +1,6 @@
-'use client'
 
-import { useTranslations } from 'next-intl'
+
+import { useTranslation } from 'react-i18next'
 import { format } from 'date-fns'
 
 import { useInstallmentPlan, useInstallmentTransactions } from '@/lib/hooks/useInstallments'
@@ -11,7 +11,7 @@ interface InstallmentDetailsProps {
 }
 
 export function InstallmentDetails({ planId }: InstallmentDetailsProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const { data: plan, isLoading: isPlanLoading } = useInstallmentPlan(planId)
   const { data: transactions, isLoading: isTxnLoading } = useInstallmentTransactions(planId)
 

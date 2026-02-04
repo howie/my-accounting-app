@@ -1,4 +1,4 @@
-'use client'
+
 
 interface CategorySuggestion {
     suggested_account_id: string | null

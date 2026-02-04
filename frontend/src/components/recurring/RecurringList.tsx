@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Plus, Pencil, Trash2, Check, X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ import { formatAmount } from '@/lib/utils'
 import type { RecurringTransaction } from '@/services/recurring'
 
 export function RecurringList() {
-  const t = useTranslations('recurring')
+  const { t } = useTranslation(undefined, { keyPrefix: 'recurring' })
   const { data: items, isLoading } = useRecurringTransactions()
   const deleteMutation = useDeleteRecurringTransaction()
 

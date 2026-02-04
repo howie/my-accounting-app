@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,7 +24,7 @@ export function TransactionFiltersComponent({
 }: TransactionFiltersProps) {
   const [searchInput, setSearchInput] = useState(filters.search || '')
   const { data: tags = [] } = useTags()
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const transactionTypes = transactionTypeKeys.map((value) => ({
     value,

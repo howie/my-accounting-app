@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useMemo, useCallback, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -84,7 +84,7 @@ export function TransactionForm({
   onSuccess,
   onCancel,
 }: TransactionFormProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   // Form state
   const [transactionType, setTransactionType] = useState<TransactionType>(() =>

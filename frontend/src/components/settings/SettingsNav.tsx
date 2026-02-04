@@ -1,8 +1,7 @@
-'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
+
+import { Link, useLocation } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Users, Settings, Key, Tag, Repeat, Calculator } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -27,8 +26,8 @@ const navItems: NavItem[] = [
  * Displays links to Account Management and other settings sections.
  */
 export function SettingsNav() {
-  const pathname = usePathname()
-  const t = useTranslations('settings')
+  const { pathname } = useLocation()
+  const { t } = useTranslation()
 
   return (
     <nav className="w-48 flex-shrink-0">
@@ -41,7 +40,7 @@ export function SettingsNav() {
           return (
             <li key={item.href}>
               <Link
-                href={item.href}
+                to={item.href}
                 className={cn(
                   'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors',
                   isActive

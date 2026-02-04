@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useMemo, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +45,7 @@ function getValidToAccounts(type: TransactionType): AccountType[] {
 }
 
 export function RecurringForm({ initialData, onSuccess, onCancel }: RecurringFormProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const { currentLedger } = useLedgerContext()
   const ledgerId = currentLedger?.id || ''
 

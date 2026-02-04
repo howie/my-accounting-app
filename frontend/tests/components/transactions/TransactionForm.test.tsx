@@ -15,8 +15,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
 // Mock next-intl
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => {
+vi.mock('react-i18next', () => ({
+  useTranslation: () => (key: string) => {
     const translations: Record<string, string> = {
       'transactionForm.title': 'New Transaction',
       'transactionForm.typeLabel': 'Transaction Type',

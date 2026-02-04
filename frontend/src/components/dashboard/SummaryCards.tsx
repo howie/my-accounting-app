@@ -1,4 +1,4 @@
-'use client'
+
 
 import { Card } from '@tremor/react'
 import { Wallet, TrendingUp, TrendingDown, CreditCard } from 'lucide-react'

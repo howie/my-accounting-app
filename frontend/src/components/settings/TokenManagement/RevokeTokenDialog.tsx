@@ -1,6 +1,6 @@
-'use client'
 
-import { useTranslations } from 'next-intl'
+
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +21,7 @@ interface RevokeTokenDialogProps {
 }
 
 export function RevokeTokenDialog({ token, isOpen, onClose }: RevokeTokenDialogProps) {
-  const t = useTranslations('settings.tokens')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.tokens' })
   const revokeToken = useRevokeToken()
 
   const handleRevoke = async () => {

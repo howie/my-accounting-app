@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -49,7 +49,7 @@ export function QuickEntryPanel({
   onViewAll,
   onEditTemplate,
 }: QuickEntryPanelProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [applyError, setApplyError] = useState<string | null>(null)
 
   const { data: templatesData, isLoading } = useTemplates(ledgerId)

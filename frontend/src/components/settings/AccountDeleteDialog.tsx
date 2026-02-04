@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { X, AlertTriangle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -27,7 +27,7 @@ export function AccountDeleteDialog({
   isOpen,
   onClose,
 }: AccountDeleteDialogProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [selectedReplacementId, setSelectedReplacementId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
