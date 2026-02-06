@@ -1,9 +1,12 @@
 """API routes for LedgerOne."""
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from src.api.routes import (
     accounts,
+    channels,
     chat,
     dashboard,
     export,
@@ -18,6 +21,7 @@ from src.api.routes import (
     transactions,
     users,
     utils,
+    webhooks,  # noqa: F401 - mounted in main.py directly
 )
 
 api_router = APIRouter()
@@ -59,8 +63,20 @@ api_router.include_router(export.router, prefix="/export", tags=["Export"])
 # Feature 007: API Tokens for MCP
 api_router.include_router(tokens.router)
 
+# Feature 012: Channel Binding
+api_router.include_router(channels.router)
+
 # AI Chat Assistant
 api_router.include_router(chat.router)
 
 # Utilities (Health Check)
 api_router.include_router(utils.router, tags=["Utils"])
+
+
+# Feature 012: OpenAPI spec export for AI assistant integration
+@api_router.get("/openapi-gpt-actions", tags=["AI Integration"])
+def get_gpt_actions_spec() -> dict[str, Any]:
+    """Get simplified OpenAPI spec for ChatGPT GPT Actions."""
+    from src.api.openapi_export import generate_gpt_actions_spec
+
+    return generate_gpt_actions_spec()

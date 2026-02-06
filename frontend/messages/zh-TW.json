@@ -168,6 +168,7 @@
     "recurring": "定期規則",
     "installments": "分期付款計畫",
     "apiTokens": "API 金鑰",
+    "channelsNav": "管道綁定",
     "language": "語言",
     "theme": "主題",
     "themeLight": "淺色",
@@ -221,6 +222,29 @@
       "tokenWarning": "此金鑰不會再次顯示。請立即複製並妥善保管。",
       "yourToken": "您的 API 金鑰",
       "done": "完成"
+    },
+    "channels": {
+      "title": "管道綁定",
+      "description": "管理您的通訊管道綁定，讓 Bot 可以為您記帳",
+      "addBinding": "新增綁定",
+      "loading": "載入中...",
+      "loadError": "載入管道綁定時發生錯誤",
+      "noBindings": "尚無管道綁定",
+      "noBindingsDescription": "新增管道綁定以透過 Telegram、LINE 或 Slack 記帳",
+      "lastUsed": "上次使用",
+      "unbind": "解除綁定",
+      "unbindTitle": "解除管道綁定",
+      "unbindDescription": "解除綁定後將無法透過此管道記帳",
+      "unbindConfirm": "確定要解除 {channel} 帳號「{name}」的綁定嗎？",
+      "unbinding": "解除中...",
+      "cancel": "取消",
+      "generateTitle": "產生驗證碼",
+      "generateDescription": "選擇管道類型後產生驗證碼，在 Bot 中輸入此驗證碼完成綁定",
+      "generate": "產生驗證碼",
+      "generating": "產生中...",
+      "expiresIn": "驗證碼將在 {minutes}:{seconds} 後失效",
+      "expired": "驗證碼已失效，請重新產生",
+      "codeInstruction": "請在 Bot 對話中輸入此驗證碼完成帳號綁定"
     }
   },
   "accountManagement": {

@@ -168,6 +168,7 @@
     "recurring": "Recurring Rules",
     "installments": "Installment Plans",
     "apiTokens": "API Tokens",
+    "channelsNav": "Channel Bindings",
     "language": "Language",
     "theme": "Theme",
     "themeLight": "Light",
@@ -221,6 +222,29 @@
       "tokenWarning": "This token will not be shown again. Copy it now and store it securely.",
       "yourToken": "Your API Token",
       "done": "Done"
+    },
+    "channels": {
+      "title": "Channel Bindings",
+      "description": "Manage your channel bindings to allow bots to record transactions for you",
+      "addBinding": "Add Binding",
+      "loading": "Loading...",
+      "loadError": "Failed to load channel bindings",
+      "noBindings": "No channel bindings",
+      "noBindingsDescription": "Add a channel binding to record transactions via Telegram, LINE, or Slack",
+      "lastUsed": "Last used",
+      "unbind": "Unbind",
+      "unbindTitle": "Unbind Channel",
+      "unbindDescription": "You will no longer be able to record transactions via this channel after unbinding",
+      "unbindConfirm": "Are you sure you want to unbind the {channel} account \"{name}\"?",
+      "unbinding": "Unbinding...",
+      "cancel": "Cancel",
+      "generateTitle": "Generate Verification Code",
+      "generateDescription": "Select a channel type and generate a code, then enter the code in the bot to complete binding",
+      "generate": "Generate Code",
+      "generating": "Generating...",
+      "expiresIn": "Code expires in {minutes}:{seconds}",
+      "expired": "Code has expired, please generate a new one",
+      "codeInstruction": "Enter this code in the bot chat to complete account binding"
     }
   },
   "accountManagement": {

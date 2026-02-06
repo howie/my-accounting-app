@@ -1,8 +1,6 @@
-
-
 import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Users, Settings, Key, Tag, Repeat, Calculator } from 'lucide-react'
+import { Users, Settings, Key, Tag, Repeat, Calculator, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface NavItem {
@@ -19,6 +17,7 @@ const navItems: NavItem[] = [
   { href: '/settings/recurring', labelKey: 'recurring', icon: Repeat },
   { href: '/settings/installments', labelKey: 'installments', icon: Calculator },
   { href: '/settings/tokens', labelKey: 'apiTokens', icon: Key },
+  { href: '/settings/channels', labelKey: 'channelsNav', icon: MessageSquare },
 ]
 
 /**

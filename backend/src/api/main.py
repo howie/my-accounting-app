@@ -7,6 +7,8 @@ from typing import Any
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from src.core.config import get_settings
 from src.core.exceptions import (
@@ -19,6 +21,9 @@ from src.core.version import VERSION
 from src.db.session import create_db_and_tables
 
 settings = get_settings()
+
+# Feature 012: Rate limiter for webhook endpoints (30 req/min per user)
+from src.api.rate_limit import limiter
 
 
 @asynccontextmanager
@@ -40,6 +45,10 @@ app = FastAPI(
     docs_url="/docs" if settings.is_development else None,
     redoc_url="/redoc" if settings.is_development else None,
 )
+
+# Feature 012: Attach rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS middleware
 app.add_middleware(
@@ -98,9 +107,12 @@ async def health_check() -> dict[str, Any]:
 
 
 # Include API routes
-from src.api.routes import api_router
+from src.api.routes import api_router, webhooks
 
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+
+# Feature 012: Webhook routes (mounted without /api/v1 prefix)
+app.include_router(webhooks.router, tags=["Webhooks"])
 
 # Mount MCP server
 from src.api.mcp.server import get_mcp_server

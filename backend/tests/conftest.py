@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures for backend tests."""
 
+import contextlib
 import os
 
 # Set test environment BEFORE any imports that read settings
@@ -15,18 +16,45 @@ from sqlmodel.pool import StaticPool
 
 from src.api.deps import get_session
 from src.api.main import app
+from src.core.config import get_settings
 
 # Import all models to register them with SQLModel metadata
 from src.models import (  # noqa: F401
     Account,
     ApiToken,
     AuditLog,
+    ChannelBinding,
+    ChannelMessageLog,
+    EmailAuthorization,
+    EmailImportBatch,
     ImportSession,
     Ledger,
     Transaction,
     TransactionTemplate,
     User,
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache():
+    """Clear get_settings lru_cache before each test to ensure clean state."""
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def clear_rate_limiter():
+    """Clear rate limiter state before and after each test."""
+    # Clear limiter storage before test
+    if hasattr(app.state, "limiter") and app.state.limiter:
+        with contextlib.suppress(Exception):
+            app.state.limiter._storage.reset()
+    yield
+    # Clear limiter storage after test
+    if hasattr(app.state, "limiter") and app.state.limiter:
+        with contextlib.suppress(Exception):
+            app.state.limiter._storage.reset()
 
 
 @pytest.fixture(name="engine")

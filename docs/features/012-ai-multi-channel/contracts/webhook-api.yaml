@@ -1,0 +1,99 @@
+openapi: "3.1.0"
+info:
+  title: Webhook API
+  version: "1.0"
+  description: Bot webhook endpoints — 接收 Telegram、LINE、Slack 的 webhook 回調
+
+paths:
+  /webhooks/telegram:
+    post:
+      summary: Telegram Bot webhook
+      operationId: telegramWebhook
+      tags: [webhooks]
+      description: |
+        接收 Telegram Bot API 的 Update 物件。
+        使用 X-Telegram-Bot-Api-Secret-Token header 驗證。
+      parameters:
+        - name: X-Telegram-Bot-Api-Secret-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Telegram Update object (see Telegram Bot API docs)
+      responses:
+        "200":
+          description: Webhook 已處理
+        "401":
+          description: 簽名驗證失敗
+        "429":
+          description: 速率限制
+
+  /webhooks/line:
+    post:
+      summary: LINE Bot webhook
+      operationId: lineWebhook
+      tags: [webhooks]
+      description: |
+        接收 LINE Messaging API 的 webhook events。
+        使用 X-Line-Signature header 進行 HMAC-SHA256 簽名驗證。
+      parameters:
+        - name: X-Line-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: LINE webhook event object
+      responses:
+        "200":
+          description: Webhook 已處理
+        "401":
+          description: 簽名驗證失敗
+        "429":
+          description: 速率限制
+
+  /webhooks/slack:
+    post:
+      summary: Slack Bot webhook
+      operationId: slackWebhook
+      tags: [webhooks]
+      description: |
+        接收 Slack Events API 的 event callbacks。
+        使用 X-Slack-Signature + X-Slack-Request-Timestamp 進行 HMAC-SHA256 驗證。
+        同時處理 url_verification challenge。
+      parameters:
+        - name: X-Slack-Signature
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: X-Slack-Request-Timestamp
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Slack event payload
+      responses:
+        "200":
+          description: Webhook 已處理（或 url_verification challenge response）
+        "401":
+          description: 簽名驗證失敗
+        "429":
+          description: 速率限制

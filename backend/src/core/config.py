@@ -41,6 +41,29 @@ class Settings(BaseSettings):
     ollama_base_url: str = "http://localhost:11434"
     ollama_model: str = "llama3.2"
 
+    # Feature 012: Telegram Bot
+    telegram_bot_token: str = ""
+    telegram_webhook_secret: str = ""
+
+    # Feature 012: LINE Bot
+    line_channel_secret: str = ""
+    line_channel_access_token: str = ""
+
+    # Feature 012: Slack Bot
+    slack_bot_token: str = ""
+    slack_signing_secret: str = ""
+    slack_app_token: str = ""
+
+    # Feature 012: Gmail API (OAuth2)
+    google_client_id: str = ""
+    google_client_secret: str = ""
+
+    # Feature 012: Encryption key for OAuth tokens
+    encryption_key: str = ""
+
+    # Feature 012: Gmail scan interval (seconds, default 6 hours)
+    gmail_scan_interval: int = 21600
+
     @property
     def cors_origins_list(self) -> list[str]:
         """Parse CORS origins from comma-separated string."""
