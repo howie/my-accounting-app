@@ -72,6 +72,10 @@ class Transaction(SQLModel, table=True):
     )
     installment_number: int | None = Field(default=None, nullable=True)
 
+    # Feature 012: Multi-channel source tracking
+    source_channel: str | None = Field(default=None, max_length=20, nullable=True)
+    channel_message_id: uuid.UUID | None = Field(default=None, nullable=True)
+
     # Relationships
     ledger: "Ledger" = Relationship(back_populates="transactions")
     from_account: "Account" = Relationship(

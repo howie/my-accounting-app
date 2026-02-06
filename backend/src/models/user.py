@@ -8,6 +8,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from src.models.api_token import ApiToken
+    from src.models.channel_binding import ChannelBinding
+    from src.models.email_authorization import EmailAuthorization
 
 
 class UserBase(SQLModel):
@@ -27,6 +29,8 @@ class User(UserBase, table=True):
 
     # Relationships
     api_tokens: list["ApiToken"] = Relationship(back_populates="user")
+    channel_bindings: list["ChannelBinding"] = Relationship(back_populates="user")
+    email_authorizations: list["EmailAuthorization"] = Relationship(back_populates="user")
 
 
 class UserCreate(UserBase):

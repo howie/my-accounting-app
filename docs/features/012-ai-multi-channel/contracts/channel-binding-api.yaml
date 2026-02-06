@@ -1,0 +1,122 @@
+openapi: "3.1.0"
+info:
+  title: Channel Binding API
+  version: "1.0"
+  description: 管道綁定管理 API — 建立、查詢、解除管道綁定
+
+paths:
+  /api/v1/channels/bindings:
+    get:
+      summary: 列出使用者的所有管道綁定
+      operationId: listChannelBindings
+      tags: [channels]
+      parameters:
+        - name: include_inactive
+          in: query
+          schema:
+            type: boolean
+            default: false
+          description: 是否包含已解除綁定的記錄
+      responses:
+        "200":
+          description: 管道綁定列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChannelBindingRead"
+
+  /api/v1/channels/bindings/generate-code:
+    post:
+      summary: 產生綁定驗證碼
+      operationId: generateBindingCode
+      tags: [channels]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateCodeRequest"
+      responses:
+        "200":
+          description: 驗證碼已產生
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateCodeResponse"
+        "429":
+          description: 產生驗證碼過於頻繁
+
+  /api/v1/channels/bindings/{binding_id}:
+    delete:
+      summary: 解除管道綁定
+      operationId: unbindChannel
+      tags: [channels]
+      parameters:
+        - name: binding_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 綁定已解除
+        "404":
+          description: 綁定不存在
+
+components:
+  schemas:
+    ChannelBindingRead:
+      type: object
+      required: [id, channel_type, external_user_id, is_active, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        channel_type:
+          type: string
+          enum: [TELEGRAM, LINE, SLACK]
+        external_user_id:
+          type: string
+        display_name:
+          type: string
+          nullable: true
+        is_active:
+          type: boolean
+        default_ledger_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        last_used_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    GenerateCodeRequest:
+      type: object
+      required: [channel_type]
+      properties:
+        channel_type:
+          type: string
+          enum: [TELEGRAM, LINE, SLACK]
+        default_ledger_id:
+          type: string
+          format: uuid
+          description: 綁定後的預設帳本
+
+    GenerateCodeResponse:
+      type: object
+      required: [code, expires_in_seconds]
+      properties:
+        code:
+          type: string
+          description: 6 位數驗證碼
+          example: "482916"
+        expires_in_seconds:
+          type: integer
+          example: 300

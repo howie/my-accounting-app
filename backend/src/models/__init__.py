@@ -12,6 +12,12 @@ from src.models.advanced import (
 )
 from src.models.api_token import ApiToken
 from src.models.audit_log import AuditAction, AuditLog
+
+# Feature 012: Multi-channel models
+from src.models.channel_binding import ChannelBinding, ChannelType
+from src.models.channel_message_log import ChannelMessageLog, MessageType, ProcessingStatus
+from src.models.email_authorization import EmailAuthorization, EmailProvider
+from src.models.email_import_batch import EmailImportBatch, EmailImportStatus
 from src.models.import_session import ImportSession, ImportStatus
 from src.models.ledger import Ledger
 from src.models.transaction import Transaction, TransactionType
@@ -42,4 +48,14 @@ __all__ = [
     "RecurringTransaction",
     "InstallmentPlan",
     "Frequency",
+    # Feature 012
+    "ChannelBinding",
+    "ChannelType",
+    "ChannelMessageLog",
+    "MessageType",
+    "ProcessingStatus",
+    "EmailAuthorization",
+    "EmailProvider",
+    "EmailImportBatch",
+    "EmailImportStatus",
 ]

@@ -1,0 +1,310 @@
+openapi: "3.1.0"
+info:
+  title: Email Import API
+  version: "1.0"
+  description: Email 帳單匯入 API — Gmail 授權、帳單掃描、預覽、確認匯入
+
+paths:
+  /api/v1/email/authorizations:
+    get:
+      summary: 列出使用者的 email 授權
+      operationId: listEmailAuthorizations
+      tags: [email]
+      responses:
+        "200":
+          description: Email 授權列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailAuthorizationRead"
+
+  /api/v1/email/authorizations/gmail/callback:
+    get:
+      summary: Gmail OAuth2 callback
+      operationId: gmailOAuthCallback
+      tags: [email]
+      description: Gmail OAuth2 授權完成後的 redirect URI
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: 重導向回前端設定頁面
+
+  /api/v1/email/authorizations/gmail/auth-url:
+    get:
+      summary: 取得 Gmail OAuth2 授權 URL
+      operationId: getGmailAuthUrl
+      tags: [email]
+      responses:
+        "200":
+          description: 授權 URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  auth_url:
+                    type: string
+                    format: uri
+
+  /api/v1/email/authorizations/{auth_id}:
+    delete:
+      summary: 撤銷 email 授權
+      operationId: revokeEmailAuthorization
+      tags: [email]
+      parameters:
+        - name: auth_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 授權已撤銷
+        "404":
+          description: 授權不存在
+
+  /api/v1/email/import-batches:
+    get:
+      summary: 列出 email 匯入批次
+      operationId: listEmailImportBatches
+      tags: [email]
+      parameters:
+        - name: ledger_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [PARSED, PENDING_CONFIRMATION, IMPORTING, COMPLETED, FAILED]
+      responses:
+        "200":
+          description: 匯入批次列表
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EmailImportBatchRead"
+
+  /api/v1/email/import-batches/{batch_id}:
+    get:
+      summary: 取得匯入批次詳情（含預覽交易明細）
+      operationId: getEmailImportBatch
+      tags: [email]
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: 匯入批次詳情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailImportBatchDetail"
+        "404":
+          description: 批次不存在
+
+  /api/v1/email/import-batches/{batch_id}/confirm:
+    post:
+      summary: 確認匯入帳單交易
+      operationId: confirmEmailImport
+      tags: [email]
+      parameters:
+        - name: batch_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfirmImportRequest"
+      responses:
+        "200":
+          description: 匯入已確認並開始處理
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailImportBatchRead"
+        "400":
+          description: 批次狀態不允許確認
+        "404":
+          description: 批次不存在
+
+  /api/v1/email/scan:
+    post:
+      summary: 手動觸發 email 帳單掃描
+      operationId: triggerEmailScan
+      tags: [email]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [authorization_id, ledger_id]
+              properties:
+                authorization_id:
+                  type: string
+                  format: uuid
+                ledger_id:
+                  type: string
+                  format: uuid
+      responses:
+        "202":
+          description: 掃描已排程
+        "404":
+          description: 授權不存在
+
+components:
+  schemas:
+    EmailAuthorizationRead:
+      type: object
+      required: [id, email_address, provider, is_active, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email_address:
+          type: string
+        provider:
+          type: string
+          enum: [GMAIL]
+        is_active:
+          type: boolean
+        last_sync_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    EmailImportBatchRead:
+      type: object
+      required:
+        [
+          id,
+          email_subject,
+          email_sender,
+          status,
+          parsed_count,
+          imported_count,
+          created_at,
+        ]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email_subject:
+          type: string
+        email_sender:
+          type: string
+        email_date:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [PARSED, PENDING_CONFIRMATION, IMPORTING, COMPLETED, FAILED]
+        parsed_count:
+          type: integer
+        imported_count:
+          type: integer
+        failed_count:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        user_confirmed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    EmailImportBatchDetail:
+      allOf:
+        - $ref: "#/components/schemas/EmailImportBatchRead"
+        - type: object
+          properties:
+            parsed_transactions:
+              type: array
+              items:
+                $ref: "#/components/schemas/ParsedTransaction"
+
+    ParsedTransaction:
+      type: object
+      required: [date, description, amount]
+      properties:
+        index:
+          type: integer
+        date:
+          type: string
+          format: date
+        description:
+          type: string
+        merchant:
+          type: string
+          nullable: true
+        amount:
+          type: number
+        currency:
+          type: string
+          default: TWD
+        suggested_from_account:
+          type: string
+          nullable: true
+        suggested_to_account:
+          type: string
+          nullable: true
+        confidence:
+          type: number
+          description: 解析信心度 0-1
+        needs_review:
+          type: boolean
+          default: false
+
+    ConfirmImportRequest:
+      type: object
+      properties:
+        transaction_overrides:
+          type: array
+          description: 使用者修改的交易（按 index 覆蓋）
+          items:
+            type: object
+            required: [index]
+            properties:
+              index:
+                type: integer
+              from_account:
+                type: string
+              to_account:
+                type: string
+              description:
+                type: string
+              skip:
+                type: boolean
+                default: false
+                description: 設為 true 跳過此筆交易

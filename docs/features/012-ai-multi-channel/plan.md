@@ -1,178 +1,293 @@
-# 012 - AI Multi-Channel Integration Plan
+# Implementation Plan: AI Multi-Channel Integration
 
-## 目標
+**Branch**: `012-ai-multi-channel` | **Date**: 2026-02-06 | **Spec**: [spec.md](./spec.md)
+**Input**: Feature specification from `/docs/features/012-ai-multi-channel/spec.md`
 
-透過多種 AI 管道（Slack、Telegram、LINE、ChatGPT、Gemini）進行記帳操作，並支援語音輸入和 Email 信用卡帳單自動匯入。
+## Summary
 
-> **前提**：需先完成 [011-cloud-deployment](../011-cloud-deployment/plan.md)，Backend 部署到雲端後才能接收外部 Webhook。
+讓使用者透過多種管道（ChatGPT、Gemini、Claude、Telegram、LINE、Slack）以自然語言進行記帳操作，並支援 Email 信用卡帳單自動匯入。技術方案是在現有 FastAPI backend 上新增 webhook endpoints 和 bot adapters，複用現有 ChatService + LLM provider 架構處理自然語言意圖解析，以 OTP 驗證碼完成帳號綁定，以 Gmail OAuth2 + LLM 解析完成帳單匯入。
 
----
+## Technical Context
 
-## 一、管道架構總覽
+**Language/Version**: Python 3.12 (Backend), TypeScript 5.x (Frontend)
+**Primary Dependencies**: FastAPI, SQLModel, python-telegram-bot, line-bot-sdk, slack-bolt, google-api-python-client, APScheduler, pdfplumber
+**Storage**: PostgreSQL 16 (Supabase) — 新增 4 個表
+**Testing**: pytest (backend), vitest (frontend)
+**Target Platform**: Linux server (cloud deployment via Feature 011)
+**Project Type**: Web application (backend + frontend)
+**Performance Goals**: Bot 回覆 < 10 秒, 記帳建立 < 5 秒, Email 解析準確率 > 85%
+**Constraints**: LINE 免費方案 500 msg/月, 所有 bot/email 服務免費方案
+**Scale/Scope**: 個人記帳, < 500 msg/月 across all channels
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     使用者接入管道                        │
-│                                                         │
-│  Claude App ──┐                                         │
-│  ChatGPT ─────┤  MCP / API  ┐                           │
-│  Gemini ──────┘             │                           │
-│                              ▼                           │
-│  Slack Bot ───┐         ┌──────────┐    ┌────────────┐  │
-│  Telegram Bot ┤ Webhook │ FastAPI  │───►│ PostgreSQL │  │
-│  LINE Bot ────┘    ───► │ Backend  │    │ (Supabase) │  │
-│                         │ + MCP    │    └────────────┘  │
-│                         └──────────┘                    │
-│                              │                           │
-│  Email (IMAP) ──► Scheduled ─┘                           │
-│                   Parser                                │
-└─────────────────────────────────────────────────────────┘
-```
+## Constitution Check
 
----
+_GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 
-## 二、ChatGPT / Gemini 整合（Phase 3）
+### I. Data-First Design (NON-NEGOTIABLE)
 
-### 2.1 OpenAPI Schema for ChatGPT Custom GPT Actions
+- [x] Does this feature preserve financial accuracy (calculations correct to the cent)?
+  - 所有管道的交易金額經過相同的驗證邏輯（DI-001, 0.01~9,999,999.99, 2 decimal places）
+- [x] Are audit trails maintained (all modifications logged with timestamp/reason)?
+  - ChannelMessageLog 記錄所有原始訊息 + 解析結果 + 交易關聯（DI-002）
+  - Transaction.source_channel 記錄來源管道
+- [x] Is data loss prevented (confirmations + backups for destructive operations)?
+  - Email 匯入需使用者明確確認才匯入（DI-004）
+  - Bot 記帳建立後回覆確認訊息
+- [x] Is input validation enforced (amounts, dates, account references)?
+  - 所有管道共用現有的 transaction validation（ChatService tool calling）
+- [x] Are destructive operations reversible?
+  - 管道綁定使用 soft delete（is_active flag + unbound_at）
+  - Email 授權撤銷不刪除歷史匯入記錄
 
-- [ ] 自動生成 OpenAPI 3.1 spec（FastAPI 內建）
-- [ ] 建立 ChatGPT GPT Action 的精簡 OpenAPI spec
-- [ ] 設定 OAuth / API Key 認證方式
-- [ ] 撰寫 GPT system prompt（記帳助手人設）
+**Violations**: None
 
-```yaml
-# 精簡的 OpenAPI spec for ChatGPT Actions
-openapi: "3.1.0"
-info:
-  title: "LedgerOne Accounting API"
-  version: "1.0"
-servers:
-  - url: "https://ledgerone-backend.onrender.com/api/v1"
-paths:
-  /ledgers/{ledger_id}/transactions:
-    post:
-      summary: "建立交易記錄"
-      operationId: "createTransaction"
-    get:
-      summary: "查詢交易記錄"
-      operationId: "listTransactions"
-  /ledgers/{ledger_id}/accounts:
-    get:
-      summary: "查詢帳戶列表"
-      operationId: "listAccounts"
-```
+### II. Test-First Development (NON-NEGOTIABLE)
 
-### 2.2 Google Gemini Extension
+- [x] Will tests be written BEFORE implementation?
+  - 每個 Phase 先寫 contract + unit tests
+- [x] Will tests be reviewed/approved before coding?
+  - 遵循 TDD 流程：Tests → Review → Red → Green → Refactor
+- [x] Are contract tests planned for service boundaries?
+  - Webhook endpoints、ChannelBindingService、BotMessageHandler、EmailImportService 各有 contract tests
+- [x] Are integration tests planned for multi-account transactions?
+  - Bot → ChatService → TransactionService 完整流程測試
+- [x] Are edge case tests planned (rounding, currency, date boundaries)?
+  - 語音轉文字失敗、LLM 解析失敗、重複帳單偵測、無效驗證碼
 
-- [ ] 使用 Gemini Function Calling 對接 LedgerOne REST API
-- [ ] 或透過 MCP Gateway（Gemini 已開始支援 MCP）
-- [ ] 設定 Gemini Extension 的 function declarations
+**Violations**: None
 
----
+### III. Financial Accuracy & Audit Trail
 
-## 三、Messaging Bot 整合（Phase 4）
+- [x] Does design maintain double-entry bookkeeping (debits = credits)?
+  - 所有管道建立交易都經過 ChatService → create_transaction tool → TransactionService，複式記帳邏輯不變
+- [x] Are transactions immutable once posted (void-and-reenter only)?
+  - 不改變現有 transaction 不可變性設計
+- [x] Are calculations traceable to source transactions?
+  - ChannelMessageLog.transaction_id + Transaction.source_channel + Transaction.channel_message_id 提供完整追溯鏈
+- [x] Are timestamps tracked (created, modified, business date)?
+  - ChannelMessageLog.created_at、EmailImportBatch.created_at/completed_at/user_confirmed_at
+- [x] Is change logging implemented (who, what, when, why)?
+  - 現有 AuditLog.extra_data 可存入 channel source 資訊
 
-### 3.1 共用 Bot 框架
+**Violations**: None
 
-- [ ] 新建 `backend/src/bots/` 模組
-- [ ] 實作共用的 message handler（解析自然語言 → 呼叫記帳 service）
-- [ ] 利用現有的 LLM provider (Gemini/Claude) 做意圖解析
+### IV. Simplicity & Maintainability
 
-```python
-# backend/src/bots/base.py
-class BotMessageHandler:
-    """共用的訊息處理邏輯"""
+- [x] Is this feature actually needed (not speculative)?
+  - 使用者需求明確：在日常工具中記帳，減少摩擦力
+- [x] Is the design clear over clever (human-auditable)?
+  - 每個 bot adapter 職責單一（webhook 驗證 + 格式轉換），共用 BotMessageHandler 處理業務邏輯
+- [x] Are abstractions minimized (especially for financial calculations)?
+  - 不新增財務計算邏輯，完全複用現有 ChatService + tool calling
+- [x] Are complex business rules documented with accounting references?
+  - Email 帳單解析的 LLM prompt 會包含明確的欄位提取規則
 
-    async def handle_message(self, user_id: str, text: str) -> str:
-        """解析自然語言並執行記帳操作"""
-        # 1. 透過 LLM 解析意圖（記帳/查詢/報表）
-        # 2. 呼叫對應的 service
-        # 3. 格式化回覆訊息
-        ...
-```
+**Violations**: None
 
-### 3.2 Telegram Bot
+### V. Cross-Platform Consistency
 
-- [ ] 使用 `python-telegram-bot` 套件
-- [ ] Webhook 模式（比 polling 更適合雲端部署）
-- [ ] 掛載在 FastAPI：`POST /webhooks/telegram`
-- [ ] 功能：文字記帳、語音記帳（Telegram 內建語音轉文字）、查餘額
-- **費用**：免費（Telegram Bot API 完全免費）
+- [x] Will calculations produce identical results across platforms?
+  - 所有管道最終都呼叫同一個 TransactionService，計算邏輯一致
+- [x] Is data format compatible between desktop and web?
+  - 新增的 channel 欄位不影響現有資料格式
+- [x] Are platform-specific features clearly documented?
+  - 語音記帳僅限 Telegram（spec 已明確）
+- [x] Do workflows follow consistent UX patterns?
+  - 所有 bot 的綁定流程一致（OTP 驗證碼）
+  - 所有 bot 的記帳回覆格式一致
+- [x] Does cloud sync maintain transaction ordering?
+  - 透過管道建立的交易使用 created_at 排序，與 web 建立的交易一致
 
-### 3.3 LINE Bot
+**Violations**: None
 
-- [ ] 使用 `line-bot-sdk` 套件
-- [ ] Messaging API Webhook
-- [ ] 掛載在 FastAPI：`POST /webhooks/line`
-- [ ] 功能：文字記帳、查詢餘額、Rich Menu
-- **費用**：免費（LINE Messaging API 免費方案 500 則/月）
+**Overall Assessment**: PASS
 
-### 3.4 Slack Bot
+## Project Structure
 
-- [ ] 使用 `slack-bolt` 套件
-- [ ] Slack Events API + Webhook
-- [ ] 掛載在 FastAPI：`POST /webhooks/slack`
-- [ ] 功能：Slash command `/expense`、DM 對話記帳、查詢
-- **費用**：免費（Slack Free workspace）
+### Documentation (this feature)
 
-### 3.5 優先順序
-
-| 順序 | Bot          | 理由                                       |
-| ---- | ------------ | ------------------------------------------ |
-| 1    | **Telegram** | 最容易開發、API 最友善、完全免費、支援語音 |
-| 2    | **LINE**     | 台灣使用率最高、API 文件完整               |
-| 3    | **Slack**    | 適合工作場景，但記帳較少在 Slack           |
-
----
-
-## 四、Email 信用卡帳單自動匯入（Phase 5）
-
-### 4.1 Email 讀取模組
-
-- [ ] 新建 `backend/src/services/email_service.py`
-- [ ] 支援 Gmail API（OAuth2）或 IMAP 協定
-- [ ] 定時排程（使用 APScheduler 或簡易 background task）
-- [ ] Email 過濾規則（寄件者、主旨關鍵字）
-
-### 4.2 帳單解析引擎
-
-- [ ] 使用 LLM（Gemini/Claude）解析帳單 email 內容
-- [ ] 支援 HTML email 解析
-- [ ] 支援 PDF 附件帳單解析（需 `pdfplumber`）
-- [ ] 交易明細結構化提取：日期、商家、金額、幣別
-- [ ] 自動分類（利用現有的 category_suggester）
-
-### 4.3 帳單匯入流程
-
-```
-Email 收件匣
-    │
-    ▼
-過濾信用卡帳單 email
-    │
-    ▼
-LLM 解析帳單內容
-    │
-    ▼
-產生 Transaction 預覽
-    │
-    ▼
-[透過 Bot/MCP] 通知使用者確認
-    │
-    ▼
-批次匯入 Transaction
+```text
+docs/features/012-ai-multi-channel/
+├── spec.md              # Feature specification
+├── plan.md              # This file
+├── research.md          # Phase 0 research decisions
+├── data-model.md        # Data model for new entities
+├── quickstart.md        # Quick start guide
+├── contracts/           # API contracts
+│   ├── channel-binding-api.yaml
+│   ├── webhook-api.yaml
+│   └── email-import-api.yaml
+├── checklists/          # Quality checklists
+│   └── requirements.md
+├── tasks.md             # Task breakdown (via /speckit.tasks)
+└── issues/              # Issue tracking
 ```
 
-### 4.4 Gmail OAuth2 整合
+### Source Code (repository root)
 
-- [ ] Google Cloud Console 建立 OAuth2 credentials
-- [ ] Frontend 新增 Gmail 授權頁面
-- [ ] 安全儲存 refresh token（加密存 DB）
-- **費用**：免費（Gmail API 免費額度足夠個人使用）
+```text
+backend/
+├── src/
+│   ├── models/
+│   │   ├── channel_binding.py       # ChannelBinding model
+│   │   ├── channel_message_log.py   # ChannelMessageLog model
+│   │   ├── email_authorization.py   # EmailAuthorization model
+│   │   └── email_import_batch.py    # EmailImportBatch model
+│   ├── schemas/
+│   │   ├── channel.py               # Channel binding schemas
+│   │   ├── webhook.py               # Webhook schemas
+│   │   └── email_import.py          # Email import schemas
+│   ├── services/
+│   │   ├── channel_binding_service.py   # Binding CRUD + OTP
+│   │   ├── bot_message_handler.py       # Shared NLP → action handler
+│   │   ├── email_service.py             # Gmail OAuth2 + email reading
+│   │   ├── email_parser_service.py      # LLM-based bill parsing
+│   │   └── email_import_service.py      # Batch import orchestration
+│   ├── bots/
+│   │   ├── telegram_adapter.py      # Telegram webhook + message adapter
+│   │   ├── line_adapter.py          # LINE webhook + message adapter
+│   │   └── slack_adapter.py         # Slack webhook + message adapter
+│   └── api/
+│       └── routes/
+│           ├── channels.py          # Channel binding routes
+│           ├── webhooks.py          # Bot webhook routes
+│           └── email_import.py      # Email import routes
+└── tests/
+    ├── unit/
+    │   ├── test_channel_binding_service.py
+    │   ├── test_bot_message_handler.py
+    │   ├── test_email_parser_service.py
+    │   └── test_email_import_service.py
+    ├── integration/
+    │   ├── test_telegram_webhook.py
+    │   ├── test_line_webhook.py
+    │   ├── test_slack_webhook.py
+    │   └── test_email_import_flow.py
+    └── contract/
+        ├── test_channel_binding_api.py
+        ├── test_webhook_api.py
+        └── test_email_import_api.py
 
----
+frontend/
+├── src/
+│   ├── app/
+│   │   └── settings/
+│   │       ├── channels/
+│   │       │   └── page.tsx         # Channel management settings page
+│   │       └── email/
+│   │           └── page.tsx         # Email authorization settings page
+│   ├── components/
+│   │   ├── channels/
+│   │   │   ├── ChannelBindingList.tsx    # List bound channels
+│   │   │   ├── BindingCodeDialog.tsx     # Generate + display OTP code
+│   │   │   └── UnbindDialog.tsx          # Confirm unbinding
+│   │   └── email-import/
+│   │       ├── EmailAuthCard.tsx         # Gmail authorization card
+│   │       ├── ImportBatchList.tsx       # List import batches
+│   │       ├── ImportPreview.tsx         # Preview parsed transactions
+│   │       └── ImportConfirmDialog.tsx   # Confirm import
+│   └── lib/
+│       ├── api/
+│       │   ├── channels.ts          # Channel binding API client
+│       │   └── emailImport.ts       # Email import API client
+│       └── hooks/
+│           ├── useChannelBindings.ts
+│           └── useEmailImport.ts
+└── tests/
+    └── (component tests as needed)
+```
 
-## 五、需要新增的 Dependencies
+**Structure Decision**: Web application structure (backend + frontend)，延續現有架構。新增 `backend/src/bots/` 模組作為 bot adapter 層，其餘遵循現有的 models/schemas/services/routes 分層。
+
+## Implementation Phases
+
+> **Note**: Phase 編號與 tasks.md 一致（共 7 個 Phase）
+
+### Phase 1: Setup — 共用基礎設施
+
+**依賴**: 無外部依賴（可在本地開發）
+**重點**: 安裝依賴、建立所有共用資料模型、DB migration、Pydantic schemas、rate limiting middleware。
+
+產出:
+
+- ChannelBinding、ChannelMessageLog、EmailAuthorization、EmailImportBatch models
+- Transaction model 新增 source_channel、channel_message_id 欄位
+- Alembic migration
+- Channel binding + email import Pydantic schemas
+- SlowAPI rate limiting middleware
+
+### Phase 2: Foundational — 阻塞性前置服務
+
+**依賴**: Phase 1
+**重點**: 建立所有 user story 共用的核心服務。**此 phase 完成前，任何 user story 都不能開始。**
+
+產出:
+
+- BotMessageHandler（訊息接收 → ChatService → 回覆格式化）
+- User model relationships（channel_bindings、email_authorizations）
+
+### Phase 3: US4 — 使用者帳號綁定與管道管理 (P1)
+
+**依賴**: Phase 2
+**重點**: OTP 驗證碼綁定流程、管道管理 API、前端設定頁面。此 phase 完成後 US2（Bot）才能開始。
+
+產出:
+
+- ChannelBindingService（OTP 生成/驗證、綁定/解綁）
+- Channel binding API routes
+- 管道管理前端頁面（設定 > 管道綁定）
+
+### Phase 4: US1 — AI 助手對話記帳 (P1)
+
+**依賴**: Phase 2（不依賴 Phase 3，可與 Phase 3 平行）+ Feature 007（MCP server）
+**重點**: 產生 ChatGPT GPT Actions 所需的 OpenAPI spec，配置 Gemini extension，確認 Claude MCP 連線。此 phase 主要是配置和文件工作，code 改動最少。
+
+產出:
+
+- ChatGPT GPT Actions OpenAPI spec（從 FastAPI 自動生成 + 精簡）
+- Gemini extension function declarations 或 MCP 配置
+- Claude MCP 配置文件更新（如需要）
+- 各 AI 助手的 system prompt 範本
+
+### Phase 5: US2 — 通訊軟體 Bot 記帳 (P2)
+
+**依賴**: Phase 2 + Phase 3（Bot 需要管道綁定）
+**重點**: 依序實作三個 bot adapter，每個 adapter 包含 webhook 驗證、訊息格式轉換、綁定流程。Telegram 額外支援語音訊息。
+
+產出:
+
+- Telegram adapter + webhook route + 語音轉文字
+- LINE adapter + webhook route
+- Slack adapter + webhook route + slash commands
+- 各 bot 的 webhook signature verification
+- Webhook routes
+
+### Phase 6: US3 — Email 信用卡帳單自動匯入 (P3)
+
+**依賴**: Phase 2（不依賴 Phase 3/4/5，可獨立進行）
+**重點**: Gmail OAuth2 授權流程、email 掃描排程、LLM 帳單解析、預覽確認匯入流程。
+
+產出:
+
+- Gmail OAuth2 授權流程（backend + frontend）
+- Email 掃描排程（APScheduler）
+- LLM 帳單解析 service
+- 匯入預覽 + 確認 UI
+- 重複帳單偵測
+
+### Phase 7: Polish — 跨 Story 打磨
+
+**依賴**: 所有需要的 user story 完成後
+**重點**: 錯誤訊息、來源篩選、資料完整性驗證、安全強化、端到端驗證。
+
+產出:
+
+- 完善的繁體中文錯誤訊息
+- Transaction 來源管道篩選功能
+- 安全性審查（webhook 驗證、token 加密、rate limiting）
+- 授權到期偵測與通知（FR-013）
+
+## Dependencies & New Packages
 
 ### Backend (pyproject.toml)
 
@@ -192,79 +307,51 @@ LLM 解析帳單內容
 
 # Background tasks
 "apscheduler>=3.10.0",
+
+# Rate limiting
+"slowapi>=0.1.9",
 ```
 
----
-
-## 六、環境變數新增
+### Environment Variables
 
 ```env
-# === Telegram Bot ===
-TELEGRAM_BOT_TOKEN=your-telegram-bot-token
-TELEGRAM_WEBHOOK_SECRET=random-secret-string
+# Telegram Bot
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
 
-# === Slack Bot ===
-SLACK_BOT_TOKEN=xoxb-your-bot-token
-SLACK_SIGNING_SECRET=your-signing-secret
-SLACK_APP_TOKEN=xapp-your-app-token
+# LINE Bot
+LINE_CHANNEL_SECRET=
+LINE_CHANNEL_ACCESS_TOKEN=
 
-# === LINE Bot ===
-LINE_CHANNEL_SECRET=your-channel-secret
-LINE_CHANNEL_ACCESS_TOKEN=your-channel-access-token
+# Slack Bot
+SLACK_BOT_TOKEN=
+SLACK_SIGNING_SECRET=
+SLACK_APP_TOKEN=
 
-# === Gmail API ===
-GOOGLE_CLIENT_ID=your-client-id
-GOOGLE_CLIENT_SECRET=your-client-secret
+# Gmail API
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
 
-# === LLM (existing, needed for bot NLP) ===
-LLM_PROVIDER=gemini
-GEMINI_API_KEY=your-key
+# Encryption key for OAuth tokens
+ENCRYPTION_KEY=
 ```
 
----
+## Cost Summary
 
-## 七、實作路線圖
+| Service      | Provider         | Monthly Cost |
+| ------------ | ---------------- | ------------ |
+| Telegram Bot | Telegram API     | $0           |
+| LINE Bot     | LINE Free (500)  | $0           |
+| Slack Bot    | Slack Free       | $0           |
+| Gmail API    | Google Free Tier | $0           |
+| LLM (Gemini) | Gemini Free Tier | $0           |
+| **Total**    |                  | **$0/mo**    |
 
-```
-Phase 3 ─── ChatGPT & Gemini（低工作量，高價值）
-   │        • OpenAPI spec for GPT Actions
-   │        • Gemini function calling setup
-   │
-Phase 4 ─── Messaging Bots（中等工作量）
-   │        • Telegram Bot (最先)
-   │        • LINE Bot
-   │        • Slack Bot
-   │
-Phase 5 ─── Email 帳單匯入（較高工作量）
-            • Gmail OAuth2
-            • LLM 帳單解析
-            • 自動匯入流程
-```
+## Security Considerations
 
----
-
-## 八、成本總結
-
-| 項目         | 平台                   | 月費      |
-| ------------ | ---------------------- | --------- |
-| Telegram Bot | Telegram API           | $0        |
-| LINE Bot     | LINE Free (500 msg/月) | $0        |
-| Slack Bot    | Slack Free             | $0        |
-| Gmail API    | Google Free Tier       | $0        |
-| LLM (Gemini) | Gemini Free Tier       | $0        |
-| **合計**     |                        | **$0/月** |
-
-### 限制
-
-| 限制            | 影響         | 因應措施                  |
-| --------------- | ------------ | ------------------------- |
-| LINE 500 msg/月 | 大量使用會超 | 個人記帳通常 < 100 msg/月 |
-
----
-
-## 九、安全性考量
-
-1. **Webhook 驗證**：各 Bot 平台都有 signature 驗證機制
-2. **環境變數**：所有 Bot token / secret 存在平台 Environment Variables（不進 Git）
-3. **Gmail OAuth2**：使用最小權限 scope（`gmail.readonly`）
-4. **Rate Limiting**：各管道 endpoint 應設定 rate limit 防止濫用
+1. **Webhook Verification**: 各平台 signature verification（Telegram secret token、LINE HMAC-SHA256、Slack HMAC-SHA256）
+2. **Secrets Management**: 所有 token/secret 存在環境變數，不進 Git
+3. **Gmail OAuth2**: 最小權限 scope（`gmail.readonly`）
+4. **Token Encryption**: OAuth2 refresh token 加密儲存（使用 ENCRYPTION_KEY）
+5. **Rate Limiting**: 每使用者每分鐘 30 次請求，防止濫用
+6. **Channel Binding Security**: OTP 驗證碼 6 位數 + 5 分鐘有效期 + 單次使用

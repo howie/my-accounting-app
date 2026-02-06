@@ -269,3 +269,27 @@ export interface ApiTokenList {
   data: ApiToken[]
   total: number
 }
+
+// Channel Binding
+export type ChannelType = 'TELEGRAM' | 'LINE' | 'SLACK'
+
+export interface ChannelBinding {
+  id: string
+  channel_type: ChannelType
+  external_user_id: string
+  display_name: string | null
+  is_active: boolean
+  default_ledger_id: string | null
+  created_at: string
+  last_used_at: string | null
+}
+
+export interface GenerateCodeRequest {
+  channel_type: ChannelType
+  default_ledger_id?: string
+}
+
+export interface GenerateCodeResponse {
+  code: string
+  expires_in_seconds: number
+}
