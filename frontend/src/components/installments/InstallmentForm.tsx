@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,7 +26,7 @@ const validFromTypes: AccountType[] = ['ASSET', 'LIABILITY']
 const validToTypes: AccountType[] = ['EXPENSE', 'ASSET', 'LIABILITY']
 
 export function InstallmentForm({ onSuccess, onCancel }: InstallmentFormProps) {
-  const t = useTranslations() // We'll add installments section later
+  const { t } = useTranslation() // We'll add installments section later
   const { currentLedger } = useLedgerContext()
   const ledgerId = currentLedger?.id || ''
 

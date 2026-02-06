@@ -1,21 +1,17 @@
-'use client'
+
 
 import { useState, useRef, useEffect } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { useTheme } from 'next-themes'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { useTheme } from '@/lib/context/ThemeContext'
 import { Settings, Sun, Moon, Monitor, Languages, User } from 'lucide-react'
 import { locales, localeNames, type Locale } from '@/i18n/config'
 import { useUserPreferences } from '@/lib/hooks/useUserPreferences'
 
-const LOCALE_COOKIE = 'NEXT_LOCALE'
-
 export function AccountMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
-  const t = useTranslations('settings')
-  const router = useRouter()
+  const { t, i18n } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { preferences, setLanguage } = useUserPreferences()
   const [mounted, setMounted] = useState(false)
@@ -37,8 +33,7 @@ export function AccountMenu() {
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLanguage(newLocale)
-    document.cookie = `${LOCALE_COOKIE}=${newLocale}; path=/; max-age=31536000; SameSite=Lax`
-    router.refresh()
+    i18n.changeLanguage(newLocale)
   }
 
   const themes = [
@@ -108,7 +103,7 @@ export function AccountMenu() {
           {/* Settings Link */}
           <div className="p-2">
             <Link
-              href="/settings"
+              to="/settings"
               onClick={() => setIsOpen(false)}
               className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors hover:bg-muted"
             >

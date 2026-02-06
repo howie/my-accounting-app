@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useMemo } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import type { Account, AccountType } from '@/types'
 
@@ -53,7 +53,7 @@ export function AccountSelect({
   disabled,
   'data-testid': testId,
 }: AccountSelectProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   // Filter and group accounts
   const groupedAccounts = useMemo(() => {

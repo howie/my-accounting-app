@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Copy, Check, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,7 +22,7 @@ interface CreateTokenDialogProps {
 }
 
 export function CreateTokenDialog({ isOpen, onClose }: CreateTokenDialogProps) {
-  const t = useTranslations('settings.tokens')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.tokens' })
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [createdToken, setCreatedToken] = useState<ApiTokenCreateResponse | null>(null)

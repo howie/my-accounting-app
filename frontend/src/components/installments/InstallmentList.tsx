@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Plus, Eye } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ import { useInstallmentPlans } from '@/lib/hooks/useInstallments'
 import { formatAmount } from '@/lib/utils'
 
 export function InstallmentList() {
-  const t = useTranslations() // We'll add installments section later
+  const { t } = useTranslation() // We'll add installments section later
   const { data: plans, isLoading } = useInstallmentPlans()
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null)

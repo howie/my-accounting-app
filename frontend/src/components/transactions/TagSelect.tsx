@@ -1,8 +1,8 @@
-'use client'
+
 
 import * as React from 'react'
 import { Plus, X, Check } from 'lucide-react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,7 @@ interface TagSelectProps {
 }
 
 export function TagSelect({ selectedTagIds, onChange }: TagSelectProps) {
-  const t = useTranslations('tags')
+  const { t } = useTranslation(undefined, { keyPrefix: 'tags' })
   const { data: tags = [] } = useTags()
   const createTag = useCreateTag()
 

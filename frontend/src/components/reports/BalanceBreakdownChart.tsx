@@ -1,4 +1,4 @@
-'use client'
+
 
 import { Card, DonutChart, Legend } from '@tremor/react'
 import type { ReportEntry } from '@/types/reports'

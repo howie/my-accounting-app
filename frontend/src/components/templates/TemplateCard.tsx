@@ -1,6 +1,6 @@
-'use client'
 
-import { useTranslations } from 'next-intl'
+
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import type { TransactionTemplateListItem } from '@/types'
@@ -20,7 +20,7 @@ export function TemplateCard({
   onDelete,
   isApplying,
 }: TemplateCardProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const transactionTypeColor = {
     EXPENSE: 'text-red-600 dark:text-red-400',

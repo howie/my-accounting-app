@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Bell, Check } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { useDueRecurringTransactions } from '@/lib/hooks/useRecurring'
 import { ApprovalModal } from '@/components/recurring/ApprovalModal'
 
 export function RecurringAlerts() {
-  const t = useTranslations('recurring')
+  const { t } = useTranslation(undefined, { keyPrefix: 'recurring' })
   const { data: dueItems, isLoading } = useDueRecurringTransactions()
   const [isModalOpen, setIsModalOpen] = useState(false)
 

@@ -1,7 +1,6 @@
-'use client'
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+
+import { Link, useLocation } from 'react-router-dom'
 import { ChevronDown, ChevronRight, Wallet, CreditCard, TrendingUp, Receipt } from 'lucide-react'
 import type { SidebarCategory, SidebarAccountItem, AccountType } from '@/types/dashboard'
 import { cn } from '@/lib/utils'
@@ -37,7 +36,7 @@ export function SidebarItem({
   iconOnly = false,
 }: SidebarItemProps) {
   const Icon = iconMap[category.type]
-  const pathname = usePathname()
+  const { pathname } = useLocation()
   const { isExpanded: isAccountExpanded, toggleExpanded } = useExpandedAccounts()
 
   if (iconOnly) {
@@ -164,7 +163,7 @@ function AccountRow({
 
         {/* Account link */}
         <Link
-          href={`/accounts/${account.id}`}
+          to={`/accounts/${account.id}`}
           style={{ paddingLeft }}
           className={cn(
             'flex flex-1 items-center justify-between rounded-md py-1.5 pr-3 text-sm',

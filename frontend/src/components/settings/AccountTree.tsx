@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import {
   DndContext,
   closestCenter,
@@ -58,7 +58,7 @@ function SortableAccountNode({
   onEdit,
   onDelete,
 }: SortableAccountNodeProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const hasChildren = account.children && account.children.length > 0
   const isExpanded = expandedIds.has(account.id)
   const indentPx = depth * 24
@@ -268,7 +268,7 @@ function SortableAccountList({
 }
 
 export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     // Expand all by default
     const ids = new Set<string>()

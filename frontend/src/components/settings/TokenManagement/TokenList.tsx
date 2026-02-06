@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Trash2, Copy, Check, Key } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { RevokeTokenDialog } from './RevokeTokenDialog'
@@ -23,7 +23,7 @@ function formatDate(dateString: string | null): string {
 }
 
 function TokenRow({ token }: { token: ApiToken }) {
-  const t = useTranslations('settings.tokens')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.tokens' })
   const [copied, setCopied] = useState(false)
   const [showRevokeDialog, setShowRevokeDialog] = useState(false)
 
@@ -94,7 +94,7 @@ function TokenRow({ token }: { token: ApiToken }) {
 }
 
 export function TokenList({ tokens }: TokenListProps) {
-  const t = useTranslations('settings.tokens')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.tokens' })
 
   if (tokens.length === 0) {
     return (

@@ -7,8 +7,8 @@ import { CreateTokenDialog } from '@/components/settings/TokenManagement/CreateT
 import { RevokeTokenDialog } from '@/components/settings/TokenManagement/RevokeTokenDialog'
 
 // Mock next-intl
-vi.mock('next-intl', () => ({
-    useTranslations: () => (key: string) => key,
+vi.mock('react-i18next', () => ({
+    useTranslation: () => (key: string) => key,
 }))
 
 // Mock UI components

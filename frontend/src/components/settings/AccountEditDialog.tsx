@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState, useEffect } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -17,7 +17,7 @@ interface AccountEditDialogProps {
 }
 
 export function AccountEditDialog({ account, ledgerId, isOpen, onClose }: AccountEditDialogProps) {
-  const t = useTranslations()
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const updateAccount = useUpdateAccount(ledgerId)

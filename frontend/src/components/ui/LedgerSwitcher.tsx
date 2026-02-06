@@ -1,8 +1,8 @@
-'use client'
+
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { useTranslations } from 'next-intl'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { useLedgers } from '@/lib/hooks/useLedgers'
@@ -14,7 +14,7 @@ export function LedgerSwitcher() {
   const { currentLedger, setCurrentLedger } = useLedgerContext()
   const { data: ledgersData } = useLedgers()
   const ledgers = ledgersData || []
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const handleSelect = (ledger: Ledger) => {
     setCurrentLedger(ledger)
@@ -64,7 +64,7 @@ export function LedgerSwitcher() {
           </div>
           <div className="border-t px-3 py-2">
             <Link
-              href="/ledgers"
+              to="/ledgers"
               className="block text-sm text-primary hover:underline"
               onClick={() => setIsOpen(false)}
             >

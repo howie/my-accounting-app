@@ -1,7 +1,7 @@
-'use client'
+
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,7 +16,7 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
   const [name, setName] = useState('')
   const [initialBalance, setInitialBalance] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const t = useTranslations()
+  const { t } = useTranslation()
 
   const createLedger = useCreateLedger()
 

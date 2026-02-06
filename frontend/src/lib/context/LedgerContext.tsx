@@ -1,4 +1,4 @@
-'use client'
+
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import type { Ledger } from '@/types'
