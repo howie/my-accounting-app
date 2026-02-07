@@ -10,8 +10,7 @@ interface HealthResponse {
 }
 
 // Health endpoint is at root level, not under /api/v1
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL?.replace('/api/v1', '') || 'http://localhost:8000'
+const API_BASE_URL = import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:8000'
 
 async function fetchVersion(): Promise<string> {
   const response = await fetch(`${API_BASE_URL}/health`)

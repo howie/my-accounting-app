@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'
 
 export interface ExportParams {
   format: 'csv' | 'html'
@@ -21,7 +21,7 @@ export async function exportTransactions(params: ExportParams): Promise<void> {
   const response = await fetch(`${API_BASE_URL}${url}`, {
     method: 'GET',
     headers: {
-        // 'Authorization': ... (Add when auth is implemented)
+      // 'Authorization': ... (Add when auth is implemented)
     },
   })
 
@@ -36,7 +36,7 @@ export async function exportTransactions(params: ExportParams): Promise<void> {
 
   // Try to get filename from Content-Disposition
   const disposition = response.headers.get('content-disposition')
-  let filename = `export_${new Date().toISOString().slice(0,10)}.${params.format}`
+  let filename = `export_${new Date().toISOString().slice(0, 10)}.${params.format}`
   if (disposition && disposition.includes('attachment')) {
     const filenameRegex = new RegExp('filename[^;=\\n]*=((["\"]).*?\\2|[^;\\n]*)')
     const matches = filenameRegex.exec(disposition)
