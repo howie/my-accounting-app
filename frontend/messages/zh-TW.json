@@ -158,7 +158,16 @@
     "switchLedger": "切換帳本",
     "currentLedger": "目前帳本",
     "selectLedgerToView": "選擇帳本以查看科目",
-    "failedToLoad": "載入科目失敗"
+    "failedToLoad": "載入科目失敗",
+    "reports": "報表",
+    "balanceSheet": "資產負債表",
+    "incomeStatement": "損益表",
+    "export": "匯出",
+    "recent": "最近使用",
+    "expandSidebar": "展開側邊欄",
+    "collapseSidebar": "收合側邊欄",
+    "openMenu": "開啟選單",
+    "closeMenu": "關閉選單"
   },
   "settings": {
     "title": "設定",
