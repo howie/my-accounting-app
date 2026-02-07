@@ -57,7 +57,7 @@ export default function BalanceSheetPage() {
             variant="outline"
             onClick={() => {
               if (currentLedger) {
-                const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/balance-sheet/export?ledger_id=${currentLedger.id}&date=${format(date, 'yyyy-MM-dd')}&format=csv`
+                const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/balance-sheet/export?ledger_id=${currentLedger.id}&date=${format(date, 'yyyy-MM-dd')}&format=csv`
                 window.open(url, '_blank')
               }
             }}
@@ -68,7 +68,7 @@ export default function BalanceSheetPage() {
             variant="outline"
             onClick={() => {
               if (currentLedger) {
-                const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/balance-sheet/export?ledger_id=${currentLedger.id}&date=${format(date, 'yyyy-MM-dd')}&format=html`
+                const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/balance-sheet/export?ledger_id=${currentLedger.id}&date=${format(date, 'yyyy-MM-dd')}&format=html`
                 window.open(url, '_blank')
               }
             }}
@@ -113,11 +113,7 @@ export default function BalanceSheetPage() {
           {/* Detail Tables */}
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-6">
-              <ReportTable
-                title="Assets"
-                total={data.total_assets}
-                data={data.assets}
-              />
+              <ReportTable title="Assets" total={data.total_assets} data={data.assets} />
             </div>
             <div className="space-y-6">
               <ReportTable
@@ -125,20 +121,14 @@ export default function BalanceSheetPage() {
                 total={data.total_liabilities}
                 data={data.liabilities}
               />
-              <ReportTable
-                title="Equity"
-                total={data.total_equity}
-                data={data.equity}
-              />
+              <ReportTable title="Equity" total={data.total_equity} data={data.equity} />
               <div className="flex items-center justify-between rounded-md border bg-muted/50 px-4 py-3 font-bold">
                 <span>Total Liabilities & Equity</span>
                 <span>
                   {new Intl.NumberFormat('en-US', {
                     style: 'currency',
                     currency: 'USD',
-                  }).format(
-                    parseFloat(data.total_liabilities) + parseFloat(data.total_equity)
-                  )}
+                  }).format(parseFloat(data.total_liabilities) + parseFloat(data.total_equity))}
                 </span>
               </div>
             </div>

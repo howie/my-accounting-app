@@ -63,7 +63,7 @@ export default function IncomeStatementPage() {
             variant="outline"
             onClick={() => {
               if (currentLedger && startDate && endDate) {
-                const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/income-statement/export?ledger_id=${currentLedger.id}&start_date=${format(startDate, 'yyyy-MM-dd')}&end_date=${format(endDate, 'yyyy-MM-dd')}&format=csv`
+                const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/income-statement/export?ledger_id=${currentLedger.id}&start_date=${format(startDate, 'yyyy-MM-dd')}&end_date=${format(endDate, 'yyyy-MM-dd')}&format=csv`
                 window.open(url, '_blank')
               }
             }}
@@ -74,7 +74,7 @@ export default function IncomeStatementPage() {
             variant="outline"
             onClick={() => {
               if (currentLedger && startDate && endDate) {
-                const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/income-statement/export?ledger_id=${currentLedger.id}&start_date=${format(startDate, 'yyyy-MM-dd')}&end_date=${format(endDate, 'yyyy-MM-dd')}&format=html`
+                const url = `${import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api/v1'}/reports/income-statement/export?ledger_id=${currentLedger.id}&start_date=${format(startDate, 'yyyy-MM-dd')}&end_date=${format(endDate, 'yyyy-MM-dd')}&format=html`
                 window.open(url, '_blank')
               }
             }}
@@ -112,27 +112,13 @@ export default function IncomeStatementPage() {
 
           {/* Detail Tables */}
           <div className="grid gap-6 md:grid-cols-2">
-            <ReportTable
-              title="Income"
-              total={data.total_income}
-              data={data.income}
-            />
-            <ReportTable
-              title="Expenses"
-              total={data.total_expenses}
-              data={data.expenses}
-            />
+            <ReportTable title="Income" total={data.total_income} data={data.income} />
+            <ReportTable title="Expenses" total={data.total_expenses} data={data.expenses} />
           </div>
 
           <div className="flex items-center justify-between rounded-md border bg-muted/50 px-4 py-3 font-bold">
             <span>Net Income</span>
-            <span
-              className={
-                parseFloat(data.net_income) >= 0
-                  ? 'text-green-600'
-                  : 'text-red-600'
-              }
-            >
+            <span className={parseFloat(data.net_income) >= 0 ? 'text-green-600' : 'text-red-600'}>
               {new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
