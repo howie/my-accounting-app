@@ -158,7 +158,16 @@
     "switchLedger": "Switch Ledger",
     "currentLedger": "Current Ledger",
     "selectLedgerToView": "Select a ledger to view accounts",
-    "failedToLoad": "Failed to load accounts"
+    "failedToLoad": "Failed to load accounts",
+    "reports": "Reports",
+    "balanceSheet": "Balance Sheet",
+    "incomeStatement": "Income Statement",
+    "export": "Export",
+    "recent": "Recent",
+    "expandSidebar": "Expand Sidebar",
+    "collapseSidebar": "Collapse Sidebar",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "settings": {
     "title": "Settings",
