@@ -1,0 +1,652 @@
+openapi: 3.1.0
+info:
+  title: Gmail Credit Card Statement Import API
+  version: 1.0.0
+  description: |
+    API for connecting Gmail, scanning for credit card statements,
+    and importing parsed transactions into the accounting system.
+
+paths:
+  /api/v1/gmail/auth/connect:
+    post:
+      summary: Initiate Gmail OAuth2 connection
+      description: Returns the OAuth2 authorization URL for the user to grant Gmail read-only access.
+      operationId: initiateGmailConnect
+      parameters:
+        - name: ledger_id
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: OAuth2 authorization URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  auth_url:
+                    type: string
+                    format: uri
+                    description: Google OAuth2 authorization URL to redirect user to
+
+  /api/v1/gmail/auth/callback:
+    get:
+      summary: OAuth2 callback handler
+      description: Handles the OAuth2 redirect from Google after user authorization.
+      operationId: handleGmailCallback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to frontend settings page after successful authorization
+        "400":
+          description: Invalid authorization code or state mismatch
+
+  /api/v1/gmail/connection:
+    get:
+      summary: Get Gmail connection status
+      description: Returns the current Gmail connection status and settings.
+      operationId: getGmailConnection
+      responses:
+        "200":
+          description: Gmail connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GmailConnectionResponse"
+        "404":
+          description: No Gmail connection found
+
+    delete:
+      summary: Disconnect Gmail
+      description: Revokes OAuth2 access and removes stored credentials.
+      operationId: disconnectGmail
+      responses:
+        "200":
+          description: Gmail disconnected successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /api/v1/gmail/banks:
+    get:
+      summary: List supported banks for Gmail import
+      description: Returns all banks with Gmail statement parser support.
+      operationId: listGmailBanks
+      responses:
+        "200":
+          description: List of supported banks
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  banks:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/GmailBankInfo"
+
+  /api/v1/gmail/banks/settings:
+    get:
+      summary: Get user's bank settings
+      description: Returns the user's per-bank configuration (enabled status, linked account).
+      operationId: getUserBankSettings
+      responses:
+        "200":
+          description: User bank settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  settings:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/UserBankSettingResponse"
+
+    put:
+      summary: Update bank settings
+      description: Update enabled status, PDF password, or linked credit card account for a bank.
+      operationId: updateBankSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateBankSettingsRequest"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserBankSettingResponse"
+
+  /api/v1/ledgers/{ledger_id}/gmail/scan:
+    post:
+      summary: Trigger manual scan
+      description: Starts a manual scan of Gmail for credit card statements.
+      operationId: triggerScan
+      parameters:
+        - name: ledger_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                bank_codes:
+                  type: array
+                  items:
+                    type: string
+                  description: Optional filter to scan only specific banks. If empty, scans all enabled banks.
+      responses:
+        "202":
+          description: Scan job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobResponse"
+        "400":
+          description: Gmail not connected or no banks enabled
+        "409":
+          description: Another scan is already in progress
+
+  /api/v1/gmail/scan/{scan_job_id}:
+    get:
+      summary: Get scan job status
+      description: Returns the current status of a scan job.
+      operationId: getScanJobStatus
+      parameters:
+        - name: scan_job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Scan job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScanJobResponse"
+        "404":
+          description: Scan job not found
+
+  /api/v1/gmail/scan/{scan_job_id}/statements:
+    get:
+      summary: List discovered statements from a scan
+      description: Returns all statements found during a scan job.
+      operationId: listDiscoveredStatements
+      parameters:
+        - name: scan_job_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: List of discovered statements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  statements:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DiscoveredStatementResponse"
+
+  /api/v1/gmail/statements/{statement_id}/preview:
+    get:
+      summary: Preview statement transactions
+      description: Returns parsed transactions from a discovered statement for user review.
+      operationId: previewStatement
+      parameters:
+        - name: statement_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Statement transaction preview
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StatementPreviewResponse"
+        "404":
+          description: Statement not found
+        "422":
+          description: Statement parsing failed
+
+  /api/v1/ledgers/{ledger_id}/gmail/statements/{statement_id}/import:
+    post:
+      summary: Import statement transactions
+      description: Imports parsed transactions from a statement into the ledger.
+      operationId: importStatement
+      parameters:
+        - name: ledger_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: statement_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportStatementRequest"
+      responses:
+        "200":
+          description: Import completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportStatementResponse"
+        "400":
+          description: Validation error or statement already imported
+        "404":
+          description: Statement not found
+
+  /api/v1/gmail/scan/history:
+    get:
+      summary: Get scan history
+      description: Returns paginated list of past scan jobs.
+      operationId: getScanHistory
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Scan history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ScanJobResponse"
+                  total:
+                    type: integer
+
+  /api/v1/gmail/schedule:
+    get:
+      summary: Get scan schedule settings
+      description: Returns the current auto-scan schedule configuration.
+      operationId: getScheduleSettings
+      responses:
+        "200":
+          description: Schedule settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleSettingsResponse"
+
+    put:
+      summary: Update scan schedule
+      description: Configure or disable automatic scanning schedule.
+      operationId: updateScheduleSettings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateScheduleRequest"
+      responses:
+        "200":
+          description: Schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleSettingsResponse"
+
+components:
+  schemas:
+    GmailConnectionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email_address:
+          type: string
+        status:
+          type: string
+          enum: [CONNECTED, EXPIRED, DISCONNECTED]
+        last_scan_at:
+          type: string
+          format: date-time
+          nullable: true
+        scan_start_date:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+
+    GmailBankInfo:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Bank identifier (e.g., CTBC)
+        name:
+          type: string
+          description: Bank display name (e.g., 中國信託)
+        email_query:
+          type: string
+          description: Gmail search query pattern
+        password_hint:
+          type: string
+          description: PDF password convention description
+
+    UserBankSettingResponse:
+      type: object
+      properties:
+        bank_code:
+          type: string
+        bank_name:
+          type: string
+        is_enabled:
+          type: boolean
+        has_password:
+          type: boolean
+          description: Whether a PDF password is configured (never returns actual password)
+        credit_card_account_id:
+          type: string
+          format: uuid
+          nullable: true
+        credit_card_account_name:
+          type: string
+          nullable: true
+
+    UpdateBankSettingsRequest:
+      type: object
+      required:
+        - bank_code
+      properties:
+        bank_code:
+          type: string
+        is_enabled:
+          type: boolean
+        pdf_password:
+          type: string
+          nullable: true
+          description: New PDF password (null to keep existing)
+        credit_card_account_id:
+          type: string
+          format: uuid
+          nullable: true
+
+    ScanJobResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        trigger_type:
+          type: string
+          enum: [MANUAL, SCHEDULED]
+        status:
+          type: string
+          enum: [PENDING, SCANNING, COMPLETED, FAILED]
+        banks_scanned:
+          type: array
+          items:
+            type: string
+        statements_found:
+          type: integer
+        error_message:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    DiscoveredStatementResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        bank_code:
+          type: string
+        bank_name:
+          type: string
+        billing_period_start:
+          type: string
+          format: date
+          nullable: true
+        billing_period_end:
+          type: string
+          format: date
+          nullable: true
+        email_subject:
+          type: string
+        email_date:
+          type: string
+          format: date-time
+        pdf_filename:
+          type: string
+        parse_status:
+          type: string
+          enum: [PENDING, PARSED, PARSE_FAILED, LLM_PARSED]
+        parse_confidence:
+          type: number
+          nullable: true
+        transaction_count:
+          type: integer
+        total_amount:
+          type: number
+          nullable: true
+        import_status:
+          type: string
+          enum: [NOT_IMPORTED, IMPORTED, SKIPPED]
+
+    StatementPreviewResponse:
+      type: object
+      properties:
+        statement_id:
+          type: string
+          format: uuid
+        bank_name:
+          type: string
+        billing_period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date
+            end:
+              type: string
+              format: date
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/StatementTransaction"
+        total_amount:
+          type: number
+        duplicate_warnings:
+          type: array
+          items:
+            $ref: "#/components/schemas/DuplicateWarning"
+        parse_confidence:
+          type: number
+
+    StatementTransaction:
+      type: object
+      properties:
+        index:
+          type: integer
+        date:
+          type: string
+          format: date
+        merchant_name:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+          default: TWD
+        suggested_category:
+          type: string
+          nullable: true
+        category_confidence:
+          type: number
+        is_foreign:
+          type: boolean
+          default: false
+        original_description:
+          type: string
+
+    DuplicateWarning:
+      type: object
+      properties:
+        transaction_index:
+          type: integer
+        existing_transaction_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+        reason:
+          type: string
+
+    ImportStatementRequest:
+      type: object
+      required:
+        - statement_id
+      properties:
+        statement_id:
+          type: string
+          format: uuid
+        category_overrides:
+          type: array
+          items:
+            type: object
+            properties:
+              transaction_index:
+                type: integer
+              category_name:
+                type: string
+              account_id:
+                type: string
+                format: uuid
+                nullable: true
+          description: User modifications to suggested categories
+        skip_transaction_indices:
+          type: array
+          items:
+            type: integer
+          description: Transaction indices to skip (e.g., duplicates)
+
+    ImportStatementResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        import_session_id:
+          type: string
+          format: uuid
+        imported_count:
+          type: integer
+        skipped_count:
+          type: integer
+        created_accounts:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+              type:
+                type: string
+
+    ScheduleSettingsResponse:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [DAILY, WEEKLY]
+          nullable: true
+          description: null means scheduling is disabled
+        hour:
+          type: integer
+          nullable: true
+        day_of_week:
+          type: integer
+          nullable: true
+          description: 0=Monday, only for WEEKLY
+        next_scan_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    UpdateScheduleRequest:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [DAILY, WEEKLY]
+          nullable: true
+          description: Set to null to disable scheduling
+        hour:
+          type: integer
+          minimum: 0
+          maximum: 23
+        day_of_week:
+          type: integer
+          minimum: 0
+          maximum: 6
+          description: Required when frequency is WEEKLY

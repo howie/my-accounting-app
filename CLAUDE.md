@@ -73,6 +73,8 @@ Standard Python virtual environment practices apply:
 - Standard Python build artifacts, test coverage reports, and cache directories are gitignored
 
 ## Active Technologies
+- Python 3.12 (Backend), TypeScript 5.x (Frontend) + FastAPI, SQLModel, google-api-python-client, google-auth-oauthlib, pdfplumber, pikepdf (PDF decryption), cryptography (credential encryption), APScheduler (scheduling); Next.js 15, React 19, TanStack Query (Frontend) (011-gmail-cc-statement-import)
+- PostgreSQL 16 (existing schema from 001-core-accounting, extended with new tables) (011-gmail-cc-statement-import)
 
 - Python 3.12 (Backend), TypeScript 5.x (Frontend) + FastAPI, SQLModel, python-telegram-bot, line-bot-sdk, slack-bolt, google-api-python-client, APScheduler, pdfplumber, SlowAPI (012-ai-multi-channel)
 - PostgreSQL 16 (existing schema + new channel/email tables) (012-ai-multi-channel)
@@ -123,6 +125,7 @@ npx eslint --fix <file> && npx prettier --write <file>
 ```
 
 ## Recent Changes
+- 011-gmail-cc-statement-import: Added Python 3.12 (Backend), TypeScript 5.x (Frontend) + FastAPI, SQLModel, google-api-python-client, google-auth-oauthlib, pdfplumber, pikepdf (PDF decryption), cryptography (credential encryption), APScheduler (scheduling); Next.js 15, React 19, TanStack Query (Frontend)
 
 - 004-transaction-entry: Feature complete - transaction entry from account page, amount calculator, templates, QuickEntryPanel
 - 001-core-accounting: Added Python 3.12 (Backend), TypeScript 5.x (Frontend)
