@@ -410,5 +410,34 @@
       "approve": "Approve",
       "allDone": "All items approved!"
     }
+  },
+  "gmailImport": {
+    "ledger": "Ledger",
+    "gmailImport": "Gmail Import",
+    "settingsTitle": "Gmail Statement Import",
+    "settingsSubtitle": "Connect your Gmail account to automatically scan for credit card statements",
+    "gmailConnection": "Gmail Connection",
+    "connectGmail": "Connect Gmail",
+    "connecting": "Connecting...",
+    "disconnect": "Disconnect",
+    "disconnecting": "Disconnecting...",
+    "reconnect": "Reconnect",
+    "reconnecting": "Reconnecting...",
+    "connectedAs": "Connected as",
+    "notConnected": "Gmail not connected. Connect your account to start scanning for credit card statements.",
+    "connectionExpired": "Connection expired. Please reconnect.",
+    "confirmDisconnect": "Are you sure you want to disconnect Gmail? You will need to reconnect to scan for statements.",
+    "connectionSuccess": "Gmail connected successfully!",
+    "authError": "Authentication failed",
+    "quickActions": "Quick Actions",
+    "scanStatements": "Scan for Statements",
+    "scanStatementsDesc": "Search your Gmail for credit card statements",
+    "viewHistory": "View Scan History",
+    "viewHistoryDesc": "See past scans and imported statements",
+    "errors": {
+      "connectFailed": "Failed to connect Gmail. Please try again.",
+      "disconnectFailed": "Failed to disconnect Gmail. Please try again.",
+      "fetchFailed": "Failed to fetch connection status. Please refresh the page."
+    }
   }
 }

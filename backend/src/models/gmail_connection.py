@@ -14,7 +14,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from src.models.user import User
+    from src.models.ledger import Ledger
 
 
 class GmailConnectionStatus(str, Enum):
@@ -33,16 +33,16 @@ class ScheduleFrequency(str, Enum):
 
 
 class GmailConnection(SQLModel, table=True):
-    """Stores a user's Gmail OAuth2 connection state and credentials.
+    """Stores a ledger's Gmail OAuth2 connection state and credentials.
 
     OAuth2 credentials are encrypted using Fernet symmetric encryption.
-    One connection per user is allowed.
+    One connection per ledger is allowed.
     """
 
     __tablename__ = "gmail_connections"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    user_id: uuid.UUID = Field(foreign_key="users.id", unique=True, index=True)
+    ledger_id: uuid.UUID = Field(foreign_key="ledgers.id", unique=True, index=True)
 
     # Gmail account info
     email_address: str = Field(max_length=255)
@@ -79,4 +79,4 @@ class GmailConnection(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
     # Relationships
-    user: "User" = Relationship(back_populates="gmail_connection")
+    ledger: "Ledger" = Relationship(back_populates="gmail_connection")

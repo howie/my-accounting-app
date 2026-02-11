@@ -94,19 +94,19 @@
 
 ### Implementation for User Story 1
 
-- [ ] T028 [US1] Implement GmailService class in backend/src/services/gmail_service.py (get_auth_url, handle_callback, get_connection, disconnect)
-- [ ] T029 [US1] Implement token encryption/decryption in GmailService using encryption.py
-- [ ] T030 [US1] Implement auto-refresh token logic in GmailService
-- [ ] T031 [US1] Create gmail_import_routes.py in backend/src/api/routes/ with OAuth2 endpoints
-- [ ] T032 [US1] Register routes in backend/src/api/routes/__init__.py
+- [x] T028 [US1] Implement GmailService class in backend/src/services/gmail_service.py (get_auth_url, handle_callback, get_connection, disconnect)
+- [x] T029 [US1] Implement token encryption/decryption in GmailService using encryption.py
+- [x] T030 [US1] Implement auto-refresh token logic in GmailService
+- [x] T031 [US1] Create gmail_import_routes.py in backend/src/api/routes/ with OAuth2 endpoints
+- [x] T032 [US1] Register routes in backend/src/api/routes/__init__.py
 - [ ] T033 [US1] Ensure all tests PASS
 - [ ] T034 [US1] Refactor while keeping tests green
 
 ### Frontend for User Story 1
 
-- [ ] T035 [P] [US1] Create GmailConnectButton component in frontend/src/components/gmail-import/GmailConnectButton.tsx
-- [ ] T036 [P] [US1] Create gmail-import API client functions in frontend/src/lib/api/gmail-import.ts (connect, getStatus, disconnect)
-- [ ] T037 [US1] Create Gmail settings page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/settings/page.tsx
+- [x] T035 [P] [US1] Create GmailConnectButton component in frontend/src/components/gmail-import/GmailConnectButton.tsx
+- [x] T036 [P] [US1] Create gmail-import API client functions in frontend/src/lib/api/gmail-import.ts (connect, getStatus, disconnect)
+- [x] T037 [US1] Create Gmail settings page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/settings/page.tsx
 - [ ] T038 [P] [US1] Component test for GmailConnectButton in frontend/tests/components/gmail-import/GmailConnectButton.test.tsx
 
 **Checkpoint**: Gmail connection fully functional - user can connect/disconnect Gmail

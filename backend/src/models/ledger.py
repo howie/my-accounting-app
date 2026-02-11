@@ -12,6 +12,7 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from src.models.account import Account
+    from src.models.gmail_connection import GmailConnection
     from src.models.import_session import ImportSession
     from src.models.transaction import Transaction
     from src.models.transaction_template import TransactionTemplate
@@ -48,4 +49,8 @@ class Ledger(SQLModel, table=True):
     import_sessions: list["ImportSession"] = Relationship(
         back_populates="ledger",
         sa_relationship_kwargs={"cascade": "all, delete-orphan"},
+    )
+    gmail_connection: "GmailConnection | None" = Relationship(
+        back_populates="ledger",
+        sa_relationship_kwargs={"cascade": "all, delete-orphan", "uselist": False},
     )

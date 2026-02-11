@@ -7,6 +7,7 @@ from src.api.routes import (
     chat,
     dashboard,
     export,
+    gmail_import_routes,
     import_routes,
     installments,  # Added
     ledgers,
@@ -52,6 +53,9 @@ api_router.include_router(users.router)
 
 # Feature 006: Data Import
 api_router.include_router(import_routes.router, tags=["Import"])
+
+# Feature 011: Gmail CC Statement Import
+api_router.include_router(gmail_import_routes.router, tags=["Gmail Import"])
 
 # Feature 008: Data Export
 api_router.include_router(export.router, prefix="/export", tags=["Export"])

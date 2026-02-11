@@ -410,5 +410,34 @@
       "approve": "批准",
       "allDone": "所有項目已完成！"
     }
+  },
+  "gmailImport": {
+    "ledger": "帳本",
+    "gmailImport": "Gmail 匯入",
+    "settingsTitle": "Gmail 信用卡帳單匯入",
+    "settingsSubtitle": "連接您的 Gmail 帳號，自動掃描信用卡電子帳單",
+    "gmailConnection": "Gmail 連接",
+    "connectGmail": "連接 Gmail",
+    "connecting": "連接中...",
+    "disconnect": "中斷連接",
+    "disconnecting": "中斷連接中...",
+    "reconnect": "重新連接",
+    "reconnecting": "重新連接中...",
+    "connectedAs": "已連接帳號",
+    "notConnected": "尚未連接 Gmail。連接帳號以開始掃描信用卡帳單。",
+    "connectionExpired": "連接已過期，請重新連接。",
+    "confirmDisconnect": "確定要中斷 Gmail 連接嗎？您需要重新連接才能掃描帳單。",
+    "connectionSuccess": "Gmail 連接成功！",
+    "authError": "認證失敗",
+    "quickActions": "快速操作",
+    "scanStatements": "掃描帳單",
+    "scanStatementsDesc": "搜尋 Gmail 中的信用卡電子帳單",
+    "viewHistory": "檢視掃描記錄",
+    "viewHistoryDesc": "查看過去的掃描記錄與匯入狀態",
+    "errors": {
+      "connectFailed": "連接 Gmail 失敗，請重試。",
+      "disconnectFailed": "中斷連接失敗，請重試。",
+      "fetchFailed": "無法取得連接狀態，請重新整理頁面。"
+    }
   }
 }

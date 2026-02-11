@@ -30,7 +30,7 @@ def upgrade() -> None:
     op.create_table(
         "gmail_connections",
         sa.Column("id", sa.Uuid(), nullable=False),
-        sa.Column("user_id", sa.Uuid(), nullable=False),
+        sa.Column("ledger_id", sa.Uuid(), nullable=False),
         sa.Column("email_address", sa.String(length=255), nullable=False),
         sa.Column("encrypted_access_token", sa.Text(), nullable=False),
         sa.Column("encrypted_refresh_token", sa.Text(), nullable=False),
@@ -51,11 +51,11 @@ def upgrade() -> None:
         sa.Column("last_scan_at", sa.DateTime(), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=False),
         sa.Column("updated_at", sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
+        sa.ForeignKeyConstraint(["ledger_id"], ["ledgers.id"]),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index(
-        op.f("ix_gmail_connections_user_id"), "gmail_connections", ["user_id"], unique=True
+        op.f("ix_gmail_connections_ledger_id"), "gmail_connections", ["ledger_id"], unique=True
     )
 
     # Create user_bank_settings table
@@ -194,7 +194,7 @@ def downgrade() -> None:
     op.drop_table("user_bank_settings")
 
     # Drop gmail_connections table
-    op.drop_index(op.f("ix_gmail_connections_user_id"), table_name="gmail_connections")
+    op.drop_index(op.f("ix_gmail_connections_ledger_id"), table_name="gmail_connections")
     op.drop_table("gmail_connections")
 
     # Drop enums
