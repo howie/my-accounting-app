@@ -8,6 +8,8 @@ from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
     from src.models.api_token import ApiToken
+    from src.models.gmail_connection import GmailConnection
+    from src.models.user_bank_setting import UserBankSetting
 
 
 class UserBase(SQLModel):
@@ -27,6 +29,8 @@ class User(UserBase, table=True):
 
     # Relationships
     api_tokens: list["ApiToken"] = Relationship(back_populates="user")
+    gmail_connection: "GmailConnection | None" = Relationship(back_populates="user")
+    bank_settings: list["UserBankSetting"] = Relationship(back_populates="user")
 
 
 class UserCreate(UserBase):

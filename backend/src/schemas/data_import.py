@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 class ImportType(str, Enum):
     MYAB_CSV = "MYAB_CSV"
     CREDIT_CARD = "CREDIT_CARD"
+    GMAIL_CC = "GMAIL_CC"  # Gmail credit card statement import (011)
 
 
 class TransactionType(str, Enum):

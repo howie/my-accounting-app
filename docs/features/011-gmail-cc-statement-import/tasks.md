@@ -31,11 +31,11 @@
 
 **Purpose**: Project initialization, dependencies, and base configuration
 
-- [ ] T001 Add Python dependencies to backend/pyproject.toml: google-api-python-client, google-auth-oauthlib, pdfplumber, pikepdf, cryptography, APScheduler
-- [ ] T002 [P] Create directory structure: backend/src/services/bank_parsers/, backend/tests/unit/test_bank_parsers/, backend/tests/fixtures/pdf/
-- [ ] T003 [P] Add environment variables to backend/.env.example: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GMAIL_ENCRYPTION_KEY
-- [ ] T004 [P] Create frontend directory structure: frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/, frontend/src/components/gmail-import/
-- [ ] T005 [P] Add TypeScript types for Gmail import API in frontend/src/lib/api/gmail-import.ts (stubs)
+- [x] T001 Add Python dependencies to backend/pyproject.toml: google-api-python-client, google-auth-oauthlib, pdfplumber, pikepdf, cryptography, APScheduler
+- [x] T002 [P] Create directory structure: backend/src/services/bank_parsers/, backend/tests/unit/test_bank_parsers/, backend/tests/fixtures/pdf/
+- [x] T003 [P] Add environment variables to backend/.env.example: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GMAIL_ENCRYPTION_KEY
+- [x] T004 [P] Create frontend directory structure: frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/, frontend/src/components/gmail-import/
+- [x] T005 [P] Add TypeScript types for Gmail import API in frontend/src/lib/api/gmail-import.ts (stubs)
 
 ---
 
@@ -47,28 +47,28 @@
 
 ### Database & Models
 
-- [ ] T006 Create Alembic migration for gmail_connections table in backend/alembic/versions/
-- [ ] T007 [P] Create GmailConnection model in backend/src/models/gmail_connection.py
-- [ ] T008 [P] Create UserBankSetting model in backend/src/models/user_bank_setting.py
-- [ ] T009 [P] Create StatementScanJob model in backend/src/models/gmail_scan.py
-- [ ] T010 [P] Create DiscoveredStatement model in backend/src/models/gmail_scan.py
-- [ ] T011 Extend ImportType enum with GMAIL_CC value in backend/src/schemas/data_import.py
-- [ ] T012 Add email_message_id field to ImportSession model in backend/src/models/import_session.py
+- [x] T006 Create Alembic migration for gmail_connections table in backend/alembic/versions/
+- [x] T007 [P] Create GmailConnection model in backend/src/models/gmail_connection.py
+- [x] T008 [P] Create UserBankSetting model in backend/src/models/user_bank_setting.py
+- [x] T009 [P] Create StatementScanJob model in backend/src/models/gmail_scan.py
+- [x] T010 [P] Create DiscoveredStatement model in backend/src/models/gmail_scan.py
+- [x] T011 Extend ImportType enum with GMAIL_CC value in backend/src/schemas/data_import.py
+- [x] T012 Add email_message_id field to ImportSession model in backend/src/models/import_session.py
 - [ ] T013 Run migration: alembic upgrade head
 
 ### Encryption Utilities
 
-- [ ] T014 Create credential encryption utility in backend/src/services/encryption.py (Fernet-based encrypt/decrypt for tokens and passwords)
+- [x] T014 Create credential encryption utility in backend/src/services/encryption.py (Fernet-based encrypt/decrypt for tokens and passwords)
 
 ### Base Parser Architecture (US6 Foundational)
 
-- [ ] T015 Create abstract BankStatementParser base class in backend/src/services/bank_parsers/base.py
-- [ ] T016 Create parser registry with @register_parser decorator in backend/src/services/bank_parsers/__init__.py
-- [ ] T017 Create ParsedStatementTransaction dataclass in backend/src/services/bank_parsers/base.py
+- [x] T015 Create abstract BankStatementParser base class in backend/src/services/bank_parsers/base.py
+- [x] T016 Create parser registry with @register_parser decorator in backend/src/services/bank_parsers/__init__.py
+- [x] T017 Create ParsedStatementTransaction dataclass in backend/src/services/bank_parsers/base.py
 
 ### API Schemas
 
-- [ ] T018 Create Gmail import schemas in backend/src/schemas/gmail_import.py (GmailConnectionResponse, ScanJobResponse, StatementPreviewResponse, etc.)
+- [x] T018 Create Gmail import schemas in backend/src/schemas/gmail_import.py (GmailConnectionResponse, ScanJobResponse, StatementPreviewResponse, etc.)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
