@@ -137,20 +137,20 @@
 
 ### Implementation for User Story 2
 
-- [ ] T052 [US2] Create PdfParser class in backend/src/services/pdf_parser.py (decrypt with pikepdf, extract text with pdfplumber)
-- [ ] T053 [US2] Implement GmailService.search_statements() for bank-specific email search
-- [ ] T054 [US2] Implement GmailService.download_attachment() for PDF download
-- [ ] T055 [P] [US2] Create CtbcParser in backend/src/services/bank_parsers/ctbc_parser.py
-- [ ] T056 [P] [US2] Create FubonParser in backend/src/services/bank_parsers/fubon_parser.py
-- [ ] T057 [P] [US2] Create CathayParser in backend/src/services/bank_parsers/cathay_parser.py
-- [ ] T058 [P] [US2] Create DbsParser in backend/src/services/bank_parsers/dbs_parser.py
+- [x] T052 [US2] Create PdfParser class in backend/src/services/pdf_parser.py (decrypt with pikepdf, extract text with pdfplumber)
+- [x] T053 [US2] Implement GmailService.search_statements() for bank-specific email search
+- [x] T054 [US2] Implement GmailService.download_attachment() for PDF download
+- [x] T055 [P] [US2] Create CtbcParser in backend/src/services/bank_parsers/ctbc_parser.py
+- [x] T056 [P] [US2] Create FubonParser in backend/src/services/bank_parsers/fubon_parser.py
+- [x] T057 [P] [US2] Create CathayParser in backend/src/services/bank_parsers/cathay_parser.py
+- [x] T058 [P] [US2] Create DbsParser in backend/src/services/bank_parsers/dbs_parser.py
 - [ ] T059 [P] [US2] Create HsbcParser in backend/src/services/bank_parsers/hsbc_parser.py
 - [ ] T060 [P] [US2] Create HncbParser in backend/src/services/bank_parsers/hncb_parser.py
-- [ ] T061 [P] [US2] Create EsunParser in backend/src/services/bank_parsers/esun_parser.py
+- [x] T061 [P] [US2] Create EsunParser in backend/src/services/bank_parsers/esun_parser.py
 - [ ] T062 [P] [US2] Create SinopacParser in backend/src/services/bank_parsers/sinopac_parser.py
-- [ ] T063 [US2] Create GmailImportService class in backend/src/services/gmail_import_service.py (execute_scan orchestration)
-- [ ] T064 [US2] Implement statement discovery and tracking in GmailImportService
-- [ ] T065 [US2] Implement PDF parsing with parser registry in GmailImportService
+- [x] T063 [US2] Create GmailImportService class in backend/src/services/gmail_import_service.py (execute_scan orchestration)
+- [x] T064 [US2] Implement statement discovery and tracking in GmailImportService
+- [x] T065 [US2] Implement PDF parsing with parser registry in GmailImportService
 - [ ] T066 [US2] Add scan and preview endpoints to backend/src/api/routes/gmail_import_routes.py
 - [ ] T067 [US2] Integrate CategorySuggester for transaction category suggestions
 - [ ] T068 [US2] Ensure all tests PASS
