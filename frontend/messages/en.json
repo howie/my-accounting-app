@@ -153,6 +153,7 @@
     "dashboard": "Dashboard",
     "accounts": "Accounts",
     "import": "Batch Import",
+    "gmailImport": "Gmail Import",
     "chat": "AI Assistant",
     "settings": "Settings",
     "switchLedger": "Switch Ledger",

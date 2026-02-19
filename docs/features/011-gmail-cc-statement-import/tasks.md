@@ -313,9 +313,9 @@
 
 - [ ] T138 [P] Add sample PDF fixtures for each bank parser to backend/tests/fixtures/pdf/
 - [ ] T139 [P] Add LLM fallback parsing support to PdfParser (optional, based on env config)
-- [ ] T140 [P] Add navigation links to Gmail import pages in sidebar
+- [x] T140 [P] Add navigation links to Gmail import pages in sidebar
 - [ ] T141 Verify all parsers handle edge cases: foreign currency transactions, installments, refunds
-- [ ] T142 [P] Add i18n translations for Gmail import UI strings
+- [x] T142 [P] Add i18n translations for Gmail import UI strings
 - [ ] T143 Verify data integrity: double-entry balance, audit trails for all imports
 - [ ] T144 Security review: OAuth2 state validation, credential encryption, no plaintext secrets
 - [ ] T145 [P] Update quickstart.md with actual usage examples
