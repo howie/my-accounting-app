@@ -434,10 +434,67 @@
     "scanStatementsDesc": "Search your Gmail for credit card statements",
     "viewHistory": "View Scan History",
     "viewHistoryDesc": "See past scans and imported statements",
+    "pageTitle": "Scan & Import Statements",
+    "pageSubtitle": "Scan Gmail for credit card statements and import transactions",
+    "settings": "Settings",
+    "notConnectedTitle": "Gmail Not Connected",
+    "notConnectedDesc": "Connect your Gmail account to start scanning for credit card statements.",
+    "goToSettings": "Go to Settings",
+    "scan": {
+      "title": "Scan for Statements",
+      "triggerScan": "Scan Now",
+      "scanning": "Scanning...",
+      "banksScanned": "Banks scanned",
+      "statementsFound": "{count, plural, =0 {No statements found} =1 {1 statement found} other {# statements found}}",
+      "noStatements": "No statements found in this scan. Try adjusting your bank settings or scan date range.",
+      "status": {
+        "pending": "Pending",
+        "scanning": "Scanning...",
+        "completed": "Completed",
+        "failed": "Failed"
+      }
+    },
+    "statements": {
+      "title": "Discovered Statements",
+      "noStatements": "No statements found yet. Run a scan to discover statements.",
+      "billingPeriod": "Billing period",
+      "transactionCount": "{count, plural, =1 {1 transaction} other {# transactions}}",
+      "parseStatus": {
+        "pending": "Pending",
+        "parsed": "Parsed",
+        "llmParsed": "AI Parsed",
+        "failed": "Parse Failed"
+      },
+      "importStatus": {
+        "imported": "Imported",
+        "skipped": "Skipped"
+      }
+    },
+    "preview": {
+      "close": "Close",
+      "bank": "Bank",
+      "emailDate": "Email Date",
+      "billingPeriod": "Billing Period",
+      "pdfFile": "PDF File",
+      "transactions": "Transactions",
+      "totalAmount": "Total",
+      "confidenceHigh": "High Confidence",
+      "confidenceMedium": "Medium Confidence",
+      "confidenceLow": "Low Confidence",
+      "confidenceUnknown": "Unknown",
+      "parseFailed": "Failed to parse this statement. The PDF format may not be supported.",
+      "lowConfidence": "Low parsing confidence. Please review transactions carefully before importing.",
+      "alreadyImported": "This statement has already been imported.",
+      "importButton": "Import to Ledger",
+      "importing": "Importing...",
+      "selectStatement": "Select a statement to preview its details"
+    },
     "errors": {
       "connectFailed": "Failed to connect Gmail. Please try again.",
       "disconnectFailed": "Failed to disconnect Gmail. Please try again.",
-      "fetchFailed": "Failed to fetch connection status. Please refresh the page."
+      "fetchFailed": "Failed to fetch connection status. Please refresh the page.",
+      "scanFailed": "Failed to start scan. Please try again.",
+      "scanTimeout": "Scan is taking too long. Please try again later."
     }
   }
 }

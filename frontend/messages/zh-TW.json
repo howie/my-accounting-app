@@ -434,10 +434,67 @@
     "scanStatementsDesc": "搜尋 Gmail 中的信用卡電子帳單",
     "viewHistory": "檢視掃描記錄",
     "viewHistoryDesc": "查看過去的掃描記錄與匯入狀態",
+    "pageTitle": "掃描與匯入帳單",
+    "pageSubtitle": "掃描 Gmail 信用卡帳單並匯入交易紀錄",
+    "settings": "設定",
+    "notConnectedTitle": "尚未連接 Gmail",
+    "notConnectedDesc": "連接您的 Gmail 帳號以開始掃描信用卡帳單。",
+    "goToSettings": "前往設定",
+    "scan": {
+      "title": "掃描帳單",
+      "triggerScan": "立即掃描",
+      "scanning": "掃描中...",
+      "banksScanned": "已掃描銀行",
+      "statementsFound": "{count, plural, =0 {未發現帳單} other {發現 # 份帳單}}",
+      "noStatements": "此次掃描未發現帳單。請調整銀行設定或掃描日期範圍。",
+      "status": {
+        "pending": "等待中",
+        "scanning": "掃描中...",
+        "completed": "完成",
+        "failed": "失敗"
+      }
+    },
+    "statements": {
+      "title": "發現的帳單",
+      "noStatements": "尚未發現帳單，請執行掃描以搜尋帳單。",
+      "billingPeriod": "帳單週期",
+      "transactionCount": "{count, plural, other {# 筆交易}}",
+      "parseStatus": {
+        "pending": "等待中",
+        "parsed": "已解析",
+        "llmParsed": "AI 解析",
+        "failed": "解析失敗"
+      },
+      "importStatus": {
+        "imported": "已匯入",
+        "skipped": "已跳過"
+      }
+    },
+    "preview": {
+      "close": "關閉",
+      "bank": "銀行",
+      "emailDate": "郵件日期",
+      "billingPeriod": "帳單週期",
+      "pdfFile": "PDF 檔案",
+      "transactions": "交易筆數",
+      "totalAmount": "總金額",
+      "confidenceHigh": "高可信度",
+      "confidenceMedium": "中可信度",
+      "confidenceLow": "低可信度",
+      "confidenceUnknown": "未知",
+      "parseFailed": "解析此帳單失敗，PDF 格式可能不支援。",
+      "lowConfidence": "解析可信度較低，匯入前請仔細檢查交易明細。",
+      "alreadyImported": "此帳單已匯入。",
+      "importButton": "匯入至帳本",
+      "importing": "匯入中...",
+      "selectStatement": "選擇帳單以預覽詳細資訊"
+    },
     "errors": {
       "connectFailed": "連接 Gmail 失敗，請重試。",
       "disconnectFailed": "中斷連接失敗，請重試。",
-      "fetchFailed": "無法取得連接狀態，請重新整理頁面。"
+      "fetchFailed": "無法取得連接狀態，請重新整理頁面。",
+      "scanFailed": "掃描啟動失敗，請重試。",
+      "scanTimeout": "掃描時間過長，請稍後再試。"
     }
   }
 }

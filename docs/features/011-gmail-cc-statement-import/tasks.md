@@ -158,11 +158,11 @@
 
 ### Frontend for User Story 2
 
-- [ ] T070 [P] [US2] Create ScanProgressIndicator component in frontend/src/components/gmail-import/ScanProgressIndicator.tsx
-- [ ] T071 [P] [US2] Create StatementList component in frontend/src/components/gmail-import/StatementList.tsx
-- [ ] T072 [P] [US2] Create StatementPreview component in frontend/src/components/gmail-import/StatementPreview.tsx
-- [ ] T073 [US2] Add scan API functions to frontend/src/lib/api/gmail-import.ts (triggerScan, getScanStatus, getStatements, getPreview)
-- [ ] T074 [US2] Create Gmail import main page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/page.tsx
+- [x] T070 [P] [US2] Create ScanProgressIndicator component in frontend/src/components/gmail-import/ScanProgressIndicator.tsx
+- [x] T071 [P] [US2] Create StatementList component in frontend/src/components/gmail-import/StatementList.tsx
+- [x] T072 [P] [US2] Create StatementPreview component in frontend/src/components/gmail-import/StatementPreview.tsx
+- [x] T073 [US2] Add scan API functions to frontend/src/lib/api/gmail-import.ts (triggerScan, getScanStatus, getStatements, getPreview)
+- [x] T074 [US2] Create Gmail import main page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/page.tsx
 - [ ] T075 [P] [US2] Component test for StatementPreview in frontend/tests/components/gmail-import/StatementPreview.test.tsx
 
 **Checkpoint**: Scan and preview functional - user can find and view statements
