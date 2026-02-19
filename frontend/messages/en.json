@@ -494,6 +494,20 @@
       "failed": "Failed to import statement. Please try again.",
       "transactionsImported": "{count, plural, =1 {1 transaction imported} other {# transactions imported}}"
     },
+    "bankSettings": {
+      "title": "Bank Settings",
+      "subtitle": "Enable banks to scan for and configure PDF password if required.",
+      "fetchError": "Failed to load bank settings.",
+      "saveError": "Failed to save bank settings.",
+      "passwordSet": "Password set",
+      "noPassword": "No password",
+      "passwordPlaceholder": "Enter PDF password",
+      "save": "Save",
+      "cancel": "Cancel",
+      "changePassword": "Change password",
+      "setPassword": "Set password",
+      "clearPassword": "Clear password"
+    },
     "errors": {
       "connectFailed": "Failed to connect Gmail. Please try again.",
       "disconnectFailed": "Failed to disconnect Gmail. Please try again.",

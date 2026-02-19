@@ -168,12 +168,12 @@ export const gmailImportApi = {
     return apiPost<{ auth_url: string }>(`/gmail/auth/connect?ledger_id=${ledgerId}`, {})
   },
 
-  getConnection: async () => {
-    return apiGet<GmailConnectionResponse>('/gmail/connection')
+  getConnection: async (ledgerId: string) => {
+    return apiGet<GmailConnectionResponse>(`/gmail/connection?ledger_id=${ledgerId}`)
   },
 
-  disconnect: async () => {
-    return apiDelete<{ message: string }>('/gmail/connection')
+  disconnect: async (ledgerId: string) => {
+    return apiDelete<{ message: string }>(`/gmail/connection?ledger_id=${ledgerId}`)
   },
 
   // Bank Settings
@@ -181,12 +181,14 @@ export const gmailImportApi = {
     return apiGet<{ banks: GmailBankInfo[] }>('/gmail/banks')
   },
 
-  getBankSettings: async () => {
-    return apiGet<{ settings: UserBankSettingResponse[] }>('/gmail/banks/settings')
+  getBankSettings: async (ledgerId: string) => {
+    return apiGet<{ settings: UserBankSettingResponse[] }>(
+      `/gmail/banks/settings?ledger_id=${ledgerId}`
+    )
   },
 
-  updateBankSettings: async (data: UpdateBankSettingsRequest) => {
-    return apiPut<UserBankSettingResponse>('/gmail/banks/settings', data)
+  updateBankSettings: async (ledgerId: string, data: UpdateBankSettingsRequest) => {
+    return apiPut<UserBankSettingResponse>(`/gmail/banks/settings?ledger_id=${ledgerId}`, data)
   },
 
   // Scanning
@@ -219,18 +221,18 @@ export const gmailImportApi = {
   },
 
   // History
-  getScanHistory: async (limit = 20, offset = 0) => {
+  getScanHistory: async (ledgerId: string, limit = 20, offset = 0) => {
     return apiGet<{ items: ScanJobResponse[]; total: number }>(
-      `/gmail/scan/history?limit=${limit}&offset=${offset}`
+      `/gmail/scan/history?ledger_id=${ledgerId}&limit=${limit}&offset=${offset}`
     )
   },
 
   // Schedule
-  getSchedule: async () => {
-    return apiGet<ScheduleSettingsResponse>('/gmail/schedule')
+  getSchedule: async (ledgerId: string) => {
+    return apiGet<ScheduleSettingsResponse>(`/gmail/schedule?ledger_id=${ledgerId}`)
   },
 
-  updateSchedule: async (data: UpdateScheduleRequest) => {
-    return apiPut<ScheduleSettingsResponse>('/gmail/schedule', data)
+  updateSchedule: async (ledgerId: string, data: UpdateScheduleRequest) => {
+    return apiPut<ScheduleSettingsResponse>(`/gmail/schedule?ledger_id=${ledgerId}`, data)
   },
 }

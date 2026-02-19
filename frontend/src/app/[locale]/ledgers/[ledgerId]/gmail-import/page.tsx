@@ -47,14 +47,14 @@ export default function GmailImportPage() {
   const fetchConnection = useCallback(async () => {
     try {
       setConnectionLoading(true)
-      const response = await gmailImportApi.getConnection()
+      const response = await gmailImportApi.getConnection(ledgerId)
       setConnection(response)
     } catch {
       setConnection(null)
     } finally {
       setConnectionLoading(false)
     }
-  }, [])
+  }, [ledgerId])
 
   useEffect(() => {
     fetchConnection()

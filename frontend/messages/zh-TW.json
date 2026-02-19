@@ -494,6 +494,20 @@
       "failed": "匯入帳單失敗，請重試。",
       "transactionsImported": "{count, plural, other {已匯入 # 筆交易}}"
     },
+    "bankSettings": {
+      "title": "銀行設定",
+      "subtitle": "啟用要掃描的銀行，並設定 PDF 密碼（如需要）。",
+      "fetchError": "載入銀行設定失敗。",
+      "saveError": "儲存銀行設定失敗。",
+      "passwordSet": "已設定密碼",
+      "noPassword": "未設定密碼",
+      "passwordPlaceholder": "輸入 PDF 密碼",
+      "save": "儲存",
+      "cancel": "取消",
+      "changePassword": "變更密碼",
+      "setPassword": "設定密碼",
+      "clearPassword": "清除密碼"
+    },
     "errors": {
       "connectFailed": "連接 Gmail 失敗，請重試。",
       "disconnectFailed": "中斷連接失敗，請重試。",

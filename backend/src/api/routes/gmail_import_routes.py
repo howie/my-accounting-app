@@ -30,7 +30,10 @@ from src.schemas.gmail_import import (
     StatementsListResponse,
     StatementTransaction,
     TriggerScanRequest,
+    UpdateBankSettingsRequest,
+    UserBankSettingResponse,
 )
+from src.services.bank_parsers import get_parser
 from src.services.gmail_import_service import GmailImportError, GmailImportService
 from src.services.gmail_service import GmailAuthError, GmailService, GmailServiceError
 
@@ -210,7 +213,7 @@ async def disconnect_gmail(
 
 
 # =============================================================================
-# Bank Settings Endpoints (US4) - Stub implementations
+# Bank Settings Endpoints (US4)
 # =============================================================================
 
 
@@ -227,26 +230,129 @@ async def list_supported_banks() -> Any:
 
 @router.get("/gmail/banks/settings")
 async def get_bank_settings(
-    ledger_id: uuid.UUID = Query(...),
-    session: Session = Depends(get_session),  # noqa: ARG001
+    ledger_id: uuid.UUID = Query(..., description="Ledger ID to get settings for"),
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get user's bank settings for a ledger.
+
+    Returns all supported banks with their enabled/disabled status and
+    whether a PDF password has been configured.
     """
-    # TODO: Implement in US4
-    return {"settings": []}
+    from src.models.ledger import Ledger
+    from src.services.bank_parsers import get_bank_info
+
+    ledger = session.exec(select(Ledger).where(Ledger.id == ledger_id)).first()
+    if not ledger:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger not found")
+
+    # Get all supported banks
+    banks = get_bank_info()
+
+    # Get user's existing settings
+    from src.models.user_bank_setting import UserBankSetting
+
+    user_settings = session.exec(
+        select(UserBankSetting).where(UserBankSetting.user_id == ledger.user_id)
+    ).all()
+    settings_by_code = {s.bank_code: s for s in user_settings}
+
+    result = []
+    for bank in banks:
+        setting = settings_by_code.get(bank["code"])
+        cc_account_name = None
+        if setting and setting.credit_card_account_id:
+            from src.models.account import Account
+
+            account = session.get(Account, setting.credit_card_account_id)
+            if account:
+                cc_account_name = account.name
+
+        result.append(
+            UserBankSettingResponse(
+                bank_code=bank["code"],
+                bank_name=bank["name"],
+                is_enabled=setting.is_enabled if setting else False,
+                has_password=bool(setting and setting.encrypted_pdf_password),
+                credit_card_account_id=setting.credit_card_account_id if setting else None,
+                credit_card_account_name=cc_account_name,
+            )
+        )
+
+    return {"settings": result}
 
 
 @router.put("/gmail/banks/settings")
 async def update_bank_settings(
-    ledger_id: uuid.UUID = Query(...),
-    session: Session = Depends(get_session),  # noqa: ARG001
+    ledger_id: uuid.UUID = Query(..., description="Ledger ID"),
+    body: UpdateBankSettingsRequest = None,
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Update bank settings (enable/disable, password, account mapping).
+
+    Password is encrypted before storage and never exposed in responses.
     """
-    # TODO: Implement in US4
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    from src.models.ledger import Ledger
+    from src.models.user_bank_setting import UserBankSetting
+    from src.services.encryption import encrypt
+
+    if not body:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request body required")
+
+    ledger = session.exec(select(Ledger).where(Ledger.id == ledger_id)).first()
+    if not ledger:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger not found")
+
+    # Find or create setting
+    setting = session.exec(
+        select(UserBankSetting).where(
+            UserBankSetting.user_id == ledger.user_id,
+            UserBankSetting.bank_code == body.bank_code,
+        )
+    ).first()
+
+    if not setting:
+        setting = UserBankSetting(
+            user_id=ledger.user_id,
+            bank_code=body.bank_code,
+        )
+
+    # Update fields
+    if body.is_enabled is not None:
+        setting.is_enabled = body.is_enabled
+
+    if body.pdf_password is not None:
+        setting.encrypted_pdf_password = encrypt(body.pdf_password) if body.pdf_password else None
+
+    if body.credit_card_account_id is not None:
+        setting.credit_card_account_id = body.credit_card_account_id
+
+    from datetime import UTC, datetime
+
+    setting.updated_at = datetime.now(UTC)
+
+    session.add(setting)
+    session.commit()
+    session.refresh(setting)
+
+    # Get account name for response
+    cc_account_name = None
+    if setting.credit_card_account_id:
+        from src.models.account import Account
+
+        account = session.get(Account, setting.credit_card_account_id)
+        if account:
+            cc_account_name = account.name
+
+    return UserBankSettingResponse(
+        bank_code=setting.bank_code,
+        bank_name=get_parser(setting.bank_code).bank_name,
+        is_enabled=setting.is_enabled,
+        has_password=bool(setting.encrypted_pdf_password),
+        credit_card_account_id=setting.credit_card_account_id,
+        credit_card_account_name=cc_account_name,
+    )
 
 
 # =============================================================================

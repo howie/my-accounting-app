@@ -226,18 +226,18 @@
 
 ### Implementation for User Story 4
 
-- [ ] T103 [US4] Implement bank listing from parser registry in GmailImportService
-- [ ] T104 [US4] Implement UserBankSetting service for CRUD operations
-- [ ] T105 [US4] Implement password encryption on save, never expose in response
-- [ ] T106 [US4] Add bank settings endpoints to backend/src/api/routes/gmail_import_routes.py
+- [x] T103 [US4] Implement bank listing from parser registry in GmailImportService
+- [x] T104 [US4] Implement UserBankSetting service for CRUD operations
+- [x] T105 [US4] Implement password encryption on save, never expose in response
+- [x] T106 [US4] Add bank settings endpoints to backend/src/api/routes/gmail_import_routes.py
 - [ ] T107 [US4] Ensure all tests PASS
 - [ ] T108 [US4] Refactor while keeping tests green
 
 ### Frontend for User Story 4
 
-- [ ] T109 [P] [US4] Create BankSettingsPanel component in frontend/src/components/gmail-import/BankSettingsPanel.tsx
-- [ ] T110 [US4] Add bank settings to Gmail settings page
-- [ ] T111 [US4] Add getBanks, getBankSettings, updateBankSettings to frontend/src/lib/api/gmail-import.ts
+- [x] T109 [P] [US4] Create BankSettingsPanel component in frontend/src/components/gmail-import/BankSettingsPanel.tsx
+- [x] T110 [US4] Add bank settings to Gmail settings page
+- [x] T111 [US4] Add getBanks, getBankSettings, updateBankSettings to frontend/src/lib/api/gmail-import.ts
 
 **Checkpoint**: Bank configuration functional - user can enable/disable banks and set passwords
 

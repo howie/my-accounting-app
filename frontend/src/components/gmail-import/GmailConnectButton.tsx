@@ -1,17 +1,17 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   gmailImportApi,
   GmailConnectionResponse,
   GmailConnectionStatus,
-} from '@/lib/api/gmail-import';
+} from '@/lib/api/gmail-import'
 
 interface GmailConnectButtonProps {
-  ledgerId: string;
-  connection: GmailConnectionResponse | null;
-  onConnectionChange: () => void;
+  ledgerId: string
+  connection: GmailConnectionResponse | null
+  onConnectionChange: () => void
 }
 
 export default function GmailConnectButton({
@@ -19,87 +19,87 @@ export default function GmailConnectButton({
   connection,
   onConnectionChange,
 }: GmailConnectButtonProps) {
-  const t = useTranslations('gmailImport');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const t = useTranslations('gmailImport')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleConnect = async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const response = await gmailImportApi.initiateConnect(ledgerId);
+      const response = await gmailImportApi.initiateConnect(ledgerId)
       // Redirect to Google OAuth2 consent page
-      window.location.href = response.auth_url;
+      window.location.href = response.auth_url
     } catch (err) {
-      console.error('Failed to initiate Gmail connection:', err);
-      setError(t('errors.connectFailed'));
-      setLoading(false);
+      console.error('Failed to initiate Gmail connection:', err)
+      setError(t('errors.connectFailed'))
+      setLoading(false)
     }
-  };
+  }
 
   const handleDisconnect = async () => {
     if (!confirm(t('confirmDisconnect'))) {
-      return;
+      return
     }
 
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      await gmailImportApi.disconnect();
-      onConnectionChange();
+      await gmailImportApi.disconnect(ledgerId)
+      onConnectionChange()
     } catch (err) {
-      console.error('Failed to disconnect Gmail:', err);
-      setError(t('errors.disconnectFailed'));
+      console.error('Failed to disconnect Gmail:', err)
+      setError(t('errors.disconnectFailed'))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const isConnected = connection?.status === GmailConnectionStatus.CONNECTED;
-  const isExpired = connection?.status === GmailConnectionStatus.EXPIRED;
+  const isConnected = connection?.status === GmailConnectionStatus.CONNECTED
+  const isExpired = connection?.status === GmailConnectionStatus.EXPIRED
 
   if (isConnected) {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full" />
+          <div className="h-3 w-3 rounded-full bg-green-500" />
           <span className="text-sm text-gray-600">{t('connectedAs')}</span>
           <span className="font-medium">{connection.email_address}</span>
         </div>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           onClick={handleDisconnect}
           disabled={loading}
-          className="px-4 py-2 text-sm text-red-600 border border-red-300 rounded-md hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md border border-red-300 px-4 py-2 text-sm text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? t('disconnecting') : t('disconnect')}
         </button>
       </div>
-    );
+    )
   }
 
   if (isExpired) {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-yellow-500 rounded-full" />
+          <div className="h-3 w-3 rounded-full bg-yellow-500" />
           <span className="text-sm text-yellow-700">{t('connectionExpired')}</span>
         </div>
         <p className="text-sm text-gray-600">{connection?.email_address}</p>
 
-        {error && <p className="text-red-600 text-sm">{error}</p>}
+        {error && <p className="text-sm text-red-600">{error}</p>}
 
         <button
           onClick={handleConnect}
           disabled={loading}
-          className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {loading ? t('reconnecting') : t('reconnect')}
         </button>
       </div>
-    );
+    )
   }
 
   // Not connected
@@ -107,14 +107,14 @@ export default function GmailConnectButton({
     <div className="space-y-3">
       <p className="text-sm text-gray-600">{t('notConnected')}</p>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button
         onClick={handleConnect}
         disabled={loading}
-        className="flex items-center gap-2 px-4 py-2 text-sm bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <svg className="w-5 h-5" viewBox="0 0 24 24">
+        <svg className="h-5 w-5" viewBox="0 0 24 24">
           <path
             fill="#4285F4"
             d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -135,5 +135,5 @@ export default function GmailConnectButton({
         {loading ? t('connecting') : t('connectGmail')}
       </button>
     </div>
-  );
+  )
 }
