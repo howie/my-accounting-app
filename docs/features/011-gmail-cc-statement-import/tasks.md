@@ -144,14 +144,14 @@
 - [x] T056 [P] [US2] Create FubonParser in backend/src/services/bank_parsers/fubon_parser.py
 - [x] T057 [P] [US2] Create CathayParser in backend/src/services/bank_parsers/cathay_parser.py
 - [x] T058 [P] [US2] Create DbsParser in backend/src/services/bank_parsers/dbs_parser.py
-- [ ] T059 [P] [US2] Create HsbcParser in backend/src/services/bank_parsers/hsbc_parser.py
-- [ ] T060 [P] [US2] Create HncbParser in backend/src/services/bank_parsers/hncb_parser.py
+- [x] T059 [P] [US2] Create HsbcParser in backend/src/services/bank_parsers/hsbc_parser.py
+- [x] T060 [P] [US2] Create HncbParser in backend/src/services/bank_parsers/hncb_parser.py
 - [x] T061 [P] [US2] Create EsunParser in backend/src/services/bank_parsers/esun_parser.py
-- [ ] T062 [P] [US2] Create SinopacParser in backend/src/services/bank_parsers/sinopac_parser.py
+- [x] T062 [P] [US2] Create SinopacParser in backend/src/services/bank_parsers/sinopac_parser.py
 - [x] T063 [US2] Create GmailImportService class in backend/src/services/gmail_import_service.py (execute_scan orchestration)
 - [x] T064 [US2] Implement statement discovery and tracking in GmailImportService
 - [x] T065 [US2] Implement PDF parsing with parser registry in GmailImportService
-- [ ] T066 [US2] Add scan and preview endpoints to backend/src/api/routes/gmail_import_routes.py
+- [x] T066 [US2] Add scan and preview endpoints to backend/src/api/routes/gmail_import_routes.py
 - [ ] T067 [US2] Integrate CategorySuggester for transaction category suggestions
 - [ ] T068 [US2] Ensure all tests PASS
 - [ ] T069 [US2] Refactor while keeping tests green

@@ -4,6 +4,7 @@ Feature 011: Gmail CC Statement Import
 Handles OAuth2 connection, scanning, and statement import operations.
 """
 
+import json
 import uuid
 from typing import Any
 
@@ -13,11 +14,18 @@ from sqlmodel import Session, select
 
 from src.api.deps import get_session
 from src.models.gmail_connection import GmailConnection, GmailConnectionStatus
+from src.models.gmail_scan import DiscoveredStatement, ScanTriggerType, StatementScanJob
 from src.schemas.gmail_import import (
+    DiscoveredStatementResponse,
     GmailAuthUrlResponse,
     GmailConnectionResponse,
     GmailDisconnectResponse,
+    ScanHistoryResponse,
+    ScanJobResponse,
+    StatementsListResponse,
+    TriggerScanRequest,
 )
+from src.services.gmail_import_service import GmailImportError, GmailImportService
 from src.services.gmail_service import GmailAuthError, GmailService, GmailServiceError
 
 router = APIRouter()
@@ -89,7 +97,6 @@ async def gmail_auth_callback(
         ) = gmail_service.handle_callback(code, state)
 
         # Get or create GmailConnection for this ledger
-        # Note: In a multi-user system, we'd also check user_id
         ledger_uuid = uuid.UUID(ledger_id)
 
         existing = session.exec(
@@ -237,61 +244,164 @@ async def update_bank_settings(
 
 
 # =============================================================================
-# Scan Endpoints (US2) - Stub implementations
+# Scan Endpoints (US2)
 # =============================================================================
 
 
-@router.post("/ledgers/{ledger_id}/gmail/scan")
+@router.post("/ledgers/{ledger_id}/gmail/scan", response_model=ScanJobResponse)
 async def trigger_scan(
     ledger_id: uuid.UUID,
-    session: Session = Depends(get_session),  # noqa: ARG001
+    body: TriggerScanRequest | None = None,
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Trigger a manual scan for credit card statements.
+
+    Searches Gmail for statement emails from enabled banks,
+    downloads PDF attachments, and parses transactions.
     """
-    # TODO: Implement in US2
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    import_service = GmailImportService(session)
+    connection = import_service.get_connection(ledger_id)
+
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Gmail connection found. Connect Gmail first.",
+        )
+
+    if connection.status != GmailConnectionStatus.CONNECTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Gmail connection is {connection.status.value}. Reconnect to scan.",
+        )
+
+    try:
+        # Get user_id from ledger for bank settings lookup
+        from src.models.ledger import Ledger
+
+        ledger = session.exec(select(Ledger).where(Ledger.id == ledger_id)).first()
+        if not ledger:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger not found")
+
+        job = import_service.execute_scan(
+            ledger_id=ledger_id,
+            user_id=ledger.user_id,
+            trigger_type=ScanTriggerType.MANUAL,
+        )
+
+        return ScanJobResponse(
+            id=job.id,
+            trigger_type=job.trigger_type,
+            status=job.status,
+            banks_scanned=json.loads(job.banks_scanned),
+            statements_found=job.statements_found,
+            error_message=job.error_message,
+            started_at=job.started_at,
+            completed_at=job.completed_at,
+        )
+    except GmailImportError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
 
 
-@router.get("/gmail/scan/{scan_job_id}")
+@router.get("/gmail/scan/{scan_job_id}", response_model=ScanJobResponse)
 async def get_scan_status(
     scan_job_id: uuid.UUID,
-    session: Session = Depends(get_session),  # noqa: ARG001
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get scan job status.
     """
-    # TODO: Implement in US2
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    job = session.get(StatementScanJob, scan_job_id)
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan job not found")
+
+    return ScanJobResponse(
+        id=job.id,
+        trigger_type=job.trigger_type,
+        status=job.status,
+        banks_scanned=json.loads(job.banks_scanned),
+        statements_found=job.statements_found,
+        error_message=job.error_message,
+        started_at=job.started_at,
+        completed_at=job.completed_at,
+    )
 
 
-@router.get("/gmail/scan/{scan_job_id}/statements")
+@router.get("/gmail/scan/{scan_job_id}/statements", response_model=StatementsListResponse)
 async def get_scan_statements(
     scan_job_id: uuid.UUID,
-    session: Session = Depends(get_session),  # noqa: ARG001
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get statements discovered in a scan job.
     """
-    # TODO: Implement in US2
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    job = session.get(StatementScanJob, scan_job_id)
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scan job not found")
+
+    statements = session.exec(
+        select(DiscoveredStatement)
+        .where(DiscoveredStatement.scan_job_id == scan_job_id)
+        .order_by(DiscoveredStatement.email_date.desc())
+    ).all()
+
+    return StatementsListResponse(
+        statements=[
+            DiscoveredStatementResponse(
+                id=s.id,
+                bank_code=s.bank_code,
+                bank_name=s.bank_name,
+                billing_period_start=s.billing_period_start,
+                billing_period_end=s.billing_period_end,
+                email_subject=s.email_subject,
+                email_date=s.email_date,
+                pdf_filename=s.pdf_filename,
+                parse_status=s.parse_status,
+                parse_confidence=s.parse_confidence,
+                transaction_count=s.transaction_count,
+                total_amount=s.total_amount,
+                import_status=s.import_status,
+            )
+            for s in statements
+        ]
+    )
 
 
 # =============================================================================
-# Preview & Import Endpoints (US2, US3) - Stub implementations
+# Preview & Import Endpoints (US2, US3)
 # =============================================================================
 
 
-@router.get("/gmail/statements/{statement_id}/preview")
+@router.get("/gmail/statements/{statement_id}/preview", response_model=DiscoveredStatementResponse)
 async def get_statement_preview(
     statement_id: uuid.UUID,
-    session: Session = Depends(get_session),  # noqa: ARG001
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get preview of a discovered statement with parsed transactions.
     """
-    # TODO: Implement in US2
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    statement = session.get(DiscoveredStatement, statement_id)
+    if not statement:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found")
+
+    return DiscoveredStatementResponse(
+        id=statement.id,
+        bank_code=statement.bank_code,
+        bank_name=statement.bank_name,
+        billing_period_start=statement.billing_period_start,
+        billing_period_end=statement.billing_period_end,
+        email_subject=statement.email_subject,
+        email_date=statement.email_date,
+        pdf_filename=statement.pdf_filename,
+        parse_status=statement.parse_status,
+        parse_confidence=statement.parse_confidence,
+        transaction_count=statement.transaction_count,
+        total_amount=statement.total_amount,
+        import_status=statement.import_status,
+    )
 
 
 @router.post("/ledgers/{ledger_id}/gmail/statements/{statement_id}/import")
@@ -308,22 +418,39 @@ async def import_statement(
 
 
 # =============================================================================
-# History Endpoints (US7) - Stub implementations
+# History Endpoints (US7)
 # =============================================================================
 
 
-@router.get("/gmail/scan/history")
+@router.get("/gmail/scan/history", response_model=ScanHistoryResponse)
 async def get_scan_history(
     ledger_id: uuid.UUID = Query(...),
     limit: int = Query(default=20, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
-    session: Session = Depends(get_session),  # noqa: ARG001
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get scan history for a ledger.
     """
-    # TODO: Implement in US7
-    return {"items": [], "total": 0}
+    import_service = GmailImportService(session)
+    jobs, total = import_service.get_scan_history(ledger_id, limit=limit, offset=offset)
+
+    return ScanHistoryResponse(
+        items=[
+            ScanJobResponse(
+                id=j.id,
+                trigger_type=j.trigger_type,
+                status=j.status,
+                banks_scanned=json.loads(j.banks_scanned),
+                statements_found=j.statements_found,
+                error_message=j.error_message,
+                started_at=j.started_at,
+                completed_at=j.completed_at,
+            )
+            for j in jobs
+        ],
+        total=total,
+    )
 
 
 # =============================================================================
