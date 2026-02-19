@@ -489,6 +489,11 @@
       "importing": "Importing...",
       "selectStatement": "Select a statement to preview its details"
     },
+    "import": {
+      "success": "Statement imported successfully!",
+      "failed": "Failed to import statement. Please try again.",
+      "transactionsImported": "{count, plural, =1 {1 transaction imported} other {# transactions imported}}"
+    },
     "errors": {
       "connectFailed": "Failed to connect Gmail. Please try again.",
       "disconnectFailed": "Failed to disconnect Gmail. Please try again.",

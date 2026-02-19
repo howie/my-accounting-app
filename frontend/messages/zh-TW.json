@@ -489,6 +489,11 @@
       "importing": "匯入中...",
       "selectStatement": "選擇帳單以預覽詳細資訊"
     },
+    "import": {
+      "success": "帳單匯入成功！",
+      "failed": "匯入帳單失敗，請重試。",
+      "transactionsImported": "{count, plural, other {已匯入 # 筆交易}}"
+    },
     "errors": {
       "connectFailed": "連接 Gmail 失敗，請重試。",
       "disconnectFailed": "中斷連接失敗，請重試。",

@@ -36,6 +36,11 @@ export default function GmailImportPage() {
 
   // Import state
   const [importing, setImporting] = useState(false)
+  const [importResult, setImportResult] = useState<{
+    success: boolean
+    message: string
+    count?: number
+  } | null>(null)
 
   const selectedStatement = statements.find((s) => s.id === selectedStatementId) ?? null
 
@@ -126,8 +131,9 @@ export default function GmailImportPage() {
 
   const handleImport = async (statementId: string) => {
     setImporting(true)
+    setImportResult(null)
     try {
-      await gmailImportApi.importStatement(ledgerId, statementId, {
+      const result = await gmailImportApi.importStatement(ledgerId, statementId, {
         statement_id: statementId,
       })
       // Refresh statements to show updated import status
@@ -135,8 +141,16 @@ export default function GmailImportPage() {
         fetchStatements(scanJob.id)
       }
       setSelectedStatementId(null)
-    } catch {
-      // Import error handled by the component
+      setImportResult({
+        success: true,
+        message: t('import.success'),
+        count: result.imported_count,
+      })
+    } catch (err) {
+      setImportResult({
+        success: false,
+        message: err instanceof Error ? err.message : t('import.failed'),
+      })
     } finally {
       setImporting(false)
     }
@@ -247,6 +261,74 @@ export default function GmailImportPage() {
               </div>
             )}
           </div>
+
+          {/* Import result notification */}
+          {importResult && (
+            <div
+              className={`rounded-lg border p-4 ${
+                importResult.success ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {importResult.success ? (
+                    <svg
+                      className="h-5 w-5 text-green-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M5 13l4 4L19 7"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-5 w-5 text-red-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  )}
+                  <span
+                    className={`text-sm ${importResult.success ? 'text-green-800' : 'text-red-800'}`}
+                  >
+                    {importResult.message}
+                    {importResult.count !== undefined &&
+                      ` (${t('import.transactionsImported', { count: importResult.count })})`}
+                  </span>
+                </div>
+                <button
+                  onClick={() => setImportResult(null)}
+                  className="rounded p-1 hover:bg-black/5"
+                >
+                  <svg
+                    className="h-4 w-4 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Results section */}
           {statements.length > 0 && (

@@ -188,22 +188,22 @@
 
 ### Implementation for User Story 3
 
-- [ ] T084 [US3] Implement GmailImportService.import_statement() with ImportService integration
-- [ ] T085 [US3] Implement category override handling in import flow
-- [ ] T086 [US3] Implement transaction skip handling for duplicates
-- [ ] T087 [US3] Add audit trail logging for Gmail imports (source="gmail-statement-import")
-- [ ] T088 [US3] Update DiscoveredStatement.import_status after successful import
-- [ ] T089 [US3] Add import endpoint to backend/src/api/routes/gmail_import_routes.py
+- [x] T084 [US3] Implement GmailImportService.import_statement() with ImportService integration
+- [x] T085 [US3] Implement category override handling in import flow
+- [x] T086 [US3] Implement transaction skip handling for duplicates
+- [x] T087 [US3] Add audit trail logging for Gmail imports (source="gmail-statement-import")
+- [x] T088 [US3] Update DiscoveredStatement.import_status after successful import
+- [x] T089 [US3] Add import endpoint to backend/src/api/routes/gmail_import_routes.py
 - [ ] T090 [US3] Ensure all tests PASS
 - [ ] T091 [US3] Refactor while keeping tests green
 
 ### Frontend for User Story 3
 
-- [ ] T092 [US3] Add import confirmation UI to StatementPreview component
+- [x] T092 [US3] Add import confirmation UI to StatementPreview component
 - [ ] T093 [US3] Add category editing UI to StatementPreview component
-- [ ] T094 [US3] Add duplicate warning display to StatementPreview component
-- [ ] T095 [US3] Add importStatement function to frontend/src/lib/api/gmail-import.ts
-- [ ] T096 [US3] Add success/error feedback after import
+- [x] T094 [US3] Add duplicate warning display to StatementPreview component
+- [x] T095 [US3] Add importStatement function to frontend/src/lib/api/gmail-import.ts
+- [x] T096 [US3] Add success/error feedback after import
 
 **Checkpoint**: P1 Complete - Full scan → preview → import flow functional (MVP!)
 

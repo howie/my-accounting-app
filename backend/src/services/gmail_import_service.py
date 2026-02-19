@@ -433,12 +433,15 @@ class GmailImportService:
     ) -> tuple[DiscoveredStatement, list]:
         """Get a statement with parsed transactions for preview.
 
+        Re-fetches the PDF from Gmail and re-parses it to extract
+        transaction details for user review before import.
+
         Args:
             statement_id: The statement ID.
             user_id: The user ID for bank settings.
 
         Returns:
-            Tuple of (statement, list of parsed transactions).
+            Tuple of (statement, list of ParsedStatementTransaction).
 
         Raises:
             GmailImportError: If statement not found or parsing fails.
@@ -450,11 +453,13 @@ class GmailImportService:
         if statement.parse_status == StatementParseStatus.PARSE_FAILED:
             raise GmailImportError(f"Statement parsing failed: {statement.error_message}")
 
-        # Re-parse to get transactions (they're not stored in DB)
-        # This requires access to the Gmail API again
-        # In a production system, you might want to cache the parsed transactions
-
-        return statement, []  # Placeholder - would need to re-fetch and parse
+        try:
+            transactions = self._reparse_statement(statement, user_id)
+            return statement, transactions
+        except GmailImportError:
+            raise
+        except Exception as e:
+            raise GmailImportError(f"Failed to load preview: {e}")
 
     def get_scan_history(
         self, ledger_id: uuid.UUID, limit: int = 20, offset: int = 0
@@ -500,3 +505,274 @@ class GmailImportService:
             List of bank info dicts.
         """
         return get_bank_info()
+
+    def _reparse_statement(
+        self,
+        statement: DiscoveredStatement,
+        user_id: uuid.UUID,
+    ) -> list:
+        """Re-parse a statement PDF to extract transactions.
+
+        Downloads the PDF from Gmail again and parses it.
+
+        Args:
+            statement: The discovered statement record.
+            user_id: User ID for bank settings (password lookup).
+
+        Returns:
+            List of ParsedStatementTransaction objects.
+
+        Raises:
+            GmailImportError: If re-parsing fails.
+        """
+        from src.services.bank_parsers.base import ParsedStatementTransaction  # noqa: F811
+
+        # Get connection to access Gmail
+        scan_job = statement.scan_job
+        connection = scan_job.gmail_connection
+
+        if connection.status != GmailConnectionStatus.CONNECTED:
+            raise GmailImportError("Gmail connection is not active")
+
+        # Build Gmail API service
+        credentials = self._gmail_service.get_credentials(
+            connection.encrypted_access_token,
+            connection.encrypted_refresh_token,
+            connection.token_expiry,
+        )
+        service = self._gmail_service.build_service(credentials)
+
+        # Download PDF
+        pdf_data = self._gmail_service.get_attachment(
+            service, statement.email_message_id, statement.pdf_attachment_id
+        )
+
+        # Get parser and password
+        parser = get_parser(statement.bank_code)
+        password = self.get_bank_password(user_id, statement.bank_code)
+
+        # Parse PDF
+        pdf_parser = PdfParser(pdf_data)
+
+        if pdf_parser.is_encrypted():
+            if not password:
+                raise GmailImportError("PDF is encrypted but no password configured")
+            try:
+                pdf_parser.decrypt(password)
+            except PdfDecryptionError as e:
+                raise GmailImportError(f"Failed to decrypt PDF: {e}")
+
+        content = pdf_parser.extract_text()
+        transactions: list[ParsedStatementTransaction] = parser.parse_statement(content)
+
+        return transactions
+
+    def import_statement(
+        self,
+        ledger_id: uuid.UUID,
+        statement_id: uuid.UUID,
+        user_id: uuid.UUID,
+        category_overrides: list | None = None,
+        skip_indices: list[int] | None = None,
+    ) -> dict:
+        """Import a discovered statement's transactions into the ledger.
+
+        Re-parses the PDF, converts transactions, creates an ImportSession,
+        and uses ImportService to create Transaction records.
+
+        Args:
+            ledger_id: The ledger to import into.
+            statement_id: The discovered statement ID.
+            user_id: The user ID for bank settings.
+            category_overrides: Optional list of CategoryOverride dicts.
+            skip_indices: Transaction indices to skip.
+
+        Returns:
+            Dict with import results (success, import_session_id, counts).
+
+        Raises:
+            GmailImportError: If import fails.
+        """
+        from hashlib import sha256
+
+        from src.models.import_session import ImportSession, ImportStatus
+        from src.schemas.data_import import (
+            AccountType,
+            ImportType,
+            ParsedAccountPath,
+            ParsedTransaction,
+            TransactionType,
+        )
+        from src.schemas.gmail_import import CategoryOverride as CategoryOverrideSchema
+        from src.services.import_service import ImportService
+
+        if category_overrides is None:
+            category_overrides = []
+        if skip_indices is None:
+            skip_indices = []
+
+        # 1. Get the statement
+        statement = self._session.get(DiscoveredStatement, statement_id)
+        if not statement:
+            raise GmailImportError("Statement not found")
+
+        if statement.import_status == StatementImportStatus.IMPORTED:
+            raise GmailImportError("Statement has already been imported")
+
+        if statement.parse_status == StatementParseStatus.PARSE_FAILED:
+            raise GmailImportError(f"Statement parsing failed: {statement.error_message}")
+
+        # 2. Re-parse the PDF to get transactions
+        raw_transactions = self._reparse_statement(statement, user_id)
+
+        if not raw_transactions:
+            raise GmailImportError("No transactions found in statement")
+
+        # 3. Build override index
+        override_map: dict[int, CategoryOverrideSchema] = {}
+        for ov in category_overrides:
+            if isinstance(ov, dict):
+                ov = CategoryOverrideSchema(**ov)
+            override_map[ov.transaction_index] = ov
+
+        # 4. Get credit card account info from bank settings
+        cc_account_id, cc_account_name = self._get_cc_account(user_id, statement.bank_code)
+
+        # Default credit card account name if not configured
+        if not cc_account_name:
+            cc_account_name = f"{statement.bank_name}信用卡"
+
+        # 5. Convert ParsedStatementTransaction -> ParsedTransaction
+        parsed_transactions: list[ParsedTransaction] = []
+        expense_account_names: set[str] = set()
+
+        for idx, raw_tx in enumerate(raw_transactions):
+            # Determine expense account name
+            if idx in override_map and override_map[idx].category_name:
+                expense_name = override_map[idx].category_name
+            elif raw_tx.category_suggestion:
+                expense_name = raw_tx.category_suggestion
+            else:
+                expense_name = "其他支出"
+
+            expense_account_names.add(expense_name)
+
+            # Credit card statement: expense from category account, to credit card
+            parsed_tx = ParsedTransaction(
+                row_number=idx,
+                date=raw_tx.date,
+                transaction_type=TransactionType.EXPENSE,
+                from_account_name=f"E-{expense_name}",
+                to_account_name=f"L-{cc_account_name}",
+                amount=abs(raw_tx.amount),
+                description=raw_tx.merchant_name,
+                from_account_path=ParsedAccountPath(
+                    account_type=AccountType.EXPENSE,
+                    path_segments=[expense_name],
+                    raw_name=f"E-{expense_name}",
+                ),
+                to_account_path=ParsedAccountPath(
+                    account_type=AccountType.LIABILITY,
+                    path_segments=["信用卡", cc_account_name],
+                    raw_name=f"L-{cc_account_name}",
+                ),
+            )
+
+            # If override specifies a specific account_id
+            if idx in override_map and override_map[idx].account_id:
+                parsed_tx.from_account_id = override_map[idx].account_id
+
+            # If bank setting has a credit card account configured
+            if cc_account_id:
+                parsed_tx.to_account_id = cc_account_id
+
+            parsed_transactions.append(parsed_tx)
+
+        # 6. Create ImportSession
+        source_hash = sha256(
+            f"{statement.email_message_id}:{statement.pdf_attachment_id}".encode()
+        ).hexdigest()
+
+        import_session = ImportSession(
+            ledger_id=ledger_id,
+            import_type=ImportType.GMAIL_CC,
+            source_filename=statement.pdf_filename,
+            source_file_hash=source_hash,
+            bank_code=statement.bank_code,
+            email_message_id=statement.email_message_id,
+            status=ImportStatus.PROCESSING,
+            progress_total=len(parsed_transactions),
+        )
+        self._session.add(import_session)
+        self._session.flush()
+
+        # 7. Auto-map accounts
+        from src.models.account import Account
+
+        existing_accounts = list(
+            self._session.exec(select(Account).where(Account.ledger_id == ledger_id)).all()
+        )
+
+        parsed_transactions, mappings = ImportService.auto_map_accounts(
+            parsed_transactions, existing_accounts
+        )
+
+        # 8. Execute import
+        try:
+            result = ImportService.execute_import(
+                session=self._session,
+                import_session=import_session,
+                transactions=parsed_transactions,
+                mappings=mappings,
+                skip_rows=skip_indices,
+            )
+        except Exception as e:
+            import_session.status = ImportStatus.FAILED
+            import_session.error_message = str(e)
+            self._session.add(import_session)
+            self._session.commit()
+            raise GmailImportError(f"Import failed: {e}")
+
+        # 9. Update statement import status
+        statement.import_status = StatementImportStatus.IMPORTED
+        statement.import_session_id = import_session.id
+        self._session.add(statement)
+        self._session.commit()
+
+        return {
+            "success": result.success,
+            "import_session_id": import_session.id,
+            "imported_count": result.imported_count,
+            "skipped_count": result.skipped_count,
+            "created_accounts": [
+                {"id": str(a.id), "name": a.name, "type": a.type.value}
+                for a in result.created_accounts
+            ],
+        }
+
+    def _get_cc_account(
+        self, user_id: uuid.UUID, bank_code: str
+    ) -> tuple[uuid.UUID | None, str | None]:
+        """Get the credit card account for a bank.
+
+        Args:
+            user_id: The user ID.
+            bank_code: The bank code.
+
+        Returns:
+            Tuple of (account_id or None, account_name or None).
+        """
+        setting = self._session.exec(
+            select(UserBankSetting).where(
+                UserBankSetting.user_id == user_id, UserBankSetting.bank_code == bank_code
+            )
+        ).first()
+
+        if setting and setting.credit_card_account_id:
+            from src.models.account import Account
+
+            account = self._session.get(Account, setting.credit_card_account_id)
+            if account:
+                return account.id, account.name
+
+        return None, None

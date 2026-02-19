@@ -1,4 +1,4 @@
-import { apiDelete, apiGet, apiPost, apiPut } from '../api';
+import { apiDelete, apiGet, apiPost, apiPut } from '../api'
 
 // Enums
 export enum GmailConnectionStatus {
@@ -39,196 +39,198 @@ export enum ScheduleFrequency {
 
 // Response Types
 export interface GmailConnectionResponse {
-  id: string;
-  email_address: string;
-  status: GmailConnectionStatus;
-  last_scan_at: string | null;
-  scan_start_date: string;
-  created_at: string;
+  id: string
+  email_address: string
+  status: GmailConnectionStatus
+  last_scan_at: string | null
+  scan_start_date: string
+  created_at: string
 }
 
 export interface GmailBankInfo {
-  code: string;
-  name: string;
-  email_query: string;
-  password_hint: string;
+  code: string
+  name: string
+  email_query: string
+  password_hint: string
 }
 
 export interface UserBankSettingResponse {
-  bank_code: string;
-  bank_name: string;
-  is_enabled: boolean;
-  has_password: boolean;
-  credit_card_account_id: string | null;
-  credit_card_account_name: string | null;
+  bank_code: string
+  bank_name: string
+  is_enabled: boolean
+  has_password: boolean
+  credit_card_account_id: string | null
+  credit_card_account_name: string | null
 }
 
 export interface ScanJobResponse {
-  id: string;
-  trigger_type: ScanTriggerType;
-  status: ScanJobStatus;
-  banks_scanned: string[];
-  statements_found: number;
-  error_message: string | null;
-  started_at: string | null;
-  completed_at: string | null;
+  id: string
+  trigger_type: ScanTriggerType
+  status: ScanJobStatus
+  banks_scanned: string[]
+  statements_found: number
+  error_message: string | null
+  started_at: string | null
+  completed_at: string | null
 }
 
 export interface DiscoveredStatementResponse {
-  id: string;
-  bank_code: string;
-  bank_name: string;
-  billing_period_start: string | null;
-  billing_period_end: string | null;
-  email_subject: string;
-  email_date: string;
-  pdf_filename: string;
-  parse_status: StatementParseStatus;
-  parse_confidence: number | null;
-  transaction_count: number;
-  total_amount: number | null;
-  import_status: StatementImportStatus;
+  id: string
+  bank_code: string
+  bank_name: string
+  billing_period_start: string | null
+  billing_period_end: string | null
+  email_subject: string
+  email_date: string
+  pdf_filename: string
+  parse_status: StatementParseStatus
+  parse_confidence: number | null
+  transaction_count: number
+  total_amount: number | null
+  import_status: StatementImportStatus
 }
 
 export interface StatementTransaction {
-  index: number;
-  date: string;
-  merchant_name: string;
-  amount: number;
-  currency: string;
-  suggested_category: string | null;
-  category_confidence: number;
-  is_foreign: boolean;
-  original_description: string;
+  index: number
+  date: string
+  merchant_name: string
+  amount: number
+  currency: string
+  suggested_category: string | null
+  category_confidence: number
+  is_foreign: boolean
+  original_description: string
 }
 
 export interface DuplicateWarning {
-  transaction_index: number;
-  existing_transaction_ids: string[];
-  reason: string;
+  transaction_index: number
+  existing_transaction_ids: string[]
+  reason: string
 }
 
 export interface StatementPreviewResponse {
-  statement_id: string;
-  bank_name: string;
-  billing_period: { start: string; end: string };
-  transactions: StatementTransaction[];
-  total_amount: number;
-  duplicate_warnings: DuplicateWarning[];
-  parse_confidence: number;
+  statement_id: string
+  bank_name: string
+  billing_period: { start: string; end: string }
+  transactions: StatementTransaction[]
+  total_amount: number
+  duplicate_warnings: DuplicateWarning[]
+  parse_confidence: number
 }
 
 export interface ImportStatementResponse {
-  success: boolean;
-  import_session_id: string;
-  imported_count: number;
-  skipped_count: number;
-  created_accounts: Array<{ id: string; name: string; type: string }>;
+  success: boolean
+  import_session_id: string
+  imported_count: number
+  skipped_count: number
+  created_accounts: Array<{ id: string; name: string; type: string }>
 }
 
 export interface ScheduleSettingsResponse {
-  frequency: ScheduleFrequency | null;
-  hour: number | null;
-  day_of_week: number | null;
-  next_scan_at: string | null;
+  frequency: ScheduleFrequency | null
+  hour: number | null
+  day_of_week: number | null
+  next_scan_at: string | null
 }
 
 // Request Types
 export interface UpdateBankSettingsRequest {
-  bank_code: string;
-  is_enabled?: boolean;
-  pdf_password?: string | null;
-  credit_card_account_id?: string | null;
+  bank_code: string
+  is_enabled?: boolean
+  pdf_password?: string | null
+  credit_card_account_id?: string | null
 }
 
 export interface TriggerScanRequest {
-  bank_codes?: string[];
+  bank_codes?: string[]
 }
 
 export interface ImportStatementRequest {
-  statement_id: string;
+  statement_id: string
   category_overrides?: Array<{
-    transaction_index: number;
-    category_name: string;
-    account_id?: string | null;
-  }>;
-  skip_transaction_indices?: number[];
+    transaction_index: number
+    category_name: string
+    account_id?: string | null
+  }>
+  skip_transaction_indices?: number[]
 }
 
 export interface UpdateScheduleRequest {
-  frequency: ScheduleFrequency | null;
-  hour?: number;
-  day_of_week?: number;
+  frequency: ScheduleFrequency | null
+  hour?: number
+  day_of_week?: number
 }
 
 // API Client
 export const gmailImportApi = {
   // OAuth2 Connection
   initiateConnect: async (ledgerId: string) => {
-    return apiPost<{ auth_url: string }>(`/gmail/auth/connect?ledger_id=${ledgerId}`, {});
+    return apiPost<{ auth_url: string }>(`/gmail/auth/connect?ledger_id=${ledgerId}`, {})
   },
 
   getConnection: async () => {
-    return apiGet<GmailConnectionResponse>('/gmail/connection');
+    return apiGet<GmailConnectionResponse>('/gmail/connection')
   },
 
   disconnect: async () => {
-    return apiDelete<{ message: string }>('/gmail/connection');
+    return apiDelete<{ message: string }>('/gmail/connection')
   },
 
   // Bank Settings
   getBanks: async () => {
-    return apiGet<{ banks: GmailBankInfo[] }>('/gmail/banks');
+    return apiGet<{ banks: GmailBankInfo[] }>('/gmail/banks')
   },
 
   getBankSettings: async () => {
-    return apiGet<{ settings: UserBankSettingResponse[] }>('/gmail/banks/settings');
+    return apiGet<{ settings: UserBankSettingResponse[] }>('/gmail/banks/settings')
   },
 
   updateBankSettings: async (data: UpdateBankSettingsRequest) => {
-    return apiPut<UserBankSettingResponse>('/gmail/banks/settings', data);
+    return apiPut<UserBankSettingResponse>('/gmail/banks/settings', data)
   },
 
   // Scanning
   triggerScan: async (ledgerId: string, data?: TriggerScanRequest) => {
-    return apiPost<ScanJobResponse>(`/ledgers/${ledgerId}/gmail/scan`, data || {});
+    return apiPost<ScanJobResponse>(`/ledgers/${ledgerId}/gmail/scan`, data || {})
   },
 
   getScanStatus: async (scanJobId: string) => {
-    return apiGet<ScanJobResponse>(`/gmail/scan/${scanJobId}`);
+    return apiGet<ScanJobResponse>(`/gmail/scan/${scanJobId}`)
   },
 
   getStatements: async (scanJobId: string) => {
     return apiGet<{ statements: DiscoveredStatementResponse[] }>(
       `/gmail/scan/${scanJobId}/statements`
-    );
+    )
   },
 
   // Preview & Import
-  getStatementPreview: async (statementId: string) => {
-    return apiGet<StatementPreviewResponse>(`/gmail/statements/${statementId}/preview`);
+  getStatementPreview: async (statementId: string, ledgerId: string) => {
+    return apiGet<StatementPreviewResponse>(
+      `/gmail/statements/${statementId}/preview?ledger_id=${ledgerId}`
+    )
   },
 
   importStatement: async (ledgerId: string, statementId: string, data: ImportStatementRequest) => {
     return apiPost<ImportStatementResponse>(
       `/ledgers/${ledgerId}/gmail/statements/${statementId}/import`,
       data
-    );
+    )
   },
 
   // History
   getScanHistory: async (limit = 20, offset = 0) => {
     return apiGet<{ items: ScanJobResponse[]; total: number }>(
       `/gmail/scan/history?limit=${limit}&offset=${offset}`
-    );
+    )
   },
 
   // Schedule
   getSchedule: async () => {
-    return apiGet<ScheduleSettingsResponse>('/gmail/schedule');
+    return apiGet<ScheduleSettingsResponse>('/gmail/schedule')
   },
 
   updateSchedule: async (data: UpdateScheduleRequest) => {
-    return apiPut<ScheduleSettingsResponse>('/gmail/schedule', data);
+    return apiPut<ScheduleSettingsResponse>('/gmail/schedule', data)
   },
-};
+}

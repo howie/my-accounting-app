@@ -16,13 +16,19 @@ from src.api.deps import get_session
 from src.models.gmail_connection import GmailConnection, GmailConnectionStatus
 from src.models.gmail_scan import DiscoveredStatement, ScanTriggerType, StatementScanJob
 from src.schemas.gmail_import import (
+    BillingPeriod,
+    CreatedAccount,
     DiscoveredStatementResponse,
     GmailAuthUrlResponse,
     GmailConnectionResponse,
     GmailDisconnectResponse,
+    ImportStatementRequest,
+    ImportStatementResponse,
     ScanHistoryResponse,
     ScanJobResponse,
+    StatementPreviewResponse,
     StatementsListResponse,
+    StatementTransaction,
     TriggerScanRequest,
 )
 from src.services.gmail_import_service import GmailImportError, GmailImportService
@@ -375,46 +381,108 @@ async def get_scan_statements(
 # =============================================================================
 
 
-@router.get("/gmail/statements/{statement_id}/preview", response_model=DiscoveredStatementResponse)
+@router.get("/gmail/statements/{statement_id}/preview", response_model=StatementPreviewResponse)
 async def get_statement_preview(
     statement_id: uuid.UUID,
+    ledger_id: uuid.UUID = Query(..., description="Ledger ID for user lookup"),
     session: Session = Depends(get_session),
 ) -> Any:
     """
     Get preview of a discovered statement with parsed transactions.
-    """
-    statement = session.get(DiscoveredStatement, statement_id)
-    if not statement:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Statement not found")
 
-    return DiscoveredStatementResponse(
-        id=statement.id,
-        bank_code=statement.bank_code,
-        bank_name=statement.bank_name,
-        billing_period_start=statement.billing_period_start,
-        billing_period_end=statement.billing_period_end,
-        email_subject=statement.email_subject,
-        email_date=statement.email_date,
-        pdf_filename=statement.pdf_filename,
-        parse_status=statement.parse_status,
-        parse_confidence=statement.parse_confidence,
-        transaction_count=statement.transaction_count,
-        total_amount=statement.total_amount,
-        import_status=statement.import_status,
-    )
+    Re-parses the PDF to extract individual transactions for review.
+    """
+    from src.models.ledger import Ledger
+
+    ledger = session.exec(select(Ledger).where(Ledger.id == ledger_id)).first()
+    if not ledger:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger not found")
+
+    import_service = GmailImportService(session)
+    try:
+        statement, transactions = import_service.get_statement_preview(statement_id, ledger.user_id)
+
+        return StatementPreviewResponse(
+            statement_id=statement.id,
+            bank_name=statement.bank_name,
+            billing_period=BillingPeriod(
+                start=statement.billing_period_start or statement.email_date.date(),
+                end=statement.billing_period_end or statement.email_date.date(),
+            ),
+            transactions=[
+                StatementTransaction(
+                    index=idx,
+                    date=tx.date,
+                    merchant_name=tx.merchant_name,
+                    amount=tx.amount,
+                    currency=tx.currency,
+                    suggested_category=tx.category_suggestion,
+                    category_confidence=tx.confidence,
+                    is_foreign=tx.is_foreign,
+                    original_description=tx.original_description or tx.merchant_name,
+                )
+                for idx, tx in enumerate(transactions)
+            ],
+            total_amount=statement.total_amount or sum(tx.amount for tx in transactions),
+            duplicate_warnings=[],
+            parse_confidence=statement.parse_confidence or 0.0,
+        )
+    except GmailImportError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 @router.post("/ledgers/{ledger_id}/gmail/statements/{statement_id}/import")
 async def import_statement(
     ledger_id: uuid.UUID,
     statement_id: uuid.UUID,
-    session: Session = Depends(get_session),  # noqa: ARG001
+    body: ImportStatementRequest | None = None,
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Import a statement's transactions into the ledger.
+
+    Re-parses the PDF, maps transactions to accounts, and creates
+    Transaction records in the ledger. Supports category overrides
+    and skipping individual transactions.
     """
-    # TODO: Implement in US3
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    from src.models.ledger import Ledger
+
+    # Get user_id from ledger
+    ledger = session.exec(select(Ledger).where(Ledger.id == ledger_id)).first()
+    if not ledger:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Ledger not found")
+
+    import_service = GmailImportService(session)
+
+    try:
+        result = import_service.import_statement(
+            ledger_id=ledger_id,
+            statement_id=statement_id,
+            user_id=ledger.user_id,
+            category_overrides=[ov.model_dump() for ov in body.category_overrides]
+            if body and body.category_overrides
+            else [],
+            skip_indices=body.skip_transaction_indices if body else [],
+        )
+
+        return ImportStatementResponse(
+            success=result["success"],
+            import_session_id=result["import_session_id"],
+            imported_count=result["imported_count"],
+            skipped_count=result["skipped_count"],
+            created_accounts=[
+                CreatedAccount(id=a["id"], name=a["name"], type=a["type"])
+                for a in result.get("created_accounts", [])
+            ],
+        )
+    except GmailImportError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
 
 
 # =============================================================================
