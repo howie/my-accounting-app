@@ -494,6 +494,23 @@
       "failed": "Failed to import statement. Please try again.",
       "transactionsImported": "{count, plural, =1 {1 transaction imported} other {# transactions imported}}"
     },
+    "history": {
+      "title": "Scan History",
+      "subtitle": "View past scans and their results",
+      "noHistory": "No scan history yet. Run your first scan to see results here.",
+      "date": "Date",
+      "trigger": "Trigger",
+      "status": "Status",
+      "banks": "Banks",
+      "statements": "Statements",
+      "triggerManual": "Manual",
+      "triggerScheduled": "Scheduled",
+      "viewStatements": "View",
+      "error": "Error",
+      "showing": "Showing {from}-{to} of {total}",
+      "previous": "Previous",
+      "next": "Next"
+    },
     "schedule": {
       "title": "Scan Schedule",
       "subtitle": "Configure automatic scanning for new credit card statements.",

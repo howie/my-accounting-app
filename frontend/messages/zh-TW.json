@@ -494,6 +494,23 @@
       "failed": "匯入帳單失敗，請重試。",
       "transactionsImported": "{count, plural, other {已匯入 # 筆交易}}"
     },
+    "history": {
+      "title": "掃描記錄",
+      "subtitle": "檢視過去的掃描結果",
+      "noHistory": "尚無掃描記錄。執行第一次掃描後即可在此查看結果。",
+      "date": "日期",
+      "trigger": "觸發方式",
+      "status": "狀態",
+      "banks": "銀行",
+      "statements": "帳單",
+      "triggerManual": "手動",
+      "triggerScheduled": "排程",
+      "viewStatements": "檢視",
+      "error": "錯誤",
+      "showing": "顯示 {from}-{to}，共 {total} 筆",
+      "previous": "上一頁",
+      "next": "下一頁"
+    },
     "schedule": {
       "title": "掃描排程",
       "subtitle": "設定自動掃描信用卡帳單的排程。",

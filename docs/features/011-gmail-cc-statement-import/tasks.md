@@ -292,16 +292,16 @@
 
 ### Implementation for User Story 7
 
-- [ ] T131 [US7] Implement scan history query in GmailImportService (paginated, with statement counts)
-- [ ] T132 [US7] Add history endpoint to backend/src/api/routes/gmail_import_routes.py
+- [x] T131 [US7] Implement scan history query in GmailImportService (paginated, with statement counts)
+- [x] T132 [US7] Add history endpoint to backend/src/api/routes/gmail_import_routes.py
 - [ ] T133 [US7] Ensure all tests PASS
 - [ ] T134 [US7] Refactor while keeping tests green
 
 ### Frontend for User Story 7
 
-- [ ] T135 [P] [US7] Create ScanHistoryTable component in frontend/src/components/gmail-import/ScanHistoryTable.tsx
-- [ ] T136 [US7] Create scan history page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/history/page.tsx
-- [ ] T137 [US7] Add getScanHistory to frontend/src/lib/api/gmail-import.ts
+- [x] T135 [P] [US7] Create ScanHistoryTable component in frontend/src/components/gmail-import/ScanHistoryTable.tsx
+- [x] T136 [US7] Create scan history page in frontend/src/app/[locale]/ledgers/[ledgerId]/gmail-import/history/page.tsx
+- [x] T137 [US7] Add getScanHistory to frontend/src/lib/api/gmail-import.ts
 
 **Checkpoint**: History functional - user can view all past scans and import status
 
