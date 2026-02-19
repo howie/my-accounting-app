@@ -115,6 +115,18 @@ CATEGORY_KEYWORDS: dict[str, list[str]] = {
 # Default category when no match is found
 DEFAULT_CATEGORY = "其他支出"
 
+# Income category keywords mapping
+INCOME_CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "薪資收入": ["薪資", "薪水", "salary", "月薪", "年終", "獎金", "bonus", "加班費"],
+    "利息收入": ["利息", "interest", "活存息", "定存息", "利率"],
+    "退款": ["退款", "refund", "退費", "退貨", "退還"],
+    "轉帳收入": ["轉入", "匯入", "轉帳收入", "代收"],
+    "投資收入": ["股利", "dividend", "配息", "收益", "基金"],
+}
+
+# Default income category when no match is found
+DEFAULT_INCOME_CATEGORY = "其他收入"
+
 
 class CategorySuggester:
     """Suggest expense categories based on merchant/description keywords."""
@@ -160,6 +172,41 @@ class CategorySuggester:
         # No match found - return default category
         return CategorySuggestion(
             suggested_account_name=DEFAULT_CATEGORY,
+            confidence=0.3,  # Low confidence for default
+            matched_keyword=None,
+        )
+
+    def suggest_income(self, description: str) -> CategorySuggestion:
+        """
+        Suggest an income category for a deposit transaction.
+
+        Args:
+            description: The transaction description
+
+        Returns:
+            CategorySuggestion with suggested income account name and confidence
+        """
+        if not description:
+            return CategorySuggestion(
+                suggested_account_name=DEFAULT_INCOME_CATEGORY,
+                confidence=0.0,
+                matched_keyword=None,
+            )
+
+        description_lower = description.lower()
+
+        for category, keywords in INCOME_CATEGORY_KEYWORDS.items():
+            for keyword in keywords:
+                if keyword.lower() in description_lower:
+                    return CategorySuggestion(
+                        suggested_account_name=category,
+                        confidence=0.8,  # High confidence for keyword match
+                        matched_keyword=keyword,
+                    )
+
+        # No match found - return default income category
+        return CategorySuggestion(
+            suggested_account_name=DEFAULT_INCOME_CATEGORY,
             confidence=0.3,  # Low confidence for default
             matched_keyword=None,
         )

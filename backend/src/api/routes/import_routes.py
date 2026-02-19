@@ -91,6 +91,16 @@ async def create_import_preview(
                     )
                 parser_cc = CreditCardCsvParser(bank_code)
                 parsed_txs, validation_errors = parser_cc.parse(f)
+            elif import_type == ImportType.BANK_RECORD:
+                if not bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="bank_code is required for bank record import",
+                    )
+                from src.services.csv_parser import BankRecordCsvParser
+
+                parser_br = BankRecordCsvParser(bank_code)
+                parsed_txs, validation_errors = parser_br.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -139,7 +149,9 @@ async def create_import_preview(
         import_type=import_type,
         source_filename=filename,
         source_file_hash=file_hash,
-        bank_code=bank_code if import_type == ImportType.CREDIT_CARD else None,
+        bank_code=bank_code
+        if import_type in (ImportType.CREDIT_CARD, ImportType.BANK_RECORD)
+        else None,
         status=ImportStatus.PENDING,
         progress_total=len(mapped_txs),
         imported_count=0,
@@ -214,6 +226,16 @@ async def execute_import(
                     )
                 parser_cc = CreditCardCsvParser(import_session.bank_code)
                 parsed_txs, _ = parser_cc.parse(f)
+            elif import_session.import_type == ImportType.BANK_RECORD:
+                if not import_session.bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Bank code not found in import session",
+                    )
+                from src.services.csv_parser import BankRecordCsvParser
+
+                parser_br = BankRecordCsvParser(import_session.bank_code)
+                parsed_txs, _ = parser_br.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
@@ -262,6 +284,17 @@ async def list_supported_banks() -> Any:
     from src.services.bank_configs import get_supported_banks
 
     banks = get_supported_banks()
+    return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
+
+
+@router.get("/import/bank-records", response_model=dict[str, list[BankConfig]])
+async def list_supported_bank_records() -> Any:
+    """
+    List supported banks for bank record import.
+    """
+    from src.services.bank_configs import get_supported_bank_records
+
+    banks = get_supported_bank_records()
     return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
 
 

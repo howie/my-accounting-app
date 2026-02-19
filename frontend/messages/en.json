@@ -250,6 +250,7 @@
     "importType": "Import Type",
     "myabCsv": "MyAB CSV",
     "creditCard": "Credit Card Statement",
+    "bankRecord": "Bank Account Statement",
     "selectBank": "Select Bank",
     "startImport": "Start Import",
     "importing": "Importing...",

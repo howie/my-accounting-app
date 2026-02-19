@@ -1,8 +1,13 @@
+from __future__ import annotations
+
 import csv
 import io
-from typing import BinaryIO
+from typing import TYPE_CHECKING, BinaryIO
 
 import charset_normalizer
+
+if TYPE_CHECKING:
+    from src.services.bank_configs import BankRecordCsvConfig
 
 
 class CsvParser:
@@ -510,3 +515,211 @@ class CreditCardCsvParser(CsvParser):
                 )
 
         return result, errors
+
+
+class BankRecordCsvParser(CsvParser):
+    """Parser for bank account transaction CSV files.
+
+    Handles two amount formats:
+    - Dual-column: separate withdrawal (提出) and deposit (存入) columns
+    - Single-column: signed amount (negative = withdrawal, positive = deposit)
+    """
+
+    def __init__(self, bank_code: str):
+        """
+        Initialize parser with bank record configuration.
+
+        Args:
+            bank_code: Bank code (e.g., CATHAY_BANK, CTBC_BANK)
+
+        Raises:
+            ValueError: If bank is not supported
+        """
+        from src.services.bank_configs import get_bank_record_config
+
+        self.config: BankRecordCsvConfig | None = get_bank_record_config(bank_code)
+        if self.config is None:
+            raise ValueError(f"Unsupported bank for bank record import: {bank_code}")
+
+    def parse(self, file: BinaryIO) -> tuple[list[ParsedTransaction], list[ValidationError]]:
+        """
+        Parse bank record CSV file.
+
+        Args:
+            file: Binary file object containing CSV data
+
+        Returns:
+            Tuple of (List of ParsedTransaction objects, List of ValidationError objects)
+        """
+        from src.services.category_suggester import CategorySuggester
+
+        config = self.config
+        if config is None:
+            raise ValueError("Parser not initialized with valid bank config")
+
+        # Use configured encoding or detect
+        encoding = config.encoding or self.detect_encoding(file)
+        file.seek(0)
+
+        try:
+            content = file.read().decode(encoding)
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Failed to decode file with encoding {encoding}: {e}") from e
+
+        # Remove BOM if present
+        if content.startswith("\ufeff"):
+            content = content[1:]
+
+        f = io.StringIO(content)
+        reader = csv.reader(f)
+        rows = list(reader)
+
+        # Skip header rows
+        data_rows = rows[config.skip_rows :]
+
+        # Initialize category suggester
+        suggester = CategorySuggester()
+
+        result = []
+        errors = []
+        bank_account_name = f"銀行帳戶-{config.name}"
+
+        for i, row in enumerate(data_rows, start=1):
+            try:
+                # Determine required max column
+                required_cols = [config.date_column, config.description_column]
+                if config.withdrawal_column is not None:
+                    required_cols.append(config.withdrawal_column)
+                if config.deposit_column is not None:
+                    required_cols.append(config.deposit_column)
+                if config.amount_column is not None:
+                    required_cols.append(config.amount_column)
+                max_col = max(required_cols)
+
+                if len(row) <= max_col:
+                    # Skip empty/short rows silently (common in bank CSVs)
+                    continue
+
+                # Parse date
+                date_str = row[config.date_column].strip()
+                if not date_str:
+                    continue  # Skip rows with empty dates (summary rows)
+
+                try:
+                    parsed_date = datetime.strptime(date_str, config.date_format).date()
+                except ValueError:
+                    errors.append(
+                        ValidationError(
+                            row_number=i,
+                            error_type=ValidationErrorType.INVALID_DATE,
+                            message=f"Invalid date format: {date_str}",
+                            value=date_str,
+                        )
+                    )
+                    continue
+
+                # Parse description
+                description = row[config.description_column].strip()
+
+                # Parse memo if available
+                memo = ""
+                if config.memo_column is not None and len(row) > config.memo_column:
+                    memo = row[config.memo_column].strip()
+
+                full_description = f"{description} - {memo}" if memo else description
+
+                # Parse amount and determine transaction type
+                tx_type, amount = self._parse_amount(row, config)
+
+                if amount is None or amount == Decimal("0"):
+                    continue  # Skip zero-amount rows
+
+                # Build transaction based on type
+                if tx_type == TransactionType.EXPENSE:
+                    # Withdrawal: from bank account to expense category
+                    suggestion = suggester.suggest(full_description)
+                    tx = ParsedTransaction(
+                        row_number=i,
+                        date=parsed_date,
+                        transaction_type=TransactionType.EXPENSE,
+                        from_account_name=bank_account_name,
+                        to_account_name=suggestion.suggested_account_name,
+                        amount=amount,
+                        description=full_description,
+                        category_suggestion=suggestion,
+                    )
+                elif tx_type == TransactionType.INCOME:
+                    # Deposit: from income source to bank account
+                    suggestion = suggester.suggest_income(full_description)
+                    tx = ParsedTransaction(
+                        row_number=i,
+                        date=parsed_date,
+                        transaction_type=TransactionType.INCOME,
+                        from_account_name=suggestion.suggested_account_name,
+                        to_account_name=bank_account_name,
+                        amount=amount,
+                        description=full_description,
+                        category_suggestion=suggestion,
+                    )
+                else:
+                    continue  # Should not happen
+
+                result.append(tx)
+
+            except Exception as e:
+                errors.append(
+                    ValidationError(
+                        row_number=i,
+                        error_type=ValidationErrorType.INVALID_FORMAT,
+                        message=f"Error parsing row {i}: {e}",
+                        value=str(row),
+                    )
+                )
+
+        return result, errors
+
+    @staticmethod
+    def _parse_amount(
+        row: list[str], config: BankRecordCsvConfig
+    ) -> tuple[TransactionType | None, Decimal | None]:
+        """Parse amount from row, returning (transaction_type, abs_amount).
+
+        Handles two modes:
+        - Dual column: withdrawal_column and deposit_column
+        - Single column: amount_column (negative=withdrawal, positive=deposit)
+        """
+
+        def clean_amount(s: str) -> Decimal | None:
+            s = s.strip().replace(",", "").replace("$", "").replace("NT", "")
+            if not s:
+                return None
+            try:
+                return Decimal(s)
+            except InvalidOperation:
+                return None
+
+        if config.withdrawal_column is not None and config.deposit_column is not None:
+            # Mode A: dual columns
+            withdrawal = clean_amount(row[config.withdrawal_column])
+            deposit = clean_amount(row[config.deposit_column])
+
+            if withdrawal and withdrawal > 0:
+                return TransactionType.EXPENSE, withdrawal
+            elif deposit and deposit > 0:
+                return TransactionType.INCOME, deposit
+            else:
+                return None, None
+
+        elif config.amount_column is not None:
+            # Mode B: single signed column
+            amount = clean_amount(row[config.amount_column])
+            if amount is None:
+                return None, None
+            if amount < 0:
+                return TransactionType.EXPENSE, abs(amount)
+            elif amount > 0:
+                return TransactionType.INCOME, amount
+            else:
+                return None, None
+
+        return None, None

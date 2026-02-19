@@ -11,6 +11,7 @@ class ImportType(str, Enum):
     MYAB_CSV = "MYAB_CSV"
     CREDIT_CARD = "CREDIT_CARD"
     GMAIL_CC = "GMAIL_CC"  # Gmail credit card statement import (011)
+    BANK_RECORD = "BANK_RECORD"  # Bank account transaction CSV import
 
 
 class TransactionType(str, Enum):

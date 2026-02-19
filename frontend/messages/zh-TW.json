@@ -250,6 +250,7 @@
     "importType": "匯入類型",
     "myabCsv": "MyAB CSV",
     "creditCard": "信用卡帳單",
+    "bankRecord": "銀行帳戶交易明細",
     "selectBank": "選擇銀行",
     "startImport": "開始匯入",
     "importing": "匯入中...",

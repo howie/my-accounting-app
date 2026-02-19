@@ -1,4 +1,4 @@
-"""Bank CSV configuration definitions for credit card import."""
+"""Bank CSV configuration definitions for credit card and bank record import."""
 
 from dataclasses import dataclass
 
@@ -82,3 +82,110 @@ def get_supported_banks() -> list[BankCsvConfig]:
 def get_bank_config(bank_code: str) -> BankCsvConfig | None:
     """Get bank configuration by code."""
     return BANK_CONFIGS.get(bank_code)
+
+
+# ============================================================================
+# Bank Record (Account Transaction) CSV Configurations
+# ============================================================================
+
+
+@dataclass
+class BankRecordCsvConfig:
+    """Configuration for parsing bank account transaction CSV files.
+
+    Supports two amount modes:
+    - Dual columns: separate withdrawal_column (提出) and deposit_column (存入)
+    - Single column: amount_column with signed values (negative=withdrawal, positive=deposit)
+    """
+
+    code: str  # Bank code (e.g., CATHAY_BANK, CTBC_BANK)
+    name: str  # Bank display name (e.g., 國泰世華銀行)
+    date_column: int  # Date column index (0-based)
+    date_format: str  # Date format string (e.g., %Y/%m/%d)
+    description_column: int  # 摘要/說明 column index
+    # Amount columns - dual column mode (most Taiwan banks)
+    withdrawal_column: int | None = None  # 提出/支出 column index
+    deposit_column: int | None = None  # 存入 column index
+    # Amount columns - single column mode (alternative)
+    amount_column: int | None = None  # Signed amount column
+    # Optional columns
+    balance_column: int | None = None  # 餘額 column (ignored during import)
+    memo_column: int | None = None  # 備註 column
+    skip_rows: int = 1  # Number of header rows to skip
+    encoding: str = "big5"  # File encoding (default Big5 for Taiwan banks)
+
+
+# Bank record configurations for major Taiwan banks
+BANK_RECORD_CONFIGS: dict[str, BankRecordCsvConfig] = {
+    "CATHAY_BANK": BankRecordCsvConfig(
+        code="CATHAY_BANK",
+        name="國泰世華銀行",
+        date_column=0,
+        date_format="%Y/%m/%d",
+        description_column=1,
+        withdrawal_column=2,
+        deposit_column=3,
+        balance_column=4,
+        memo_column=5,
+        skip_rows=1,
+        encoding="big5",
+    ),
+    "CTBC_BANK": BankRecordCsvConfig(
+        code="CTBC_BANK",
+        name="中國信託銀行",
+        date_column=0,
+        date_format="%Y/%m/%d",
+        description_column=1,
+        withdrawal_column=2,
+        deposit_column=3,
+        balance_column=4,
+        skip_rows=1,
+        encoding="big5",
+    ),
+    "ESUN_BANK": BankRecordCsvConfig(
+        code="ESUN_BANK",
+        name="玉山銀行",
+        date_column=0,
+        date_format="%Y/%m/%d",
+        description_column=1,
+        withdrawal_column=2,
+        deposit_column=3,
+        balance_column=4,
+        skip_rows=1,
+        encoding="big5",
+    ),
+    "TAISHIN_BANK": BankRecordCsvConfig(
+        code="TAISHIN_BANK",
+        name="台新銀行",
+        date_column=0,
+        date_format="%Y/%m/%d",
+        description_column=1,
+        withdrawal_column=2,
+        deposit_column=3,
+        balance_column=4,
+        skip_rows=1,
+        encoding="big5",
+    ),
+    "FUBON_BANK": BankRecordCsvConfig(
+        code="FUBON_BANK",
+        name="富邦銀行",
+        date_column=0,
+        date_format="%Y-%m-%d",
+        description_column=1,
+        withdrawal_column=2,
+        deposit_column=3,
+        balance_column=4,
+        skip_rows=1,
+        encoding="big5",
+    ),
+}
+
+
+def get_supported_bank_records() -> list[BankRecordCsvConfig]:
+    """Get list of all supported bank record configurations."""
+    return list(BANK_RECORD_CONFIGS.values())
+
+
+def get_bank_record_config(bank_code: str) -> BankRecordCsvConfig | None:
+    """Get bank record configuration by code."""
+    return BANK_RECORD_CONFIGS.get(bank_code)
