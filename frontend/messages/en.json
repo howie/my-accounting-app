@@ -494,6 +494,31 @@
       "failed": "Failed to import statement. Please try again.",
       "transactionsImported": "{count, plural, =1 {1 transaction imported} other {# transactions imported}}"
     },
+    "schedule": {
+      "title": "Scan Schedule",
+      "subtitle": "Configure automatic scanning for new credit card statements.",
+      "frequency": "Frequency",
+      "disabled": "Disabled (manual scan only)",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "hour": "Scan Time (Hour)",
+      "dayOfWeek": "Day of Week",
+      "nextScan": "Next scan",
+      "save": "Save Schedule",
+      "saving": "Saving...",
+      "disable": "Disable Schedule",
+      "fetchError": "Failed to load schedule settings.",
+      "saveError": "Failed to save schedule settings.",
+      "days": {
+        "monday": "Monday",
+        "tuesday": "Tuesday",
+        "wednesday": "Wednesday",
+        "thursday": "Thursday",
+        "friday": "Friday",
+        "saturday": "Saturday",
+        "sunday": "Sunday"
+      }
+    },
     "bankSettings": {
       "title": "Bank Settings",
       "subtitle": "Enable banks to scan for and configure PDF password if required.",

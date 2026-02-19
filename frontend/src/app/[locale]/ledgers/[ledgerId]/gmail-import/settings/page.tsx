@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import GmailConnectButton from '@/components/gmail-import/GmailConnectButton'
 import BankSettingsPanel from '@/components/gmail-import/BankSettingsPanel'
+import ScheduleSettings from '@/components/gmail-import/ScheduleSettings'
 import {
   gmailImportApi,
   GmailConnectionResponse,
@@ -131,6 +132,15 @@ export default function GmailImportSettingsPage() {
           <h2 className="mb-4 text-lg font-semibold text-gray-900">{t('bankSettings.title')}</h2>
           <p className="mb-4 text-sm text-gray-500">{t('bankSettings.subtitle')}</p>
           <BankSettingsPanel ledgerId={idValue} />
+        </div>
+      )}
+
+      {/* Schedule Settings */}
+      {connection?.status === GmailConnectionStatus.CONNECTED && (
+        <div className="mb-6 rounded-lg border border-gray-200 bg-white p-6 shadow">
+          <h2 className="mb-4 text-lg font-semibold text-gray-900">{t('schedule.title')}</h2>
+          <p className="mb-4 text-sm text-gray-500">{t('schedule.subtitle')}</p>
+          <ScheduleSettings ledgerId={idValue} />
         </div>
       )}
 

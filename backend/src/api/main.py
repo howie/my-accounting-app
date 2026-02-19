@@ -27,9 +27,23 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
     # Startup: create tables if needed (for development)
     if settings.is_development:
         create_db_and_tables()
+
+    # Start Gmail scan scheduler
+    from src.db.session import engine
+    from src.services.gmail_scheduler import get_scheduler
+
+    scheduler = get_scheduler()
+    try:
+        scheduler.start(engine)
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).exception("Failed to start Gmail scheduler")
+
     yield
-    # Shutdown: cleanup if needed
-    pass
+
+    # Shutdown: stop scheduler
+    scheduler.shutdown()
 
 
 app = FastAPI(

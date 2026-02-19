@@ -259,19 +259,19 @@
 
 ### Implementation for User Story 5
 
-- [ ] T117 [US5] Create GmailScheduler class in backend/src/services/gmail_scheduler.py (APScheduler integration)
-- [ ] T118 [US5] Implement schedule configuration persistence in GmailConnection model
-- [ ] T119 [US5] Implement scheduled job execution calling GmailImportService.execute_scan()
-- [ ] T120 [US5] Add schedule endpoints to backend/src/api/routes/gmail_import_routes.py
-- [ ] T121 [US5] Initialize scheduler on app startup in backend/src/api/main.py
+- [x] T117 [US5] Create GmailScheduler class in backend/src/services/gmail_scheduler.py (APScheduler integration)
+- [x] T118 [US5] Implement schedule configuration persistence in GmailConnection model
+- [x] T119 [US5] Implement scheduled job execution calling GmailImportService.execute_scan()
+- [x] T120 [US5] Add schedule endpoints to backend/src/api/routes/gmail_import_routes.py
+- [x] T121 [US5] Initialize scheduler on app startup in backend/src/api/main.py
 - [ ] T122 [US5] Ensure all tests PASS
 - [ ] T123 [US5] Refactor while keeping tests green
 
 ### Frontend for User Story 5
 
-- [ ] T124 [P] [US5] Create ScheduleSettings component in frontend/src/components/gmail-import/ScheduleSettings.tsx
-- [ ] T125 [US5] Add schedule settings to Gmail settings page
-- [ ] T126 [US5] Add getSchedule, updateSchedule to frontend/src/lib/api/gmail-import.ts
+- [x] T124 [P] [US5] Create ScheduleSettings component in frontend/src/components/gmail-import/ScheduleSettings.tsx
+- [x] T125 [US5] Add schedule settings to Gmail settings page
+- [x] T126 [US5] Add getSchedule, updateSchedule to frontend/src/lib/api/gmail-import.ts
 
 **Checkpoint**: Scheduling functional - user can configure auto-scan schedule
 

@@ -494,6 +494,31 @@
       "failed": "匯入帳單失敗，請重試。",
       "transactionsImported": "{count, plural, other {已匯入 # 筆交易}}"
     },
+    "schedule": {
+      "title": "掃描排程",
+      "subtitle": "設定自動掃描信用卡帳單的排程。",
+      "frequency": "頻率",
+      "disabled": "停用（僅手動掃描）",
+      "daily": "每日",
+      "weekly": "每週",
+      "hour": "掃描時間（小時）",
+      "dayOfWeek": "星期幾",
+      "nextScan": "下次掃描",
+      "save": "儲存排程",
+      "saving": "儲存中...",
+      "disable": "停用排程",
+      "fetchError": "載入排程設定失敗。",
+      "saveError": "儲存排程設定失敗。",
+      "days": {
+        "monday": "星期一",
+        "tuesday": "星期二",
+        "wednesday": "星期三",
+        "thursday": "星期四",
+        "friday": "星期五",
+        "saturday": "星期六",
+        "sunday": "星期日"
+      }
+    },
     "bankSettings": {
       "title": "銀行設定",
       "subtitle": "啟用要掃描的銀行，並設定 PDF 密碼（如需要）。",

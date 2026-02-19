@@ -635,22 +635,114 @@ async def get_scan_history(
 @router.get("/gmail/schedule")
 async def get_schedule(
     ledger_id: uuid.UUID = Query(...),
-    session: Session = Depends(get_session),  # noqa: ARG001
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Get current scan schedule settings.
     """
-    # TODO: Implement in US5
-    return {"frequency": None, "hour": None, "day_of_week": None, "next_scan_at": None}
+    from src.services.gmail_scheduler import GmailScheduler
+
+    connection = session.exec(
+        select(GmailConnection).where(GmailConnection.ledger_id == ledger_id)
+    ).first()
+
+    if not connection:
+        return {"frequency": None, "hour": None, "day_of_week": None, "next_scan_at": None}
+
+    next_scan = GmailScheduler.calculate_next_scan(
+        connection.schedule_frequency,
+        connection.schedule_hour,
+        connection.schedule_day_of_week,
+    )
+
+    return {
+        "frequency": connection.schedule_frequency,
+        "hour": connection.schedule_hour,
+        "day_of_week": connection.schedule_day_of_week,
+        "next_scan_at": next_scan,
+    }
 
 
 @router.put("/gmail/schedule")
 async def update_schedule(
     ledger_id: uuid.UUID = Query(...),
-    session: Session = Depends(get_session),  # noqa: ARG001
+    body: dict | None = None,
+    session: Session = Depends(get_session),
 ) -> Any:
     """
     Update scan schedule settings.
     """
-    # TODO: Implement in US5
-    raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Not implemented")
+    from src.models.gmail_connection import ScheduleFrequency
+    from src.services.gmail_scheduler import GmailScheduler, get_scheduler
+
+    connection = session.exec(
+        select(GmailConnection).where(GmailConnection.ledger_id == ledger_id)
+    ).first()
+
+    if not connection:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No Gmail connection found for this ledger",
+        )
+
+    if not body:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Request body required",
+        )
+
+    frequency_value = body.get("frequency")
+    hour = body.get("hour")
+    day_of_week = body.get("day_of_week")
+
+    # Parse frequency
+    frequency = None
+    if frequency_value:
+        try:
+            frequency = ScheduleFrequency(frequency_value)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid frequency: {frequency_value}. Must be DAILY or WEEKLY.",
+            )
+
+    # Validate
+    if frequency and hour is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Hour is required when frequency is set",
+        )
+
+    if frequency == ScheduleFrequency.WEEKLY and day_of_week is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="day_of_week is required for weekly schedule",
+        )
+
+    # Update connection
+    connection.schedule_frequency = frequency
+    connection.schedule_hour = hour if frequency else None
+    connection.schedule_day_of_week = day_of_week if frequency == ScheduleFrequency.WEEKLY else None
+
+    from datetime import UTC, datetime
+
+    connection.updated_at = datetime.now(UTC)
+    session.add(connection)
+    session.commit()
+
+    # Update scheduler
+    scheduler = get_scheduler()
+    if scheduler.is_running:
+        if frequency:
+            scheduler.schedule_scan(ledger_id, frequency, hour, day_of_week)
+        else:
+            scheduler.cancel_scan(ledger_id)
+
+    next_scan = GmailScheduler.calculate_next_scan(frequency, hour, day_of_week)
+
+    return {
+        "frequency": frequency,
+        "hour": connection.schedule_hour,
+        "day_of_week": connection.schedule_day_of_week,
+        "next_scan_at": next_scan,
+    }
