@@ -134,6 +134,25 @@ BANK_RECORD_CONFIGS: dict[str, BankRecordCsvConfig] = {
         skip_rows=3,  # 2 header lines + 1 column header line
         encoding="big5",
     ),
+    # Verified with actual CSV sample (2026-02-20)
+    # Format: Account info (5 lines) + column headers (1 line) = 6 lines to skip
+    # Columns: "交易日期","帳務日期","說明","提出","存入","餘額","交易資訊","備註"
+    # Note: Uses 帳務日期 (col 1) instead of 交易日期 (col 0) because col 0 is multiline
+    # Note: Uses "−" (U+2212 MINUS SIGN) for empty amounts, not blank
+    # Note: Has footer rows with totals (skipped by date validation)
+    "CATHAY_BANK": BankRecordCsvConfig(
+        code="CATHAY_BANK",
+        name="國泰世華銀行",
+        date_column=1,  # 帳務日期 (not 交易日期 which has multiline time)
+        date_format="%Y/%m/%d",
+        description_column=2,  # 說明
+        withdrawal_column=3,  # 提出
+        deposit_column=4,  # 存入
+        balance_column=5,  # 餘額
+        memo_column=7,  # 備註
+        skip_rows=6,  # 5 header lines + 1 column header line
+        encoding="utf-8",  # UTF-8 (has full-width chars like ＡＴＭ)
+    ),
 }
 
 

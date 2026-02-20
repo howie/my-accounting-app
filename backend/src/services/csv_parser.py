@@ -691,7 +691,8 @@ class BankRecordCsvParser(CsvParser):
 
         def clean_amount(s: str) -> Decimal | None:
             s = s.strip().replace(",", "").replace("$", "").replace("NT", "")
-            if not s:
+            # Handle Unicode MINUS SIGN (U+2212) used by some banks (e.g., Cathay) for empty
+            if not s or s == "−" or s == "-":
                 return None
             try:
                 return Decimal(s)

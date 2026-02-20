@@ -114,9 +114,10 @@ class TestBankConfigLoading:
 
         banks = get_supported_bank_records()
         # Only verified bank configs are included
-        assert len(banks) >= 1
+        assert len(banks) >= 2
         bank_codes = [b.code for b in banks]
         assert "CTBC_BANK" in bank_codes
+        assert "CATHAY_BANK" in bank_codes
 
     def test_get_bank_config(self):
         from src.services.bank_configs import get_bank_config
@@ -298,3 +299,117 @@ class TestBankRecordCsvParser:
         assert config.memo_column == 5
         assert config.skip_rows == 3
         assert config.encoding == "big5"
+
+
+# Sample Cathay United Bank CSV (verified format)
+# Uses "−" (U+2212) for empty amounts, all fields quoted, multiline transaction dates
+SAMPLE_CATHAY_BANK_CSV = """"212506058292 台幣帳戶（股票交割）"
+"幣別：TWD"
+"筆數：5 筆","(自 2025/12/01 至 2026/02/20)"
+"
+"
+"交易日期","帳務日期","說明","提出","存入","餘額","交易資訊","備註"
+"2026/02/12
+12:04","2026/02/12","網銀轉帳","−","4,108","1,441,326","(013)0000201***001170","借券費"
+"2026/02/10
+09:05","2026/02/10","薪資獎金","−","91,549","1,437,218","−","禾禹科技股份有限公司"
+"2026/02/03
+13:54","2026/02/03","信用卡款","112,297","−","1,345,669","(013)02669813503735155","−"
+"2026/01/30
+10:02","2026/01/30","跨行轉入","−","600,000","1,914,972","(012)0000480***066955","−"
+"2026/01/15
+16:26","2026/01/15","自行提款","2,000","−","17,172","−","0130VP3L"
+"
+"
+"提出","總金額 TWD 114,297 ( 共 2 筆 )"
+"存入","總金額 TWD 695,657 ( 共 3 筆 )"
+""".encode()
+
+
+class TestCathayBankRecordCsvParser:
+    """Unit tests for Cathay United Bank account CSV parser."""
+
+    def test_parse_cathay_bank_csv(self):
+        """Test parsing Cathay bank CSV with verified format."""
+        from src.schemas.transaction import TransactionType
+        from src.services.csv_parser import BankRecordCsvParser
+
+        parser = BankRecordCsvParser("CATHAY_BANK")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_BANK_CSV))
+
+        # Should parse 5 data rows, skip header (6 rows) and footer (4 rows)
+        assert len(errors) == 0, f"Unexpected errors: {errors}"
+        assert len(transactions) == 5
+
+        # Row 1: Deposit of 4,108 (網銀轉帳)
+        tx1 = transactions[0]
+        assert tx1.date == datetime.date(2026, 2, 12)
+        assert tx1.amount == Decimal("4108")
+        assert tx1.transaction_type == TransactionType.INCOME
+        assert "網銀轉帳" in tx1.description
+        assert tx1.to_account_name == "銀行帳戶-國泰世華銀行"
+
+        # Row 2: Deposit of 91,549 (薪資獎金)
+        tx2 = transactions[1]
+        assert tx2.date == datetime.date(2026, 2, 10)
+        assert tx2.amount == Decimal("91549")
+        assert tx2.transaction_type == TransactionType.INCOME
+        assert "薪資獎金" in tx2.description
+
+        # Row 3: Withdrawal of 112,297 (信用卡款)
+        tx3 = transactions[2]
+        assert tx3.date == datetime.date(2026, 2, 3)
+        assert tx3.amount == Decimal("112297")
+        assert tx3.transaction_type == TransactionType.EXPENSE
+        assert tx3.from_account_name == "銀行帳戶-國泰世華銀行"
+
+        # Row 5: Withdrawal of 2,000 (自行提款)
+        tx5 = transactions[4]
+        assert tx5.date == datetime.date(2026, 1, 15)
+        assert tx5.amount == Decimal("2000")
+        assert tx5.transaction_type == TransactionType.EXPENSE
+
+    def test_cathay_unicode_minus_handling(self):
+        """Test that Unicode MINUS SIGN (−) is treated as empty."""
+        from src.services.csv_parser import BankRecordCsvParser
+
+        parser = BankRecordCsvParser("CATHAY_BANK")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_BANK_CSV))
+
+        # Verify deposits have "−" in withdrawal column (treated as empty)
+        deposits = [tx for tx in transactions if tx.transaction_type.value == "INCOME"]
+        assert len(deposits) == 3  # 3 deposits in sample
+
+        # Verify withdrawals have "−" in deposit column
+        withdrawals = [tx for tx in transactions if tx.transaction_type.value == "EXPENSE"]
+        assert len(withdrawals) == 2  # 2 withdrawals in sample
+
+    def test_cathay_skip_footer_rows(self):
+        """Test that footer summary rows are skipped."""
+        from src.services.csv_parser import BankRecordCsvParser
+
+        parser = BankRecordCsvParser("CATHAY_BANK")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_BANK_CSV))
+
+        # Footer rows ("提出","總金額...") should be skipped (no valid date)
+        # All parsed transactions should have valid dates in 2025-2026
+        for tx in transactions:
+            assert tx.date.year in (2025, 2026)
+
+    def test_cathay_bank_config_structure(self):
+        """Test Cathay bank record config has correct fields."""
+        from src.services.bank_configs import get_bank_record_config
+
+        config = get_bank_record_config("CATHAY_BANK")
+        assert config is not None
+        assert config.code == "CATHAY_BANK"
+        assert config.name == "國泰世華銀行"
+        assert config.date_column == 1  # 帳務日期, not 交易日期
+        assert config.date_format == "%Y/%m/%d"
+        assert config.description_column == 2
+        assert config.withdrawal_column == 3
+        assert config.deposit_column == 4
+        assert config.balance_column == 5
+        assert config.memo_column == 7
+        assert config.skip_rows == 6
+        assert config.encoding == "utf-8"
