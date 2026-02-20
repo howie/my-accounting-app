@@ -413,3 +413,85 @@ class TestCathayBankRecordCsvParser:
         assert config.memo_column == 7
         assert config.skip_rows == 6
         assert config.encoding == "utf-8"
+
+
+# ============================================================================
+# Bank Adapter Pattern Tests
+# ============================================================================
+
+
+class TestBankAdapterPattern:
+    """Tests for the bank record adapter pattern."""
+
+    def test_get_bank_adapter_ctbc(self):
+        """Test getting CTBC adapter."""
+        from src.services.bank_adapters import get_bank_adapter
+
+        adapter = get_bank_adapter("CTBC_BANK")
+        assert adapter.bank_code == "CTBC_BANK"
+        assert adapter.bank_name == "中國信託銀行"
+        assert adapter.bank_account_name == "銀行帳戶-中國信託銀行"
+        assert adapter.skip_rows == 3
+        assert adapter.encoding == "big5"
+
+    def test_get_bank_adapter_cathay(self):
+        """Test getting Cathay adapter."""
+        from src.services.bank_adapters import get_bank_adapter
+
+        adapter = get_bank_adapter("CATHAY_BANK")
+        assert adapter.bank_code == "CATHAY_BANK"
+        assert adapter.bank_name == "國泰世華銀行"
+        assert adapter.bank_account_name == "銀行帳戶-國泰世華銀行"
+        assert adapter.skip_rows == 6
+        assert adapter.encoding == "utf-8"
+
+    def test_get_bank_adapter_unsupported(self):
+        """Test that unsupported bank raises error."""
+        from src.services.bank_adapters import get_bank_adapter
+
+        with pytest.raises(ValueError, match="Unsupported bank"):
+            get_bank_adapter("UNKNOWN_BANK")
+
+    def test_get_supported_bank_adapters(self):
+        """Test getting all supported adapters."""
+        from src.services.bank_adapters import get_supported_bank_adapters
+
+        adapters = get_supported_bank_adapters()
+        assert len(adapters) >= 2
+        codes = [a.bank_code for a in adapters]
+        assert "CTBC_BANK" in codes
+        assert "CATHAY_BANK" in codes
+
+    def test_adapter_parse_ctbc(self):
+        """Test CTBC adapter parsing produces same results."""
+        from src.schemas.transaction import TransactionType
+        from src.services.bank_adapters import get_bank_adapter
+
+        adapter = get_bank_adapter("CTBC_BANK")
+        transactions, errors = adapter.parse(BytesIO(SAMPLE_CTBC_BANK_CSV))
+
+        assert len(errors) == 0
+        assert len(transactions) == 7
+
+        # Verify first transaction
+        tx1 = transactions[0]
+        assert tx1.date == datetime.date(2026, 2, 1)
+        assert tx1.amount == Decimal("100000")
+        assert tx1.transaction_type == TransactionType.INCOME
+
+    def test_adapter_parse_cathay(self):
+        """Test Cathay adapter parsing produces same results."""
+        from src.schemas.transaction import TransactionType
+        from src.services.bank_adapters import get_bank_adapter
+
+        adapter = get_bank_adapter("CATHAY_BANK")
+        transactions, errors = adapter.parse(BytesIO(SAMPLE_CATHAY_BANK_CSV))
+
+        assert len(errors) == 0
+        assert len(transactions) == 5
+
+        # Verify deposits and withdrawals
+        deposits = [tx for tx in transactions if tx.transaction_type == TransactionType.INCOME]
+        withdrawals = [tx for tx in transactions if tx.transaction_type == TransactionType.EXPENSE]
+        assert len(deposits) == 3
+        assert len(withdrawals) == 2

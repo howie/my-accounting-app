@@ -97,10 +97,10 @@ async def create_import_preview(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="bank_code is required for bank record import",
                     )
-                from src.services.csv_parser import BankRecordCsvParser
+                from src.services.bank_adapters import get_bank_adapter
 
-                parser_br = BankRecordCsvParser(bank_code)
-                parsed_txs, validation_errors = parser_br.parse(f)
+                adapter = get_bank_adapter(bank_code)
+                parsed_txs, validation_errors = adapter.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
@@ -232,10 +232,10 @@ async def execute_import(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Bank code not found in import session",
                     )
-                from src.services.csv_parser import BankRecordCsvParser
+                from src.services.bank_adapters import get_bank_adapter
 
-                parser_br = BankRecordCsvParser(import_session.bank_code)
-                parsed_txs, _ = parser_br.parse(f)
+                adapter = get_bank_adapter(import_session.bank_code)
+                parsed_txs, _ = adapter.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
@@ -292,10 +292,14 @@ async def list_supported_bank_records() -> Any:
     """
     List supported banks for bank record import.
     """
-    from src.services.bank_configs import get_supported_bank_records
+    from src.services.bank_adapters import get_supported_bank_adapters
 
-    banks = get_supported_bank_records()
-    return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
+    adapters = get_supported_bank_adapters()
+    return {
+        "banks": [
+            BankConfig(code=a.bank_code, name=a.bank_name, encoding=a.encoding) for a in adapters
+        ]
+    }
 
 
 @router.get("/ledgers/{ledger_id}/import/history")
