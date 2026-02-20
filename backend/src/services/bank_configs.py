@@ -116,20 +116,11 @@ class BankRecordCsvConfig:
 
 
 # Bank record configurations for major Taiwan banks
+# Only add configs that have been verified with actual CSV samples
 BANK_RECORD_CONFIGS: dict[str, BankRecordCsvConfig] = {
-    "CATHAY_BANK": BankRecordCsvConfig(
-        code="CATHAY_BANK",
-        name="國泰世華銀行",
-        date_column=0,
-        date_format="%Y/%m/%d",
-        description_column=1,
-        withdrawal_column=2,
-        deposit_column=3,
-        balance_column=4,
-        memo_column=5,
-        skip_rows=1,
-        encoding="big5",
-    ),
+    # Verified with actual CSV sample (2026-02-19)
+    # Format: 活存明細查詢 + timestamp header (2 lines), then column headers
+    # Columns: 日期,摘要,支出,存入,結餘,備註,轉出入帳號,註記
     "CTBC_BANK": BankRecordCsvConfig(
         code="CTBC_BANK",
         name="中國信託銀行",
@@ -139,43 +130,8 @@ BANK_RECORD_CONFIGS: dict[str, BankRecordCsvConfig] = {
         withdrawal_column=2,
         deposit_column=3,
         balance_column=4,
-        skip_rows=1,
-        encoding="big5",
-    ),
-    "ESUN_BANK": BankRecordCsvConfig(
-        code="ESUN_BANK",
-        name="玉山銀行",
-        date_column=0,
-        date_format="%Y/%m/%d",
-        description_column=1,
-        withdrawal_column=2,
-        deposit_column=3,
-        balance_column=4,
-        skip_rows=1,
-        encoding="big5",
-    ),
-    "TAISHIN_BANK": BankRecordCsvConfig(
-        code="TAISHIN_BANK",
-        name="台新銀行",
-        date_column=0,
-        date_format="%Y/%m/%d",
-        description_column=1,
-        withdrawal_column=2,
-        deposit_column=3,
-        balance_column=4,
-        skip_rows=1,
-        encoding="big5",
-    ),
-    "FUBON_BANK": BankRecordCsvConfig(
-        code="FUBON_BANK",
-        name="富邦銀行",
-        date_column=0,
-        date_format="%Y-%m-%d",
-        description_column=1,
-        withdrawal_column=2,
-        deposit_column=3,
-        balance_column=4,
-        skip_rows=1,
+        memo_column=5,
+        skip_rows=3,  # 2 header lines + 1 column header line
         encoding="big5",
     ),
 }

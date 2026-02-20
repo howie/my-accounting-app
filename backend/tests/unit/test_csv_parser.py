@@ -101,13 +101,22 @@ class TestBankConfigLoading:
         from src.services.bank_configs import get_supported_banks
 
         banks = get_supported_banks()
-        assert len(banks) >= 5  # 至少支援 5 家銀行
+        assert len(banks) >= 5  # 至少支援 5 家銀行（信用卡）
         bank_codes = [b.code for b in banks]
         assert "CATHAY" in bank_codes
         assert "CTBC" in bank_codes
         assert "ESUN" in bank_codes
         assert "TAISHIN" in bank_codes
         assert "FUBON" in bank_codes
+
+    def test_get_supported_bank_records(self):
+        from src.services.bank_configs import get_supported_bank_records
+
+        banks = get_supported_bank_records()
+        # Only verified bank configs are included
+        assert len(banks) >= 1
+        bank_codes = [b.code for b in banks]
+        assert "CTBC_BANK" in bank_codes
 
     def test_get_bank_config(self):
         from src.services.bank_configs import get_bank_config
@@ -180,3 +189,112 @@ data1,data2
         parser = CreditCardCsvParser("CATHAY")
         transactions, errors = parser.parse(BytesIO(invalid_csv))
         assert len(errors) > 0
+
+
+# ============================================================================
+# Bank Record CSV Parser Tests
+# ============================================================================
+
+# Sample CTBC bank account CSV (verified format)
+# Headers: 日期,摘要,支出,存入,結餘,備註,轉出入帳號,註記
+SAMPLE_CTBC_BANK_CSV = """活存明細查詢
+資料時間：2026/02/19 20:33:23,單位金額：元
+日期,摘要,支出,存入,結餘,備註,轉出入帳號,註記
+2026/02/01,跨行轉,,"100,000","173,699",一　銀,000002221**17201,處理非約定轉帳
+2026/02/05,跨行轉,"30,000",,"143,699",行動網,'0000864979095431,安家費
+2026/02/06,委代入,,200,"143,899",獎金,,統一發票獎金
+2026/02/13,繳放款,"18,836",,"125,063",,'0000002051600965,
+2026/02/14,轉帳提,"2,780",,"122,283",行動網,'0000347540101931,懷平
+2026/02/19,跨行轉,,"50,000","172,283",824,000011100**96499,
+2026/02/19,跨行轉,"100,000",,"72,283",行動網,'0000885211623789,信用卡
+""".encode("big5")
+
+
+class TestBankRecordCsvParser:
+    """Unit tests for bank account transaction CSV parser."""
+
+    def test_parse_ctbc_bank_csv(self):
+        """Test parsing CTBC bank account CSV with verified format."""
+        from src.schemas.transaction import TransactionType
+        from src.services.csv_parser import BankRecordCsvParser
+
+        parser = BankRecordCsvParser("CTBC_BANK")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CTBC_BANK_CSV))
+
+        assert len(errors) == 0, f"Unexpected errors: {errors}"
+        assert len(transactions) == 7
+
+        # Row 1: Deposit of 100,000
+        tx1 = transactions[0]
+        assert tx1.date == datetime.date(2026, 2, 1)
+        assert tx1.amount == Decimal("100000")
+        assert tx1.transaction_type == TransactionType.INCOME
+        assert "跨行轉" in tx1.description
+        assert tx1.to_account_name == "銀行帳戶-中國信託銀行"  # Bank account receives deposit
+
+        # Row 2: Withdrawal of 30,000
+        tx2 = transactions[1]
+        assert tx2.date == datetime.date(2026, 2, 5)
+        assert tx2.amount == Decimal("30000")
+        assert tx2.transaction_type == TransactionType.EXPENSE
+        assert tx2.from_account_name == "銀行帳戶-中國信託銀行"  # Bank account is source
+
+        # Row 3: Small deposit of 200 (no comma)
+        tx3 = transactions[2]
+        assert tx3.date == datetime.date(2026, 2, 6)
+        assert tx3.amount == Decimal("200")
+        assert tx3.transaction_type == TransactionType.INCOME
+        assert "委代入" in tx3.description
+
+        # Row 5: Withdrawal with memo
+        tx5 = transactions[4]
+        assert tx5.date == datetime.date(2026, 2, 14)
+        assert tx5.amount == Decimal("2780")
+        assert tx5.transaction_type == TransactionType.EXPENSE
+        assert "行動網" in tx5.description  # Memo should be included
+
+    def test_parse_ctbc_skip_rows(self):
+        """Test that CTBC parser correctly skips 3 header rows."""
+        from src.services.bank_configs import get_bank_record_config
+
+        config = get_bank_record_config("CTBC_BANK")
+        assert config is not None
+        assert config.skip_rows == 3
+
+    def test_parse_amounts_with_comma_thousands(self):
+        """Test parsing amounts with comma thousand separators."""
+        from src.services.csv_parser import BankRecordCsvParser
+
+        parser = BankRecordCsvParser("CTBC_BANK")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CTBC_BANK_CSV))
+
+        # Check that amounts are parsed correctly regardless of comma formatting
+        amounts = [tx.amount for tx in transactions]
+        assert Decimal("100000") in amounts  # "100,000" -> 100000
+        assert Decimal("30000") in amounts  # "30,000" -> 30000
+        assert Decimal("50000") in amounts  # "50,000" -> 50000
+
+    def test_parse_unsupported_bank_record(self):
+        """Test that unsupported bank code raises error."""
+        from src.services.csv_parser import BankRecordCsvParser
+
+        with pytest.raises(ValueError, match="Unsupported bank"):
+            BankRecordCsvParser("UNKNOWN_BANK")
+
+    def test_bank_record_config_structure(self):
+        """Test bank record config has required fields."""
+        from src.services.bank_configs import get_bank_record_config
+
+        config = get_bank_record_config("CTBC_BANK")
+        assert config is not None
+        assert config.code == "CTBC_BANK"
+        assert config.name == "中國信託銀行"
+        assert config.date_column == 0
+        assert config.date_format == "%Y/%m/%d"
+        assert config.description_column == 1
+        assert config.withdrawal_column == 2
+        assert config.deposit_column == 3
+        assert config.balance_column == 4
+        assert config.memo_column == 5
+        assert config.skip_rows == 3
+        assert config.encoding == "big5"
