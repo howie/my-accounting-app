@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ interface UnbindDialogProps {
 }
 
 export function UnbindDialog({ binding, onClose }: UnbindDialogProps) {
-  const t = useTranslations('settings.channels')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.channels' })
   const unbind = useUnbindChannel()
 
   const handleUnbind = async () => {

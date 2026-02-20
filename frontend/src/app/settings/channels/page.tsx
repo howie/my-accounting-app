@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ChannelBindingList } from '@/components/channels/ChannelBindingList'
@@ -11,7 +11,7 @@ import { useChannelBindings } from '@/lib/hooks/useChannelBindings'
 import type { ChannelBinding } from '@/types'
 
 export default function ChannelsPage() {
-  const t = useTranslations('settings.channels')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.channels' })
   const { data: bindings, isLoading, error } = useChannelBindings()
   const [showCodeDialog, setShowCodeDialog] = useState(false)
   const [unbindTarget, setUnbindTarget] = useState<ChannelBinding | null>(null)

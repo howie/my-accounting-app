@@ -1,6 +1,6 @@
 'use client'
 
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import { MessageSquare, Unlink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { ChannelBinding, ChannelType } from '@/types'
@@ -17,7 +17,7 @@ interface ChannelBindingListProps {
 }
 
 export function ChannelBindingList({ bindings, onUnbind }: ChannelBindingListProps) {
-  const t = useTranslations('settings.channels')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.channels' })
 
   if (bindings.length === 0) {
     return (
