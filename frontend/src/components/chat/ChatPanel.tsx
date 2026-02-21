@@ -1,6 +1,5 @@
-
-
 import { useCallback, useRef, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MessageCircle, Trash2 } from 'lucide-react'
 import {
   Sheet,
@@ -17,15 +16,9 @@ import { ChatMessage } from './ChatMessage'
 import { ChatInput } from './ChatInput'
 
 export function ChatPanel() {
-  const {
-    isOpen,
-    closeChat,
-    messages,
-    addMessage,
-    clearMessages,
-    isLoading,
-    setIsLoading,
-  } = useChatContext()
+  const { t } = useTranslation()
+  const { isOpen, closeChat, messages, addMessage, clearMessages, isLoading, setIsLoading } =
+    useChatContext()
   const { currentLedger } = useLedgerContext()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -84,14 +77,14 @@ export function ChatPanel() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
-              <SheetTitle>AI 記帳助手</SheetTitle>
+              <SheetTitle>{t('chat.title')}</SheetTitle>
             </div>
             {messages.length > 0 && (
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={clearMessages}
-                title="清除對話"
+                title={t('chat.clearHistory')}
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -99,8 +92,8 @@ export function ChatPanel() {
           </div>
           <SheetDescription>
             {currentLedger
-              ? `目前帳本：${currentLedger.name}`
-              : '請先選擇帳本'}
+              ? t('chat.currentLedger', { name: currentLedger.name })
+              : t('chat.selectLedgerFirst')}
           </SheetDescription>
         </SheetHeader>
 
@@ -110,12 +103,8 @@ export function ChatPanel() {
             <div className="flex h-full items-center justify-center p-6 text-center text-muted-foreground">
               <div className="space-y-2">
                 <MessageCircle className="mx-auto h-12 w-12 opacity-50" />
-                <p className="text-sm">
-                  您好！我可以幫您記帳、查詢帳戶餘額、或是查看交易記錄。
-                </p>
-                <p className="text-xs">
-                  試著說：「幫我記一筆 500 元午餐」
-                </p>
+                <p className="text-sm">{t('chat.welcomeMessage')}</p>
+                <p className="text-xs">{t('chat.tryExample')}</p>
               </div>
             </div>
           ) : (
@@ -129,9 +118,7 @@ export function ChatPanel() {
                     <MessageCircle className="h-4 w-4 animate-pulse" />
                   </div>
                   <div className="flex items-center">
-                    <span className="text-sm text-muted-foreground">
-                      思考中...
-                    </span>
+                    <span className="text-sm text-muted-foreground">{t('chat.thinking')}</span>
                   </div>
                 </div>
               )}

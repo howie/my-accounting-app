@@ -53,6 +53,8 @@ export interface Account {
   depth: number
   sort_order: number
   has_children: boolean
+  is_archived: boolean
+  archived_at: string | null
   created_at: string
   updated_at: string
 }
@@ -78,6 +80,7 @@ export interface AccountListItem {
   depth: number
   sort_order: number
   has_children: boolean
+  is_archived: boolean
 }
 
 export interface AccountTreeNode {
@@ -89,6 +92,7 @@ export interface AccountTreeNode {
   parent_id: string | null
   depth: number
   sort_order: number
+  is_archived: boolean
   children: AccountTreeNode[]
 }
 

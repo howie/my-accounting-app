@@ -91,6 +91,8 @@ def create_account(
         depth=account.depth,
         sort_order=account.sort_order,
         has_children=service.has_children(account.id),
+        is_archived=account.is_archived,
+        archived_at=account.archived_at,
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -101,9 +103,10 @@ def list_accounts(
     ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
     service: Annotated[AccountService, Depends(get_account_service)],
     type: Annotated[AccountType | None, Query()] = None,
+    include_archived: Annotated[bool, Query(description="Include archived accounts")] = False,
 ) -> dict:
     """List all accounts for a ledger with calculated balances."""
-    accounts = service.get_accounts(ledger_id, type_filter=type)
+    accounts = service.get_accounts(ledger_id, type_filter=type, include_archived=include_archived)
     return {
         "data": [
             AccountListItem(
@@ -116,6 +119,7 @@ def list_accounts(
                 depth=a.depth,
                 sort_order=a.sort_order,
                 has_children=service.has_children(a.id),
+                is_archived=a.is_archived,
             )
             for a in accounts
         ]
@@ -127,13 +131,14 @@ def get_account_tree(
     ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
     service: Annotated[AccountService, Depends(get_account_service)],
     type: Annotated[AccountType | None, Query()] = None,
+    include_archived: Annotated[bool, Query(description="Include archived accounts")] = False,
 ) -> dict:
     """Get hierarchical tree of accounts for a ledger.
 
     Returns only root-level accounts with nested children.
     Each node includes aggregated balance from all descendants.
     """
-    tree = service.get_account_tree(ledger_id, type_filter=type)
+    tree = service.get_account_tree(ledger_id, type_filter=type, include_archived=include_archived)
     return {"data": tree}
 
 
@@ -178,6 +183,8 @@ def get_account(
         depth=account.depth,
         sort_order=account.sort_order,
         has_children=service.has_children(account.id),
+        is_archived=account.is_archived,
+        archived_at=account.archived_at,
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -226,6 +233,8 @@ def update_account(
         depth=account.depth,
         sort_order=account.sort_order,
         has_children=service.has_children(account.id),
+        is_archived=account.is_archived,
+        archived_at=account.archived_at,
         created_at=account.created_at,
         updated_at=account.updated_at,
     )
@@ -340,3 +349,62 @@ def reassign_and_delete(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
+
+
+@router.post("/{account_id}/archive", response_model=AccountRead)
+def archive_account(
+    account_id: uuid.UUID,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> AccountRead:
+    """Archive an account."""
+    try:
+        account = service.archive_account(account_id, ledger_id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    if not account:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+    return AccountRead(
+        id=account.id,
+        ledger_id=account.ledger_id,
+        name=account.name,
+        type=account.type,
+        balance=service.calculate_balance(account.id),
+        is_system=account.is_system,
+        parent_id=account.parent_id,
+        depth=account.depth,
+        sort_order=account.sort_order,
+        has_children=service.has_children(account.id),
+        is_archived=account.is_archived,
+        archived_at=account.archived_at,
+        created_at=account.created_at,
+        updated_at=account.updated_at,
+    )
+
+
+@router.post("/{account_id}/unarchive", response_model=AccountRead)
+def unarchive_account(
+    account_id: uuid.UUID,
+    ledger_id: Annotated[uuid.UUID, Depends(verify_ledger_exists)],
+    service: Annotated[AccountService, Depends(get_account_service)],
+) -> AccountRead:
+    """Unarchive an account."""
+    account = service.unarchive_account(account_id, ledger_id)
+    if not account:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Account not found")
+    return AccountRead(
+        id=account.id,
+        ledger_id=account.ledger_id,
+        name=account.name,
+        type=account.type,
+        balance=service.calculate_balance(account.id),
+        is_system=account.is_system,
+        parent_id=account.parent_id,
+        depth=account.depth,
+        sort_order=account.sort_order,
+        has_children=service.has_children(account.id),
+        is_archived=account.is_archived,
+        archived_at=account.archived_at,
+        created_at=account.created_at,
+        updated_at=account.updated_at,
+    )

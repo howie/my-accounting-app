@@ -134,11 +134,12 @@ class DashboardService:
 
         categories = []
         for account_type in category_order:
-            # Get all accounts for this type, sorted by sort_order then name
+            # Get all non-archived accounts for this type, sorted by sort_order then name
             accounts = self.session.exec(
                 select(Account)
                 .where(Account.ledger_id == ledger_id)
                 .where(Account.type == account_type)
+                .where(Account.is_archived.is_(False))
                 .order_by(Account.sort_order, Account.name)
             ).all()
 

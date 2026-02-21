@@ -5,6 +5,7 @@ Supports hierarchical account structure (up to 3 levels deep).
 """
 
 import uuid
+from datetime import UTC, datetime
 from decimal import Decimal
 
 from sqlmodel import Session, func, select
@@ -84,16 +85,23 @@ class AccountService:
         return account
 
     def get_accounts(
-        self, ledger_id: uuid.UUID, type_filter: AccountType | None = None
+        self,
+        ledger_id: uuid.UUID,
+        type_filter: AccountType | None = None,
+        include_archived: bool = False,
     ) -> list[Account]:
         """List all accounts for a ledger.
 
         Optionally filter by account type.
+        When include_archived is False, archived accounts are excluded.
         """
         statement = select(Account).where(Account.ledger_id == ledger_id)
 
         if type_filter is not None:
             statement = statement.where(Account.type == type_filter)
+
+        if not include_archived:
+            statement = statement.where(Account.is_archived.is_(False))
 
         result = self.session.exec(statement)
         return list(result.all())
@@ -178,6 +186,34 @@ class AccountService:
         self.session.commit()
         return True
 
+    def archive_account(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> Account | None:
+        """Archive an account (soft-delete). System accounts cannot be archived."""
+        account = self.session.get(Account, account_id)
+        if not account or account.ledger_id != ledger_id:
+            return None
+        if account.is_system:
+            raise ValueError("System accounts cannot be archived")
+        account.is_archived = True
+        account.archived_at = datetime.now(UTC)
+        account.updated_at = datetime.now(UTC)
+        self.session.add(account)
+        self.session.commit()
+        self.session.refresh(account)
+        return account
+
+    def unarchive_account(self, account_id: uuid.UUID, ledger_id: uuid.UUID) -> Account | None:
+        """Unarchive a previously archived account."""
+        account = self.session.get(Account, account_id)
+        if not account or account.ledger_id != ledger_id:
+            return None
+        account.is_archived = False
+        account.archived_at = None
+        account.updated_at = datetime.now(UTC)
+        self.session.add(account)
+        self.session.commit()
+        self.session.refresh(account)
+        return account
+
     def calculate_balance(self, account_id: uuid.UUID) -> Decimal:
         """Calculate account balance from all transactions.
 
@@ -260,7 +296,10 @@ class AccountService:
         return result
 
     def get_account_tree(
-        self, ledger_id: uuid.UUID, type_filter: AccountType | None = None
+        self,
+        ledger_id: uuid.UUID,
+        type_filter: AccountType | None = None,
+        include_archived: bool = False,
     ) -> list[AccountTreeNode]:
         """Get hierarchical tree of accounts for a ledger.
 
@@ -271,6 +310,8 @@ class AccountService:
         statement = select(Account).where(Account.ledger_id == ledger_id)
         if type_filter is not None:
             statement = statement.where(Account.type == type_filter)
+        if not include_archived:
+            statement = statement.where(Account.is_archived.is_(False))
 
         accounts = list(self.session.exec(statement).all())
 
@@ -301,6 +342,7 @@ class AccountService:
                 parent_id=account.parent_id,
                 depth=account.depth,
                 sort_order=account.sort_order,
+                is_archived=account.is_archived,
                 children=child_nodes,
             )
 

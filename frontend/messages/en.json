@@ -97,7 +97,18 @@
     "loadingTransactions": "Loading transactions...",
     "errorLoading": "Error loading transactions",
     "showFilters": "Show Filters",
-    "hideFilters": "Hide Filters"
+    "hideFilters": "Hide Filters",
+    "edit": "Edit",
+    "deleteTransaction": "Delete Transaction",
+    "deleteConfirm": "Are you sure you want to delete this transaction? This action cannot be undone.",
+    "deleteSuccess": "Transaction deleted",
+    "updateSuccess": "Transaction updated",
+    "searchPlaceholder": "Search transactions...",
+    "searchResults": "{count} results found",
+    "noSearchResults": "No matching transactions",
+    "balance": "Balance",
+    "updateTransaction": "Update Transaction",
+    "updating": "Updating..."
   },
   "transactionForm": {
     "title": "Record Transaction",
@@ -114,7 +125,13 @@
     "accountsRequired": "Both from and to accounts are required",
     "saving": "Saving...",
     "saveTransaction": "Save Transaction",
-    "failedToCreate": "Failed to create transaction"
+    "failedToCreate": "Failed to create transaction",
+    "paymentAccount": "Payment Account",
+    "expenseCategory": "Expense Category",
+    "incomeSource": "Income Source",
+    "depositAccount": "Deposit Account",
+    "transferFrom": "Transfer From",
+    "transferTo": "Transfer To"
   },
   "transactionTypes": {
     "EXPENSE": "Expense",
@@ -270,7 +287,16 @@
     "cannotDeleteSystem": "System accounts cannot be deleted",
     "maxDepthReached": "Maximum nesting level reached",
     "dragToReorder": "Drag to reorder accounts",
-    "noAccounts": "No accounts in this category"
+    "noAccounts": "No accounts in this category",
+    "archiveAccount": "Archive Account",
+    "unarchiveAccount": "Unarchive Account",
+    "confirmArchive": "Archive this account? It will be hidden from daily operations but historical transactions will be preserved.",
+    "archivedSection": "Archived",
+    "showArchived": "Show archived",
+    "hideArchived": "Hide archived",
+    "cannotArchiveSystem": "System accounts cannot be archived",
+    "archiveSuccess": "Account archived",
+    "unarchiveSuccess": "Account unarchived"
   },
   "import": {
     "title": "Batch Import",
@@ -412,6 +438,35 @@
       "confirm": "Are you sure you want to delete this tag? This action cannot be undone.",
       "deleting": "Deleting..."
     }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "overview": "Financial overview for {name}",
+    "noLedger": "No Ledger Selected",
+    "noLedgerDesc": "Please select or create a ledger to view your dashboard.",
+    "errorLoading": "Error Loading Dashboard",
+    "totalAssets": "Total Assets",
+    "totalLiabilities": "Total Liabilities",
+    "monthlyIncome": "Monthly Income",
+    "monthlyExpenses": "Monthly Expenses",
+    "netIncome": "Net Income"
+  },
+  "accountPage": {
+    "selectLedger": "Please select a ledger to view account transactions.",
+    "selectLedgerButton": "Select Ledger",
+    "backToDashboard": "Back to Dashboard",
+    "transactionCount": "{count} transactions",
+    "noTransactionsFor": "No transactions found for {name}",
+    "pageInfo": "Page {page} of {total}"
+  },
+  "chat": {
+    "title": "AI Accounting Assistant",
+    "clearHistory": "Clear conversation",
+    "currentLedger": "Current ledger: {name}",
+    "selectLedgerFirst": "Please select a ledger first",
+    "welcomeMessage": "Hello! I can help you record transactions, check account balances, or view transaction history.",
+    "tryExample": "Try saying: \"Record a $500 lunch expense\"",
+    "thinking": "Thinking..."
   },
   "recurring": {
     "title": "Recurring Transactions",

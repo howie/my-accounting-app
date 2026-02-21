@@ -1,5 +1,3 @@
-
-
 import { useMutation, useQuery, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api'
@@ -104,7 +102,49 @@ export function useUpdateTransaction(ledgerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY, ledgerId] })
       queryClient.invalidateQueries({ queryKey: ['accounts', ledgerId] })
+      queryClient.invalidateQueries({ queryKey: ['account-transactions'] })
     },
+  })
+}
+
+export interface TransactionSuggestion {
+  description: string
+  count: number
+  fromAccountId: string
+  toAccountId: string
+  type: string
+}
+
+export function useTransactionSuggestions(ledgerId: string) {
+  return useQuery({
+    queryKey: ['transaction-suggestions', ledgerId],
+    queryFn: async () => {
+      const result = await apiGet<PaginatedResponse<TransactionListItem>>(
+        `/ledgers/${ledgerId}/transactions?limit=100`
+      )
+      const descMap = new Map<
+        string,
+        { count: number; fromAccountId: string; toAccountId: string; type: string }
+      >()
+      for (const tx of result.data) {
+        const existing = descMap.get(tx.description)
+        if (existing) {
+          existing.count++
+        } else {
+          descMap.set(tx.description, {
+            count: 1,
+            fromAccountId: tx.from_account.id,
+            toAccountId: tx.to_account.id,
+            type: tx.transaction_type,
+          })
+        }
+      }
+      return Array.from(descMap.entries())
+        .sort((a, b) => b[1].count - a[1].count)
+        .map(([description, meta]) => ({ description, ...meta }))
+    },
+    enabled: !!ledgerId,
+    staleTime: 5 * 60 * 1000,
   })
 }
 
@@ -118,6 +158,7 @@ export function useDeleteTransaction(ledgerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [TRANSACTIONS_KEY, ledgerId] })
       queryClient.invalidateQueries({ queryKey: ['accounts', ledgerId] })
+      queryClient.invalidateQueries({ queryKey: ['account-transactions'] })
     },
   })
 }

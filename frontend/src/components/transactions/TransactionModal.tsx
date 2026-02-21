@@ -1,12 +1,10 @@
-
-
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { X, Plus } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { TransactionForm } from '@/components/transactions/TransactionForm'
-import type { AccountType } from '@/types'
+import type { AccountType, Transaction } from '@/types'
 
 export interface TransactionModalProps {
   ledgerId: string
@@ -14,7 +12,7 @@ export interface TransactionModalProps {
   preSelectedAccountId?: string
   /** Pre-selected account type */
   preSelectedAccountType?: AccountType
-  /** Called when a transaction is created successfully */
+  /** Called when a transaction is created/updated successfully */
   onTransactionCreated?: () => void
   /** Custom trigger element - if not provided, default button is rendered */
   trigger?: React.ReactNode
@@ -22,16 +20,23 @@ export interface TransactionModalProps {
   triggerText?: string
   /** Variant for the default trigger button */
   triggerVariant?: 'default' | 'outline' | 'ghost'
+  /** Transaction data for edit mode */
+  editTransaction?: Transaction
+  /** Whether the modal is controlled externally */
+  open?: boolean
+  /** Called when modal open state changes (for controlled mode) */
+  onOpenChange?: (open: boolean) => void
 }
 
 /**
- * TransactionModal - A modal dialog for creating transactions
+ * TransactionModal - A modal dialog for creating or editing transactions
  *
  * Features:
- * - Opens on trigger click
+ * - Opens on trigger click (uncontrolled) or via open prop (controlled)
  * - Closes on save, cancel, or overlay click
  * - Supports account pre-selection
- * - Triggers callback on successful transaction creation
+ * - Supports edit mode with editTransaction prop
+ * - Triggers callback on successful transaction creation/update
  */
 export function TransactionModal({
   ledgerId,
@@ -41,47 +46,74 @@ export function TransactionModal({
   trigger,
   triggerText,
   triggerVariant = 'default',
+  editTransaction,
+  open,
+  onOpenChange,
 }: TransactionModalProps) {
   const { t } = useTranslation()
-  const [isOpen, setIsOpen] = useState(false)
+  const [internalOpen, setInternalOpen] = useState(false)
+
+  const isControlled = open !== undefined
+  const isOpen = isControlled ? open : internalOpen
+
+  const setOpen = useCallback(
+    (value: boolean) => {
+      if (isControlled) {
+        onOpenChange?.(value)
+      } else {
+        setInternalOpen(value)
+      }
+    },
+    [isControlled, onOpenChange]
+  )
 
   const handleOpen = useCallback(() => {
-    setIsOpen(true)
-  }, [])
+    setOpen(true)
+  }, [setOpen])
 
   const handleClose = useCallback(() => {
-    setIsOpen(false)
-  }, [])
+    setOpen(false)
+  }, [setOpen])
 
   const handleSuccess = useCallback(() => {
-    setIsOpen(false)
+    setOpen(false)
     onTransactionCreated?.()
-  }, [onTransactionCreated])
+  }, [setOpen, onTransactionCreated])
 
-  const handleOverlayClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    // Only close if clicking directly on the overlay, not on the dialog
-    if (e.target === e.currentTarget) {
-      setIsOpen(false)
-    }
-  }, [])
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      if (e.target === e.currentTarget) {
+        setOpen(false)
+      }
+    },
+    [setOpen]
+  )
 
+  const isEditMode = !!editTransaction
+  const modalTitle = isEditMode
+    ? t('transactionEntry.editTransaction')
+    : t('transactionModal.title')
   const defaultTriggerText = triggerText || t('transactionModal.trigger')
 
   return (
     <>
-      {/* Trigger */}
-      {trigger ? (
-        <div onClick={handleOpen}>{trigger}</div>
-      ) : (
-        <Button
-          type="button"
-          variant={triggerVariant}
-          onClick={handleOpen}
-          data-testid="add-transaction-trigger"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {defaultTriggerText}
-        </Button>
+      {/* Trigger - only render if not controlled */}
+      {!isControlled && (
+        <>
+          {trigger ? (
+            <div onClick={handleOpen}>{trigger}</div>
+          ) : (
+            <Button
+              type="button"
+              variant={triggerVariant}
+              onClick={handleOpen}
+              data-testid="add-transaction-trigger"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {defaultTriggerText}
+            </Button>
+          )}
+        </>
       )}
 
       {/* Modal */}
@@ -105,7 +137,7 @@ export function TransactionModal({
             {/* Header */}
             <div className="flex items-center justify-between border-b px-6 py-4">
               <h2 id="transaction-modal-title" className="text-lg font-semibold">
-                {t('transactionModal.title')}
+                {modalTitle}
               </h2>
               <button
                 type="button"
@@ -124,6 +156,7 @@ export function TransactionModal({
                 ledgerId={ledgerId}
                 preSelectedAccountId={preSelectedAccountId}
                 preSelectedAccountType={preSelectedAccountType}
+                editTransaction={editTransaction}
                 onSuccess={handleSuccess}
                 onCancel={handleClose}
               />

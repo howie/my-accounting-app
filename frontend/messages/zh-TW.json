@@ -97,7 +97,18 @@
     "loadingTransactions": "載入交易中...",
     "errorLoading": "載入交易錯誤",
     "showFilters": "顯示篩選",
-    "hideFilters": "隱藏篩選"
+    "hideFilters": "隱藏篩選",
+    "edit": "編輯",
+    "deleteTransaction": "刪除交易",
+    "deleteConfirm": "確定要刪除此交易嗎？此操作無法復原。",
+    "deleteSuccess": "交易已刪除",
+    "updateSuccess": "交易已更新",
+    "searchPlaceholder": "搜尋交易...",
+    "searchResults": "找到 {count} 筆結果",
+    "noSearchResults": "找不到符合的交易",
+    "balance": "餘額",
+    "updateTransaction": "更新交易",
+    "updating": "更新中..."
   },
   "transactionForm": {
     "title": "記錄交易",
@@ -114,7 +125,13 @@
     "accountsRequired": "來源和目標科目皆為必填",
     "saving": "儲存中...",
     "saveTransaction": "儲存交易",
-    "failedToCreate": "建立交易失敗"
+    "failedToCreate": "建立交易失敗",
+    "paymentAccount": "付款帳戶",
+    "expenseCategory": "支出分類",
+    "incomeSource": "收入來源",
+    "depositAccount": "入帳帳戶",
+    "transferFrom": "轉出帳戶",
+    "transferTo": "轉入帳戶"
   },
   "transactionTypes": {
     "EXPENSE": "支出",
@@ -270,7 +287,16 @@
     "cannotDeleteSystem": "系統科目無法刪除",
     "maxDepthReached": "已達最大層級深度",
     "dragToReorder": "拖曳以重新排序科目",
-    "noAccounts": "此類別無科目"
+    "noAccounts": "此類別無科目",
+    "archiveAccount": "封存科目",
+    "unarchiveAccount": "取消封存",
+    "confirmArchive": "確定要封存此科目嗎？它將從日常操作中隱藏，但歷史交易記錄會保留。",
+    "archivedSection": "已封存",
+    "showArchived": "顯示已封存",
+    "hideArchived": "隱藏已封存",
+    "cannotArchiveSystem": "系統科目無法封存",
+    "archiveSuccess": "科目已封存",
+    "unarchiveSuccess": "科目已取消封存"
   },
   "import": {
     "title": "批次匯入",
@@ -412,6 +438,35 @@
       "confirm": "確定要刪除此標籤嗎？此操作無法復原。",
       "deleting": "刪除中..."
     }
+  },
+  "dashboard": {
+    "title": "儀表板",
+    "overview": "{name} 的財務概覽",
+    "noLedger": "尚未選擇帳本",
+    "noLedgerDesc": "請選擇或建立帳本以查看儀表板。",
+    "errorLoading": "載入儀表板錯誤",
+    "totalAssets": "總資產",
+    "totalLiabilities": "總負債",
+    "monthlyIncome": "本月收入",
+    "monthlyExpenses": "本月支出",
+    "netIncome": "本月淨收入"
+  },
+  "accountPage": {
+    "selectLedger": "請選擇帳本以查看科目交易。",
+    "selectLedgerButton": "選擇帳本",
+    "backToDashboard": "返回儀表板",
+    "transactionCount": "{count} 筆交易",
+    "noTransactionsFor": "「{name}」尚無交易記錄",
+    "pageInfo": "第 {page} 頁，共 {total} 頁"
+  },
+  "chat": {
+    "title": "AI 記帳助手",
+    "clearHistory": "清除對話",
+    "currentLedger": "目前帳本：{name}",
+    "selectLedgerFirst": "請先選擇帳本",
+    "welcomeMessage": "您好！我可以幫您記帳、查詢帳戶餘額、或是查看交易記錄。",
+    "tryExample": "試著說：「幫我記一筆 500 元午餐」",
+    "thinking": "思考中..."
   },
   "recurring": {
     "title": "定期交易",
