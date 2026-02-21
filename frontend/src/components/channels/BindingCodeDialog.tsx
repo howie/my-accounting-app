@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useTranslations } from 'next-intl'
+import { useTranslation } from 'react-i18next'
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,7 @@ interface BindingCodeDialogProps {
 }
 
 export function BindingCodeDialog({ isOpen, onClose }: BindingCodeDialogProps) {
-  const t = useTranslations('settings.channels')
+  const { t } = useTranslation(undefined, { keyPrefix: 'settings.channels' })
   const generateCode = useGenerateCode()
   const [selectedChannel, setSelectedChannel] = useState<ChannelType>('TELEGRAM')
   const [code, setCode] = useState<string | null>(null)
