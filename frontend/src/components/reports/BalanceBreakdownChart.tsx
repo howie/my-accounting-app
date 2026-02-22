@@ -1,5 +1,3 @@
-
-
 import { Card, DonutChart, Legend } from '@tremor/react'
 import type { ReportEntry } from '@/types/reports'
 
@@ -14,12 +12,7 @@ interface BalanceBreakdownChartProps {
  * Donut chart showing breakdown of balance sheet categories.
  * Shows top-level account distribution (e.g., Cash, Investments, etc.)
  */
-export function BalanceBreakdownChart({
-  title,
-  data,
-  total,
-  color,
-}: BalanceBreakdownChartProps) {
+export function BalanceBreakdownChart({ title, data, total, color }: BalanceBreakdownChartProps) {
   // Flatten to get top-level accounts with their amounts
   const chartData = data
     .map((entry) => ({
@@ -43,10 +36,10 @@ export function BalanceBreakdownChart({
   }
 
   const colorVariants = {
-    blue: ['blue', 'cyan', 'indigo', 'sky', 'violet', 'slate'],
-    emerald: ['emerald', 'green', 'teal', 'lime', 'cyan', 'slate'],
-    amber: ['amber', 'yellow', 'orange', 'lime', 'green', 'slate'],
-    rose: ['rose', 'pink', 'red', 'orange', 'fuchsia', 'slate'],
+    blue: ['blue', 'rose', 'amber', 'emerald', 'violet', 'cyan'],
+    emerald: ['emerald', 'blue', 'amber', 'rose', 'violet', 'cyan'],
+    amber: ['amber', 'blue', 'emerald', 'rose', 'violet', 'cyan'],
+    rose: ['rose', 'blue', 'amber', 'emerald', 'violet', 'cyan'],
   }
 
   return (
