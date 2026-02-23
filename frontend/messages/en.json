@@ -13,7 +13,8 @@
     "error": "Error",
     "system": "System",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "createdAt": "Created At"
   },
   "home": {
     "title": "Personal Accounting System",
@@ -323,7 +324,28 @@
     "cancel": "Cancel Import",
     "confirmCancel": "Are you sure you want to cancel the import?",
     "importMore": "Import More",
-    "viewTransactions": "View Transactions"
+    "viewTransactions": "View Transactions",
+    "uploadFile": "Upload File",
+    "analyzing": "Analyzing...",
+    "generatePreview": "Generate Preview",
+    "selectBankRequired": "Please select a bank",
+    "uploadError": "Failed to upload file",
+    "duplicateTransactionsDetected": "Duplicate Transactions Detected",
+    "duplicateCount": "{count} transactions seem to be duplicates",
+    "skipDuplicates": "Skip Duplicates",
+    "accountMappings": "Account Mappings",
+    "reviewAccountMappings": "Review how CSV accounts map to your ledger. We've auto-matched names where possible.",
+    "csvAccount": "CSV Account",
+    "csvType": "CSV Type",
+    "action": "Action",
+    "details": "Details",
+    "createNewAccount": "Create New Account",
+    "existingAccounts": "Existing Accounts",
+    "transactionPreview": "Transaction Preview ({count})",
+    "creditCardAutoCategory": "Credit card transactions have been auto-categorized. Click a category to modify.",
+    "confirmImport": "Confirm Import",
+    "validationErrors": "Parsing errors ({count})",
+    "noTransactions": "No transactions to preview. Please check the CSV format."
   },
   "transactionModal": {
     "title": "Add Transaction",
