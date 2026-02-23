@@ -82,10 +82,18 @@ invalid_date,支出,E-Food,,,A-Cash,100,Desc,""".encode()
 # T043: Unit test for credit card CSV parser (multiple banks)
 # T045: Unit test for bank config loading
 
-SAMPLE_CATHAY_CSV = """交易日期,入帳日期,商店名稱,金額
-2024/01/15,2024/01/16,星巴克信義店,150
-2024/01/16,2024/01/17,全聯福利中心,520
-2024/01/18,2024/01/19,台灣高鐵,1490
+SAMPLE_CATHAY_CSV = """2026/02信用卡對帳單
+帳單資訊,,,
+
+帳單明細
+新臺幣
+"消費日","交易說明","新臺幣金額","卡號/行動末四碼","消費國家/幣別","消費金額","入帳起息日","折算日"
+"−","上期帳單總額","112,297","−","−","−","−","−"
+"02/03","ＣＵＢＥＡｐｐ轉帳繳款","-112,297","9341","−","−","02/03","−"
+"01/15","星巴克信義店","150","9341","TW / TWD","−","01/21","−"
+"01/16","全聯福利中心","520","9341","TW / TWD","−","01/22","−"
+"12/25","跨年測試消費","300","9341","TW / TWD","−","01/01","−"
+"正卡消費 TWD 96210"
 """.encode()
 
 SAMPLE_CTBC_CSV = """交易日,商店,消費金額
@@ -137,17 +145,46 @@ class TestCreditCardCsvParser:
         transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
         assert len(errors) == 0
 
+        # Should skip: "−" date row (上期帳單總額) and negative amount row (繳款)
+        # Should parse: 3 actual purchase transactions
         assert len(transactions) == 3
 
+        # tx1: bill month 2026/02, tx month 01 <= 02 → year 2026
         tx1 = transactions[0]
-        assert tx1.date == datetime.date(2024, 1, 15)
+        assert tx1.date == datetime.date(2026, 1, 15)
         assert tx1.amount == Decimal("150")
         assert tx1.description == "星巴克信義店"
 
         tx2 = transactions[1]
-        assert tx2.date == datetime.date(2024, 1, 16)
+        assert tx2.date == datetime.date(2026, 1, 16)
         assert tx2.amount == Decimal("520")
         assert tx2.description == "全聯福利中心"
+
+        # tx3: bill month 2026/02, tx month 12 > 02 → cross-year → year 2025
+        tx3 = transactions[2]
+        assert tx3.date == datetime.date(2025, 12, 25)
+        assert tx3.amount == Decimal("300")
+        assert tx3.description == "跨年測試消費"
+
+    def test_cathay_skips_payment_rows(self):
+        """Negative-amount (payment) rows must be filtered out."""
+        from src.services.csv_parser import CreditCardCsvParser
+
+        parser = CreditCardCsvParser("CATHAY")
+        transactions, errors = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
+        descriptions = [tx.description for tx in transactions]
+        assert "ＣＵＢＥＡｐｐ轉帳繳款" not in descriptions
+        assert "上期帳單總額" not in descriptions
+
+    def test_cathay_year_inference_cross_year(self):
+        """Transaction month > bill month must resolve to previous year."""
+        from src.services.csv_parser import CreditCardCsvParser
+
+        parser = CreditCardCsvParser("CATHAY")
+        transactions, _errors = parser.parse(BytesIO(SAMPLE_CATHAY_CSV))
+        cross_year_tx = next(tx for tx in transactions if tx.description == "跨年測試消費")
+        assert cross_year_tx.date.year == 2025
+        assert cross_year_tx.date.month == 12
 
     def test_parse_ctbc_csv(self):
         from src.services.csv_parser import CreditCardCsvParser
@@ -172,10 +209,12 @@ class TestCreditCardCsvParser:
     def test_parse_invalid_format(self):
         from src.services.csv_parser import CreditCardCsvParser
 
-        # CSV with wrong column count
-        invalid_csv = b"""col1,col2
-data1,data2
-"""
+        # CATHAY format with enough columns but an invalid date value
+        invalid_csv = (
+            "2026/02信用卡對帳單\n"
+            '"消費日","交易說明","新臺幣金額","卡號/行動末四碼"\n'
+            '"99/99","無效日期店家","150","9341"\n'
+        ).encode()
 
         parser = CreditCardCsvParser("CATHAY")
         transactions, errors = parser.parse(BytesIO(invalid_csv))
