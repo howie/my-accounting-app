@@ -100,6 +100,20 @@ async def create_import_preview(
             # Fatal parsing error (e.g. file encoding, fundamental format)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    # 3b. LLM category enhancement (credit card only)
+    if import_type == ImportType.CREDIT_CARD and parsed_txs:
+        from src.models.account import AccountType as ModelAccountType  # noqa: PLC0415
+        from src.services.llm_category_enhancer import LLMCategoryEnhancer  # noqa: PLC0415
+
+        expense_accounts = session.exec(
+            select(Account).where(
+                Account.ledger_id == ledger_id,
+                Account.type == ModelAccountType.EXPENSE,
+            )
+        ).all()
+        enhancer = LLMCategoryEnhancer()
+        parsed_txs = enhancer.enhance_batch(parsed_txs, list(expense_accounts))
+
     # 4. Generate Mappings
     existing_accounts = session.exec(select(Account).where(Account.ledger_id == ledger_id)).all()
     mapped_txs, mappings = ImportService.auto_map_accounts(parsed_txs, list(existing_accounts))

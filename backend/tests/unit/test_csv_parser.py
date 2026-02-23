@@ -4,7 +4,7 @@ from io import BytesIO
 
 import pytest
 
-from src.schemas.data_import import ParsedTransaction
+from src.schemas.data_import import ParsedTransaction  # AccountType used in assertions
 from src.services.csv_parser import CsvParser, MyAbCsvParser
 
 # T012: Unit test for MyAB CSV parser
@@ -139,6 +139,7 @@ class TestCreditCardCsvParser:
     """T043: Unit test for credit card CSV parser (multiple banks)"""
 
     def test_parse_cathay_csv(self):
+        from src.schemas.data_import import AccountType
         from src.services.csv_parser import CreditCardCsvParser
 
         parser = CreditCardCsvParser("CATHAY")
@@ -154,6 +155,11 @@ class TestCreditCardCsvParser:
         assert tx1.date == datetime.date(2026, 1, 15)
         assert tx1.amount == Decimal("150")
         assert tx1.description == "星巴克信義店"
+        # Account path types must be correctly set
+        assert tx1.from_account_path is not None
+        assert tx1.from_account_path.account_type == AccountType.LIABILITY
+        assert tx1.to_account_path is not None
+        assert tx1.to_account_path.account_type == AccountType.EXPENSE
 
         tx2 = transactions[1]
         assert tx2.date == datetime.date(2026, 1, 16)

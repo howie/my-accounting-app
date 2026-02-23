@@ -560,6 +560,16 @@ class CreditCardCsvParser(CsvParser):
                     amount=amount,
                     description=description,
                     category_suggestion=suggestion,
+                    from_account_path=ParsedAccountPath(
+                        account_type=AccountType.LIABILITY,
+                        path_segments=["信用卡", self.config.name],
+                        raw_name=f"信用卡-{self.config.name}",
+                    ),
+                    to_account_path=ParsedAccountPath(
+                        account_type=AccountType.EXPENSE,
+                        path_segments=[suggestion.suggested_account_name],
+                        raw_name=suggestion.suggested_account_name,
+                    ),
                 )
                 result.append(tx)
 
