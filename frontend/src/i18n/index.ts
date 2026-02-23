@@ -1,9 +1,9 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
 
-import en from '../../messages/en.json';
-import zhTW from '../../messages/zh-TW.json';
+import en from '../../messages/en.json'
+import zhTW from '../../messages/zh-TW.json'
 
 i18n
   .use(LanguageDetector)
@@ -17,12 +17,14 @@ i18n
     supportedLngs: ['zh-TW', 'en'],
     interpolation: {
       escapeValue: false,
+      prefix: '{',
+      suffix: '}',
     },
     detection: {
       order: ['localStorage', 'navigator'],
       lookupLocalStorage: 'NEXT_LOCALE',
       caches: ['localStorage'],
     },
-  });
+  })
 
-export default i18n;
+export default i18n

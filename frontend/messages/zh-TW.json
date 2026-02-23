@@ -13,7 +13,8 @@
     "error": "錯誤",
     "system": "系統",
     "previous": "上一頁",
-    "next": "下一頁"
+    "next": "下一頁",
+    "createdAt": "建立時間"
   },
   "home": {
     "title": "個人記帳系統",
@@ -323,7 +324,28 @@
     "cancel": "取消匯入",
     "confirmCancel": "確定要取消匯入嗎？",
     "importMore": "再匯入更多",
-    "viewTransactions": "查看交易"
+    "viewTransactions": "查看交易",
+    "uploadFile": "上傳檔案",
+    "analyzing": "分析中...",
+    "generatePreview": "生成預覽",
+    "selectBankRequired": "請選擇銀行",
+    "uploadError": "檔案上傳失敗",
+    "duplicateTransactionsDetected": "偵測到重複交易",
+    "duplicateCount": "{count} 筆交易似乎是重複的",
+    "skipDuplicates": "跳過重複項目",
+    "accountMappings": "科目對應",
+    "reviewAccountMappings": "檢查 CSV 科目如何對應到您的帳本。我們已自動比對名稱。",
+    "csvAccount": "CSV 科目",
+    "csvType": "CSV 類型",
+    "action": "操作",
+    "details": "詳情",
+    "createNewAccount": "建立新科目",
+    "existingAccounts": "現有科目",
+    "transactionPreview": "交易預覽（{count} 筆）",
+    "creditCardAutoCategory": "信用卡交易已自動分類。點擊類別可修改。",
+    "confirmImport": "確認匯入",
+    "validationErrors": "解析錯誤（{count} 個）",
+    "noTransactions": "沒有可預覽的交易，請確認 CSV 格式"
   },
   "transactionModal": {
     "title": "新增交易",
