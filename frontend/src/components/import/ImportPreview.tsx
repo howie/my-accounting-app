@@ -9,7 +9,7 @@ import {
 } from '@/lib/api/import'
 import { accountsApi, AccountListItem } from '@/lib/api/accounts'
 import ImportProgress from './ImportProgress'
-import CategoryEditor from './CategoryEditor'
+import CategoryEditor, { buildHierarchicalAccountOptions } from './CategoryEditor'
 
 interface ImportPreviewProps {
   ledgerId: string
@@ -80,6 +80,19 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
     () => existingAccounts.filter((a: AccountListItem) => a.type === 'EXPENSE'),
     [existingAccounts]
   )
+
+  const expenseHierarchicalOptions = useMemo(
+    () => buildHierarchicalAccountOptions(expenseAccounts),
+    [expenseAccounts]
+  )
+
+  const accountsByType = useMemo(() => {
+    const types = [...new Set(existingAccounts.map((a) => a.type))]
+    return types.map((type) => ({
+      type,
+      options: buildHierarchicalAccountOptions(existingAccounts.filter((a) => a.type === type)),
+    }))
+  }, [existingAccounts])
 
   const handleExecute = async () => {
     setExecuting(true)
@@ -275,13 +288,15 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
                       className="rounded border border-gray-300 bg-white px-2 py-1 text-sm"
                     >
                       <option value="">{t('import.createNewAccount')}</option>
-                      <optgroup label={t('import.existingAccounts')}>
-                        {existingAccounts.map((acc) => (
-                          <option key={acc.id} value={acc.id}>
-                            {acc.name} ({acc.type})
-                          </option>
-                        ))}
-                      </optgroup>
+                      {accountsByType.map(({ type, options }) => (
+                        <optgroup key={type} label={type}>
+                          {options.map((opt) => (
+                            <option key={opt.id} value={opt.id}>
+                              {opt.displayName}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ))}
                     </select>
                   </td>
                   <td className="px-4 py-2">
@@ -350,8 +365,9 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
                   Boolean(txEdits[tx.row_number]) && Object.keys(txEdits[tx.row_number]).length > 0
                 const isDuplicate = data.duplicates.some((d: any) => d.row_number === tx.row_number)
                 const toDisplayName = txEdits[tx.row_number]?.toAccountId
-                  ? (existingAccounts.find((a) => a.id === txEdits[tx.row_number]?.toAccountId)
-                      ?.name ?? tx._displayTo)
+                  ? (expenseHierarchicalOptions.find(
+                      (o) => o.id === txEdits[tx.row_number]?.toAccountId
+                    )?.displayName ?? tx._displayTo)
                   : tx._displayTo
 
                 return (
