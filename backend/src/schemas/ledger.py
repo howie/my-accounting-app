@@ -16,6 +16,7 @@ class LedgerCreate(SQLModel):
 
     name: str = Field(min_length=1, max_length=100)
     initial_balance: Decimal = Field(default=Decimal("0"), ge=0, max_digits=15, decimal_places=2)
+    template_ledger_id: uuid.UUID | None = None
 
 
 class LedgerRead(SQLModel):

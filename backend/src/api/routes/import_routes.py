@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from src.api.deps import get_session
 from src.models.account import Account
@@ -33,6 +33,7 @@ async def create_import_preview(
     import_type: Annotated[ImportType, Form(...)],
     session: Session = Depends(get_session),
     bank_code: Annotated[str | None, Form()] = None,  # noqa: ARG001 - Reserved for credit card import
+    reference_ledger_id: Annotated[uuid.UUID | None, Form()] = None,
 ) -> Any:
     """
     Parse CSV and generate import preview.
@@ -105,18 +106,46 @@ async def create_import_preview(
         from src.models.account import AccountType as ModelAccountType  # noqa: PLC0415
         from src.services.llm_category_enhancer import LLMCategoryEnhancer  # noqa: PLC0415
 
-        expense_accounts = session.exec(
+        ledger_ids = [ledger_id]
+        if reference_ledger_id:
+            ledger_ids.append(reference_ledger_id)
+
+        expense_accounts_raw = session.exec(
             select(Account).where(
-                Account.ledger_id == ledger_id,
+                col(Account.ledger_id).in_(ledger_ids),
                 Account.type == ModelAccountType.EXPENSE,
             )
         ).all()
+
+        # Deduplicate: prefer current ledger's version when names clash
+        seen_expense: set[str] = set()
+        expense_accounts = []
+        for acc in sorted(expense_accounts_raw, key=lambda a: a.ledger_id != ledger_id):
+            if acc.name not in seen_expense:
+                seen_expense.add(acc.name)
+                expense_accounts.append(acc)
+
         enhancer = LLMCategoryEnhancer()
-        parsed_txs = enhancer.enhance_batch(parsed_txs, list(expense_accounts))
+        parsed_txs = enhancer.enhance_batch(parsed_txs, expense_accounts)
 
     # 4. Generate Mappings
-    existing_accounts = session.exec(select(Account).where(Account.ledger_id == ledger_id)).all()
-    mapped_txs, mappings = ImportService.auto_map_accounts(parsed_txs, list(existing_accounts))
+    ledger_ids_for_map = [ledger_id]
+    if reference_ledger_id:
+        ledger_ids_for_map.append(reference_ledger_id)
+
+    all_accounts_raw = session.exec(
+        select(Account).where(col(Account.ledger_id).in_(ledger_ids_for_map))
+    ).all()
+
+    # Deduplicate: prefer current ledger's version when names clash
+    seen_all: set[str] = set()
+    all_accounts: list[Account] = []
+    for acc in sorted(all_accounts_raw, key=lambda a: a.ledger_id != ledger_id):
+        if acc.name not in seen_all:
+            seen_all.add(acc.name)
+            all_accounts.append(acc)
+
+    mapped_txs, mappings = ImportService.auto_map_accounts(parsed_txs, all_accounts)
 
     if len(mapped_txs) > 2000:
         raise HTTPException(
@@ -248,6 +277,7 @@ async def execute_import(
             transactions=parsed_txs,
             mappings=request.account_mappings,
             skip_rows=request.skip_duplicate_rows,
+            transaction_overrides=request.transaction_overrides or None,
         )
         session.commit()
         return result

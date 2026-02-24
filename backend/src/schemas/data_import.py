@@ -124,10 +124,22 @@ class ImportPreviewResponse(BaseModel):
     is_valid: bool
 
 
+_Date = date  # alias to prevent field name 'date' from shadowing datetime.date in annotations
+
+
+class TransactionOverride(BaseModel):
+    date: _Date | None = None
+    amount: Decimal | None = None
+    description: str | None = None
+    from_account_id: UUID | None = None
+    to_account_id: UUID | None = None
+
+
 class ImportExecuteRequest(BaseModel):
     session_id: UUID
     account_mappings: list[AccountMapping]
     skip_duplicate_rows: list[int] = Field(default_factory=list)
+    transaction_overrides: dict[int, TransactionOverride] = Field(default_factory=dict)
 
 
 class CreatedAccount(BaseModel):

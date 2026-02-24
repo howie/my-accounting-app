@@ -12,6 +12,7 @@ from src.schemas.data_import import (
     ImportResult,
     ParsedAccountPath,
     ParsedTransaction,
+    TransactionOverride,
 )
 from src.services.csv_parser import MyAbCsvParser
 
@@ -288,6 +289,7 @@ class ImportService:
         transactions: list[ParsedTransaction],
         mappings: list[AccountMapping],
         skip_rows: list[int],
+        transaction_overrides: dict[int, TransactionOverride] | None = None,
     ) -> "ImportResult":
         from datetime import datetime
 
@@ -322,21 +324,28 @@ class ImportService:
         # 2. Process Transactions
         imported_count = 0
         skipped_count = 0
+        overrides = transaction_overrides or {}
 
         for tx in transactions:
             if tx.row_number in skip_rows:
                 skipped_count += 1
                 continue
 
-            # Resolve IDs using Mappings
-            from_id = name_to_id.get(tx.from_account_name)
-            to_id = name_to_id.get(tx.to_account_name)
+            override = overrides.get(tx.row_number)
+
+            # Resolve IDs: override takes priority over name_to_id lookup
+            from_id = (
+                override.from_account_id
+                if override and override.from_account_id
+                else name_to_id.get(tx.from_account_name)
+            )
+            to_id = (
+                override.to_account_id
+                if override and override.to_account_id
+                else name_to_id.get(tx.to_account_name)
+            )
 
             if not from_id or not to_id:
-                # If mapping not explicit, check if we Auto-mapped earlier in Preview?
-                # Preview returned mappings. User might have modified.
-                # Request `mappings` should contain all involved accounts.
-                # If missing, it's an error.
                 raise ValueError(
                     f"Account mapping missing for account '{tx.from_account_name}' or '{tx.to_account_name}' in row {tx.row_number}"
                 )
@@ -349,9 +358,13 @@ class ImportService:
 
             db_tx = Transaction(
                 ledger_id=import_session.ledger_id,
-                date=tx.date,
-                amount=tx.amount,
-                description=tx.description,
+                date=override.date if override and override.date else tx.date,
+                amount=override.amount if override and override.amount is not None else tx.amount,
+                description=(
+                    override.description
+                    if override and override.description is not None
+                    else tx.description
+                ),
                 from_account_id=from_id,
                 to_account_id=to_id,
                 transaction_type=model_tx_type,

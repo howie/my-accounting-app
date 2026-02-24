@@ -54,7 +54,9 @@
     "invalidBalance": "Initial balance must be a positive number",
     "creating": "Creating...",
     "createLedger": "Create Ledger",
-    "failedToCreate": "Failed to create ledger"
+    "failedToCreate": "Failed to create ledger",
+    "templateLedgerLabel": "Copy existing account tree (optional)",
+    "noTemplate": "Start from scratch"
   },
   "accounts": {
     "title": "Accounts",
@@ -345,7 +347,12 @@
     "creditCardAutoCategory": "Credit card transactions have been auto-categorized. Click a category to modify.",
     "confirmImport": "Confirm Import",
     "validationErrors": "Parsing errors ({count})",
-    "noTransactions": "No transactions to preview. Please check the CSV format."
+    "noTransactions": "No transactions to preview. Please check the CSV format.",
+    "referenceLedger": "Reference Ledger (Optional)",
+    "referenceLedgerPlaceholder": "Select to have AI categorize using this ledger's accounts",
+    "overrideCategory": "Override category",
+    "editedRow": "Edited",
+    "resetRowEdit": "Reset"
   },
   "transactionModal": {
     "title": "Add Transaction",
