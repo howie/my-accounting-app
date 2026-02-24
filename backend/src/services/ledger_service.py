@@ -8,7 +8,7 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from sqlmodel import Session, select
+from sqlmodel import Session, col, select
 
 from src.models.account import Account, AccountType
 from src.models.audit_log import AuditLog
@@ -33,53 +33,83 @@ class LedgerService:
     def create_ledger(self, user_id: uuid.UUID, data: LedgerCreate) -> Ledger:
         """Create a new ledger with initial system accounts.
 
-        Side effects:
-        - Creates Cash account with initial_balance
-        - Creates Equity account with 0 balance
-        - Creates initial transaction from Equity to Cash (if initial_balance > 0)
+        When template_ledger_id is provided, copies the account tree from that
+        ledger (balance reset to 0). Otherwise creates default Cash + Equity accounts.
         """
-        # Create the ledger
         ledger = Ledger(
             user_id=user_id,
             name=data.name,
             initial_balance=data.initial_balance,
         )
         self.session.add(ledger)
-        self.session.flush()  # Get the ledger ID
-
-        # Create system accounts
-        cash_account = Account(
-            ledger_id=ledger.id,
-            name="Cash",
-            type=AccountType.ASSET,
-            is_system=True,
-        )
-        equity_account = Account(
-            ledger_id=ledger.id,
-            name="Equity",
-            type=AccountType.ASSET,
-            is_system=True,
-        )
-        self.session.add(cash_account)
-        self.session.add(equity_account)
         self.session.flush()
 
-        # Create initial transaction if initial_balance > 0
-        if data.initial_balance > Decimal("0"):
-            initial_transaction = Transaction(
+        if data.template_ledger_id:
+            self._copy_accounts_from_template(ledger.id, data.template_ledger_id)
+        else:
+            cash_account = Account(
                 ledger_id=ledger.id,
-                date=date.today(),
-                description="Initial balance",
-                amount=data.initial_balance,
-                from_account_id=equity_account.id,
-                to_account_id=cash_account.id,
-                transaction_type=TransactionType.TRANSFER,
+                name="Cash",
+                type=AccountType.ASSET,
+                is_system=True,
             )
-            self.session.add(initial_transaction)
+            equity_account = Account(
+                ledger_id=ledger.id,
+                name="Equity",
+                type=AccountType.ASSET,
+                is_system=True,
+            )
+            self.session.add(cash_account)
+            self.session.add(equity_account)
+            self.session.flush()
+
+            if data.initial_balance > Decimal("0"):
+                initial_transaction = Transaction(
+                    ledger_id=ledger.id,
+                    date=date.today(),
+                    description="Initial balance",
+                    amount=data.initial_balance,
+                    from_account_id=equity_account.id,
+                    to_account_id=cash_account.id,
+                    transaction_type=TransactionType.TRANSFER,
+                )
+                self.session.add(initial_transaction)
 
         self.session.commit()
         self.session.refresh(ledger)
         return ledger
+
+    def _copy_accounts_from_template(
+        self, new_ledger_id: uuid.UUID, template_ledger_id: uuid.UUID
+    ) -> None:
+        """Copy the entire account tree from a template ledger into a new ledger.
+
+        Processes accounts in depth/sort_order order so parents are always created
+        before children. All balances are reset to 0.
+        """
+        template_accounts = self.session.exec(
+            select(Account)
+            .where(col(Account.ledger_id) == template_ledger_id)
+            .order_by(Account.depth, Account.sort_order)
+        ).all()
+
+        old_to_new: dict[uuid.UUID, uuid.UUID] = {}
+
+        for acc in template_accounts:
+            new_parent_id = old_to_new[acc.parent_id] if acc.parent_id else None
+            new_acc = Account(
+                ledger_id=new_ledger_id,
+                name=acc.name,
+                type=acc.type,
+                balance=Decimal("0"),
+                is_system=acc.is_system,
+                parent_id=new_parent_id,
+                depth=acc.depth,
+                sort_order=acc.sort_order,
+            )
+            self.session.add(new_acc)
+            self.session.flush()
+            old_to_new[acc.id] = new_acc.id
 
     def get_ledgers(self, user_id: uuid.UUID) -> list[Ledger]:
         """List all ledgers for a user."""

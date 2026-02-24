@@ -13,8 +13,11 @@ class BankCsvConfig:
     date_format: str  # Date format string (e.g., %Y/%m/%d)
     description_column: int  # Merchant/description column index
     amount_column: int  # Amount column index
-    skip_rows: int = 1  # Number of header rows to skip
+    skip_rows: int = 1  # Number of header rows to skip (used when header_marker is absent)
     encoding: str = "utf-8"  # File encoding
+    header_marker: str | None = None  # Search for this string to dynamically locate header row
+    skip_negative_amounts: bool = False  # Skip rows with negative amounts (e.g., payment records)
+    date_year_pattern: str | None = None  # Regex to extract (year, month) from first row
 
 
 # Bank configurations
@@ -25,11 +28,14 @@ BANK_CONFIGS: dict[str, BankCsvConfig] = {
         code="CATHAY",
         name="國泰世華",
         date_column=0,
-        date_format="%Y/%m/%d",
-        description_column=2,
-        amount_column=3,
+        date_format="%m/%d",  # Real format: MM/DD without year
+        description_column=1,  # 交易說明
+        amount_column=2,  # 新臺幣金額
         skip_rows=1,
         encoding="utf-8",
+        header_marker="消費日",  # Dynamically locate header row
+        skip_negative_amounts=True,  # Skip payment records (negative amounts)
+        date_year_pattern=r"(\d{4})/(\d{2})信用卡對帳單",  # Extract year/month from first row
     ),
     "CTBC": BankCsvConfig(
         code="CTBC",

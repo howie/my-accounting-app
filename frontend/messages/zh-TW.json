@@ -54,7 +54,9 @@
     "invalidBalance": "初始餘額必須為正數",
     "creating": "建立中...",
     "createLedger": "建立帳本",
-    "failedToCreate": "建立帳本失敗"
+    "failedToCreate": "建立帳本失敗",
+    "templateLedgerLabel": "複製現有科目樹（選填）",
+    "noTemplate": "從零開始"
   },
   "accounts": {
     "title": "科目",
@@ -345,7 +347,12 @@
     "creditCardAutoCategory": "信用卡交易已自動分類。點擊類別可修改。",
     "confirmImport": "確認匯入",
     "validationErrors": "解析錯誤（{count} 個）",
-    "noTransactions": "沒有可預覽的交易，請確認 CSV 格式"
+    "noTransactions": "沒有可預覽的交易，請確認 CSV 格式",
+    "referenceLedger": "參照帳本（選填）",
+    "referenceLedgerPlaceholder": "選擇後 AI 分類會參考該帳本科目",
+    "overrideCategory": "覆蓋分類",
+    "editedRow": "已修改",
+    "resetRowEdit": "還原此筆"
   },
   "transactionModal": {
     "title": "新增交易",

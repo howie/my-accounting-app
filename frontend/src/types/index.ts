@@ -35,6 +35,7 @@ export interface Ledger {
 export interface LedgerCreate {
   name: string
   initial_balance?: number
+  template_ledger_id?: string
 }
 
 export interface LedgerUpdate {

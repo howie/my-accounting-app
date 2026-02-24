@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ImportType, importApi, ImportPreviewResponse } from '@/lib/api/import'
+import { useLedgers } from '@/lib/hooks/useLedgers'
 import BankSelector from './BankSelector'
 
 interface FileUploaderProps {
@@ -13,8 +14,12 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
   const [file, setFile] = useState<File | null>(null)
   const [importType, setImportType] = useState<ImportType>(ImportType.MYAB_CSV)
   const [bankCode, setBankCode] = useState<string | null>(null)
+  const [referenceLedgerId, setReferenceLedgerId] = useState<string>('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const { data: ledgers } = useLedgers()
+  const otherLedgers = ledgers?.filter((l) => l.id !== ledgerId) ?? []
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -46,7 +51,8 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
         ledgerId,
         file,
         importType,
-        importType === ImportType.CREDIT_CARD ? (bankCode ?? undefined) : undefined
+        importType === ImportType.CREDIT_CARD ? (bankCode ?? undefined) : undefined,
+        referenceLedgerId || undefined
       )
       onPreviewLoaded(response)
     } catch (err: any) {
@@ -79,6 +85,27 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
 
         {importType === ImportType.CREDIT_CARD && (
           <BankSelector value={bankCode} onChange={setBankCode} disabled={loading} />
+        )}
+
+        {otherLedgers.length > 0 && (
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              {t('import.referenceLedger')}
+            </label>
+            <select
+              value={referenceLedgerId}
+              onChange={(e) => setReferenceLedgerId(e.target.value)}
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled={loading}
+            >
+              <option value="">{t('import.referenceLedgerPlaceholder')}</option>
+              {otherLedgers.map((ledger) => (
+                <option key={ledger.id} value={ledger.id}>
+                  {ledger.name}
+                </option>
+              ))}
+            </select>
+          </div>
         )}
 
         <div>

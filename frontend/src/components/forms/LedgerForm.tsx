@@ -1,11 +1,9 @@
-
-
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { useCreateLedger } from '@/lib/hooks/useLedgers'
+import { useCreateLedger, useLedgers } from '@/lib/hooks/useLedgers'
 
 interface LedgerFormProps {
   onSuccess?: () => void
@@ -15,10 +13,14 @@ interface LedgerFormProps {
 export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
   const [name, setName] = useState('')
   const [initialBalance, setInitialBalance] = useState('')
+  const [templateLedgerId, setTemplateLedgerId] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const { t } = useTranslation()
 
   const createLedger = useCreateLedger()
+  const { data: ledgers } = useLedgers()
+
+  const hasTemplate = templateLedgerId !== ''
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -29,16 +31,19 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
       return
     }
 
-    const balance = initialBalance ? parseFloat(initialBalance) : 0
-    if (isNaN(balance) || balance < 0) {
-      setError(t('ledgerForm.invalidBalance'))
-      return
+    if (!hasTemplate) {
+      const balance = initialBalance ? parseFloat(initialBalance) : 0
+      if (isNaN(balance) || balance < 0) {
+        setError(t('ledgerForm.invalidBalance'))
+        return
+      }
     }
 
     try {
+      const balance = hasTemplate ? undefined : initialBalance ? parseFloat(initialBalance) : 0
       await createLedger.mutateAsync({
         name: name.trim(),
-        initial_balance: balance,
+        ...(hasTemplate ? { template_ledger_id: templateLedgerId } : { initial_balance: balance }),
       })
       onSuccess?.()
     } catch (err) {
@@ -68,21 +73,44 @@ export function LedgerForm({ onSuccess, onCancel }: LedgerFormProps) {
         />
       </div>
 
-      <div className="mb-6">
-        <label htmlFor="initialBalance" className="mb-2 block text-sm font-medium">
-          {t('ledgerForm.initialBalanceLabel')}
-        </label>
-        <Input
-          id="initialBalance"
-          type="number"
-          step="0.01"
-          min="0"
-          value={initialBalance}
-          onChange={(e) => setInitialBalance(e.target.value)}
-          placeholder="0.00"
-        />
-        <p className="mt-1 text-sm text-muted-foreground">{t('ledgerForm.initialBalanceNote')}</p>
-      </div>
+      {ledgers && ledgers.length > 0 && (
+        <div className="mb-4">
+          <label htmlFor="templateLedger" className="mb-2 block text-sm font-medium">
+            {t('ledgerForm.templateLedgerLabel')}
+          </label>
+          <select
+            id="templateLedger"
+            value={templateLedgerId}
+            onChange={(e) => setTemplateLedgerId(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">{t('ledgerForm.noTemplate')}</option>
+            {ledgers.map((ledger) => (
+              <option key={ledger.id} value={ledger.id}>
+                {ledger.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!hasTemplate && (
+        <div className="mb-6">
+          <label htmlFor="initialBalance" className="mb-2 block text-sm font-medium">
+            {t('ledgerForm.initialBalanceLabel')}
+          </label>
+          <Input
+            id="initialBalance"
+            type="number"
+            step="0.01"
+            min="0"
+            value={initialBalance}
+            onChange={(e) => setInitialBalance(e.target.value)}
+            placeholder="0.00"
+          />
+          <p className="mt-1 text-sm text-muted-foreground">{t('ledgerForm.initialBalanceNote')}</p>
+        </div>
+      )}
 
       <div className="flex gap-2">
         <Button type="submit" disabled={createLedger.isPending}>

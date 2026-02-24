@@ -4,6 +4,7 @@ import {
   ImportPreviewResponse,
   ImportExecuteRequest,
   ImportResult,
+  TransactionOverride,
   importApi,
 } from '@/lib/api/import'
 import { accountsApi, AccountListItem } from '@/lib/api/accounts'
@@ -19,6 +20,15 @@ interface ImportPreviewProps {
 
 type ImportStatus = 'pending' | 'processing' | 'completed' | 'failed'
 
+type TxEdit = {
+  date?: string
+  amount?: string
+  description?: string
+  toAccountId?: string
+}
+
+type EditingCell = { row: number; field: 'date' | 'description' | 'amount' } | null
+
 export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: ImportPreviewProps) {
   const { t } = useTranslation()
   const [mappings, setMappings] = useState(data.account_mappings)
@@ -27,8 +37,9 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
   const [executing, setExecuting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [importStatus, setImportStatus] = useState<ImportStatus>('pending')
+  const [txEdits, setTxEdits] = useState<Record<number, TxEdit>>({})
+  const [editingCell, setEditingCell] = useState<EditingCell>(null)
 
-  // Check if this is a credit card import (has category suggestions)
   const hasCategorySuggestions = useMemo(() => {
     return data.transactions.some((tx: any) => tx.category_suggestion)
   }, [data.transactions])
@@ -40,6 +51,36 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
       .catch((err) => console.error('Failed to fetch accounts', err))
   }, [ledgerId])
 
+  // Map CSV account names to system account names based on current mappings
+  const accountNameMap = useMemo(() => {
+    const map: Record<string, string> = {}
+    for (const m of mappings) {
+      if (m.system_account_id) {
+        const acc = existingAccounts.find((a: AccountListItem) => a.id === m.system_account_id)
+        map[m.csv_account_name] = acc?.name ?? m.csv_account_name
+      } else {
+        map[m.csv_account_name] = m.suggested_name ?? m.csv_account_name
+      }
+    }
+    return map
+  }, [mappings, existingAccounts])
+
+  // Resolved transactions with display names derived from current mappings
+  const resolvedTransactions = useMemo(
+    () =>
+      data.transactions.map((tx: any) => ({
+        ...tx,
+        _displayFrom: accountNameMap[tx.from_account_name] ?? tx.from_account_name,
+        _displayTo: accountNameMap[tx.to_account_name] ?? tx.to_account_name,
+      })),
+    [data.transactions, accountNameMap]
+  )
+
+  const expenseAccounts = useMemo(
+    () => existingAccounts.filter((a: AccountListItem) => a.type === 'EXPENSE'),
+    [existingAccounts]
+  )
+
   const handleExecute = async () => {
     setExecuting(true)
     setError(null)
@@ -47,10 +88,22 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
     try {
       const skippedRows = skipDuplicates ? data.duplicates.map((d: any) => d.row_number) : []
 
+      const overrides: Record<number, TransactionOverride> = {}
+      for (const [rowStr, edit] of Object.entries(txEdits)) {
+        const row = parseInt(rowStr)
+        const override: TransactionOverride = {}
+        if (edit.date) override.date = edit.date
+        if (edit.amount) override.amount = parseFloat(edit.amount)
+        if (edit.description !== undefined) override.description = edit.description
+        if (edit.toAccountId) override.to_account_id = edit.toAccountId
+        overrides[row] = override
+      }
+
       const req: ImportExecuteRequest = {
         session_id: data.session_id,
         account_mappings: mappings,
         skip_duplicate_rows: skippedRows,
+        ...(Object.keys(overrides).length > 0 ? { transaction_overrides: overrides } : {}),
       }
 
       const res = await importApi.execute(ledgerId, req)
@@ -69,12 +122,10 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
     const newMappings = [...mappings]
     newMappings[index] = { ...newMappings[index], [field]: value }
 
-    // If user selects an existing account, set create_new to false and update ID
     if (field === 'system_account_id') {
       if (value) {
         newMappings[index].create_new = false
         newMappings[index].system_account_id = value
-        // also update suggested_name to match? Not necessary logic-wise but maybe display
       } else {
         newMappings[index].create_new = true
         newMappings[index].system_account_id = null
@@ -82,6 +133,65 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
     }
 
     setMappings(newMappings)
+  }
+
+  const updateTxEdit = (rowNumber: number, field: keyof TxEdit, value: string) => {
+    setTxEdits((prev) => ({
+      ...prev,
+      [rowNumber]: { ...prev[rowNumber], [field]: value },
+    }))
+  }
+
+  const resetTxEdit = (rowNumber: number) => {
+    setTxEdits((prev) => {
+      const next = { ...prev }
+      delete next[rowNumber]
+      return next
+    })
+  }
+
+  const renderEditableCell = (
+    tx: any,
+    field: 'date' | 'description' | 'amount',
+    inputType: 'date' | 'text' | 'number',
+    className?: string
+  ) => {
+    const isEditing = editingCell?.row === tx.row_number && editingCell?.field === field
+    const override = txEdits[tx.row_number]
+    const currentValue = override?.[field] ?? tx[field]?.toString() ?? ''
+    const isModified = override?.[field] !== undefined
+
+    if (isEditing) {
+      return (
+        <input
+          type={inputType}
+          defaultValue={currentValue}
+          autoFocus
+          className={`rounded border border-blue-400 px-1 py-0.5 text-sm focus:outline-none ${className ?? 'w-full'}`}
+          onBlur={(e) => {
+            const newVal = e.target.value
+            if (newVal !== (tx[field]?.toString() ?? '')) {
+              updateTxEdit(tx.row_number, field, newVal)
+            }
+            setEditingCell(null)
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') e.currentTarget.blur()
+            if (e.key === 'Escape') setEditingCell(null)
+          }}
+        />
+      )
+    }
+
+    return (
+      <span
+        className={`cursor-pointer rounded px-1 py-0.5 hover:bg-blue-50 ${isModified ? 'font-medium text-blue-700' : ''}`}
+        onClick={() => !executing && setEditingCell({ row: tx.row_number, field })}
+        title={isModified ? t('import.editedRow') : undefined}
+      >
+        {currentValue || <span className="text-gray-400">—</span>}
+      </span>
+    )
   }
 
   return (
@@ -228,56 +338,94 @@ export default function ImportPreview({ ledgerId, data, onSuccess, onCancel }: I
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {data.transactions.length === 0 && (
+              {resolvedTransactions.length === 0 && (
                 <tr>
                   <td colSpan={7} className="py-8 text-center text-gray-400">
                     {t('import.noTransactions')}
                   </td>
                 </tr>
               )}
-              {data.transactions.map((tx: any, i: number) => (
-                <tr
-                  key={i}
-                  className={`hover:bg-gray-50 ${data.duplicates.some((d: any) => d.row_number === tx.row_number) ? 'bg-yellow-50' : ''}`}
-                >
-                  <td className="px-4 py-2 text-gray-500">{tx.row_number}</td>
-                  <td className="px-4 py-2">{tx.date}</td>
-                  {!hasCategorySuggestions && <td className="px-4 py-2">{tx.transaction_type}</td>}
-                  <td className="px-4 py-2">{tx.description}</td>
-                  <td className="px-4 py-2 text-right font-mono">{tx.amount}</td>
-                  {hasCategorySuggestions ? (
-                    <>
-                      <td
-                        className="max-w-[150px] truncate px-4 py-2 text-xs"
-                        title={tx.from_account_name}
-                      >
-                        {tx.from_account_name}
-                      </td>
-                      <td className="px-4 py-2">
-                        <CategoryEditor
-                          suggestion={tx.category_suggestion}
-                          value={tx.to_account_name}
-                        />
-                      </td>
-                    </>
-                  ) : (
-                    <>
-                      <td
-                        className="max-w-[150px] truncate px-4 py-2 text-xs"
-                        title={tx.from_account_name}
-                      >
-                        {tx.from_account_name}
-                      </td>
-                      <td
-                        className="max-w-[150px] truncate px-4 py-2 text-xs"
-                        title={tx.to_account_name}
-                      >
-                        {tx.to_account_name}
-                      </td>
-                    </>
-                  )}
-                </tr>
-              ))}
+              {resolvedTransactions.map((tx: any, i: number) => {
+                const hasEdit =
+                  Boolean(txEdits[tx.row_number]) && Object.keys(txEdits[tx.row_number]).length > 0
+                const isDuplicate = data.duplicates.some((d: any) => d.row_number === tx.row_number)
+                const toDisplayName = txEdits[tx.row_number]?.toAccountId
+                  ? (existingAccounts.find((a) => a.id === txEdits[tx.row_number]?.toAccountId)
+                      ?.name ?? tx._displayTo)
+                  : tx._displayTo
+
+                return (
+                  <tr
+                    key={i}
+                    className={`hover:bg-gray-50 ${isDuplicate ? 'bg-yellow-50' : ''} ${hasEdit ? 'border-l-2 border-l-blue-400' : ''}`}
+                  >
+                    <td className="px-4 py-2 text-gray-500">
+                      <div className="flex items-center gap-1">
+                        {tx.row_number}
+                        {hasEdit && (
+                          <button
+                            onClick={() => resetTxEdit(tx.row_number)}
+                            className="text-xs text-gray-400 hover:text-red-500"
+                            title={t('import.resetRowEdit')}
+                          >
+                            ↩
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2">{renderEditableCell(tx, 'date', 'date', 'w-28')}</td>
+                    {!hasCategorySuggestions && (
+                      <td className="px-4 py-2">{tx.transaction_type}</td>
+                    )}
+                    <td className="px-4 py-2">
+                      {renderEditableCell(tx, 'description', 'text', 'w-40')}
+                    </td>
+                    <td className="px-4 py-2 text-right font-mono">
+                      {renderEditableCell(tx, 'amount', 'number', 'w-24 text-right')}
+                    </td>
+                    {hasCategorySuggestions ? (
+                      <>
+                        <td
+                          className="max-w-[150px] truncate px-4 py-2 text-xs"
+                          title={tx.from_account_name}
+                        >
+                          {tx._displayFrom}
+                        </td>
+                        <td className="px-4 py-2">
+                          <CategoryEditor
+                            suggestion={tx.category_suggestion}
+                            value={toDisplayName}
+                            selectedAccountId={txEdits[tx.row_number]?.toAccountId}
+                            accounts={expenseAccounts}
+                            disabled={executing}
+                            onChange={(accountId) =>
+                              setTxEdits((prev) => ({
+                                ...prev,
+                                [tx.row_number]: { ...prev[tx.row_number], toAccountId: accountId },
+                              }))
+                            }
+                          />
+                        </td>
+                      </>
+                    ) : (
+                      <>
+                        <td
+                          className="max-w-[150px] truncate px-4 py-2 text-xs"
+                          title={tx.from_account_name}
+                        >
+                          {tx._displayFrom}
+                        </td>
+                        <td
+                          className="max-w-[150px] truncate px-4 py-2 text-xs"
+                          title={tx.to_account_name}
+                        >
+                          {tx._displayTo}
+                        </td>
+                      </>
+                    )}
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>

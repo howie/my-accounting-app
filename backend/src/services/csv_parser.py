@@ -1,5 +1,7 @@
 import csv
 import io
+import re
+from datetime import date
 from typing import BinaryIO
 
 import charset_normalizer
@@ -55,7 +57,7 @@ class CsvParser:
         return list(reader)
 
 
-from datetime import date, datetime
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 
 from src.schemas.data_import import (
@@ -369,6 +371,9 @@ class MyAbCsvParser(CsvParser):
 class CreditCardCsvParser(CsvParser):
     """Parser for bank credit card CSV files."""
 
+    # Date values that indicate non-transaction rows (dash variants)
+    _SKIP_DATE_VALUES = {"−", "-", "—", "－"}
+
     def __init__(self, bank_code: str):
         """
         Initialize parser with bank configuration.
@@ -385,6 +390,48 @@ class CreditCardCsvParser(CsvParser):
         if self.config is None:
             raise ValueError(f"Unsupported bank: {bank_code}")
 
+    def _find_data_start_row(self, rows: list[list[str]], config) -> tuple[int, int, int]:
+        """
+        Locate data start row using header_marker, and extract bill year/month from first row.
+
+        Returns:
+            (data_start_idx, bill_year, bill_month)
+        """
+        today = date.today()
+        bill_year = today.year
+        bill_month = today.month
+
+        # Try to extract year/month from the first non-empty row
+        if config.date_year_pattern and rows:
+            first_line = ",".join(rows[0])
+            m = re.search(config.date_year_pattern, first_line)
+            if m:
+                bill_year = int(m.group(1))
+                bill_month = int(m.group(2))
+
+        # Dynamically find header row by marker
+        if config.header_marker:
+            for idx, row in enumerate(rows):
+                if any(config.header_marker in cell for cell in row):
+                    return idx + 1, bill_year, bill_month
+
+        # Fallback to static skip_rows
+        return config.skip_rows, bill_year, bill_month
+
+    def _resolve_year_for_mmdd(self, tx_month: int, bill_year: int, bill_month: int) -> int:
+        """
+        Infer the full year for a MM/DD date.
+
+        If tx_month > bill_month the transaction occurred in the previous year (cross-year billing).
+        """
+        if tx_month <= bill_month:
+            return bill_year
+        return bill_year - 1
+
+    def _is_skip_row(self, row: list[str]) -> bool:
+        """Return True if the row should be silently skipped (empty or too short to be data)."""
+        return not row or all(cell.strip() == "" for cell in row)
+
     def parse(self, file: BinaryIO) -> tuple[list[ParsedTransaction], list[ValidationError]]:
         """
         Parse credit card CSV file.
@@ -397,7 +444,6 @@ class CreditCardCsvParser(CsvParser):
         """
         from src.services.category_suggester import CategorySuggester
 
-        # Ensure config is present (init validatio should guarantee this, but for types)
         if self.config is None:
             raise ValueError("Parser not initialized with valid bank config")
 
@@ -418,8 +464,11 @@ class CreditCardCsvParser(CsvParser):
         reader = csv.reader(f)
         rows = list(reader)
 
-        # Skip header rows
-        data_rows = rows[self.config.skip_rows :]
+        # Dynamically locate the data start row (supports real-format bank CSVs)
+        data_start, bill_year, bill_month = self._find_data_start_row(rows, self.config)
+        data_rows = rows[data_start:]
+
+        needs_year_inference = "%Y" not in self.config.date_format
 
         # Initialize category suggester
         suggester = CategorySuggester()
@@ -429,6 +478,10 @@ class CreditCardCsvParser(CsvParser):
 
         for i, row in enumerate(data_rows, start=1):
             try:
+                # Skip blank / footer rows silently
+                if self._is_skip_row(row):
+                    continue
+
                 # Validate row has enough columns
                 max_col = max(
                     self.config.date_column,
@@ -436,20 +489,29 @@ class CreditCardCsvParser(CsvParser):
                     self.config.amount_column,
                 )
                 if len(row) <= max_col:
-                    errors.append(
-                        ValidationError(
-                            row_number=i,
-                            error_type=ValidationErrorType.MISSING_COLUMN,
-                            message=f"Row {i} has insufficient columns",
-                            value=str(row),
-                        )
-                    )
+                    # Rows with insufficient columns are silently skipped (e.g. footer summaries)
+                    continue
+
+                date_str = row[self.config.date_column].strip()
+
+                # Skip non-transaction rows where date is a dash variant (e.g. "−", "-")
+                if date_str in self._SKIP_DATE_VALUES:
                     continue
 
                 # Parse date
-                date_str = row[self.config.date_column].strip()
                 try:
-                    parsed_date = datetime.strptime(date_str, self.config.date_format).date()
+                    if needs_year_inference:
+                        # Parse MM/DD manually to avoid Python 3.15 strptime deprecation
+                        # (strptime with year-less format defaults to year 1900)
+                        sep = "/" if "/" in date_str else "-"
+                        parts = date_str.split(sep)
+                        if len(parts) != 2:
+                            raise ValueError(f"Expected MM{sep}DD, got: {date_str}")
+                        tx_month, tx_day = int(parts[0]), int(parts[1])
+                        inferred_year = self._resolve_year_for_mmdd(tx_month, bill_year, bill_month)
+                        parsed_date = date(inferred_year, tx_month, tx_day)
+                    else:
+                        parsed_date = datetime.strptime(date_str, self.config.date_format).date()
                 except ValueError:
                     errors.append(
                         ValidationError(
@@ -461,15 +523,11 @@ class CreditCardCsvParser(CsvParser):
                     )
                     continue
 
-                # Parse description
-                description = row[self.config.description_column].strip()
-
                 # Parse amount
                 amount_str = row[self.config.amount_column].strip()
                 try:
-                    # Remove thousand separators and handle negative amounts
-                    amount_str = amount_str.replace(",", "").replace("$", "").replace("NT", "")
-                    amount = abs(Decimal(amount_str))
+                    cleaned = amount_str.replace(",", "").replace("$", "").replace("NT", "")
+                    amount_decimal = Decimal(cleaned)
                 except InvalidOperation:
                     errors.append(
                         ValidationError(
@@ -481,21 +539,37 @@ class CreditCardCsvParser(CsvParser):
                     )
                     continue
 
+                # Skip negative amounts (payment / refund rows) if configured
+                if self.config.skip_negative_amounts and amount_decimal < 0:
+                    continue
+
+                amount = abs(amount_decimal)
+
+                # Parse description
+                description = row[self.config.description_column].strip()
+
                 # Get category suggestion
                 suggestion = suggester.suggest(description)
 
-                # Create transaction
-                # For credit card: from_account = credit card (LIABILITY)
-                # to_account = expense category (EXPENSE)
                 tx = ParsedTransaction(
                     row_number=i,
                     date=parsed_date,
                     transaction_type=TransactionType.EXPENSE,
-                    from_account_name=f"信用卡-{self.config.name}",  # Will be mapped later
+                    from_account_name=f"信用卡-{self.config.name}",
                     to_account_name=suggestion.suggested_account_name,
                     amount=amount,
                     description=description,
                     category_suggestion=suggestion,
+                    from_account_path=ParsedAccountPath(
+                        account_type=AccountType.LIABILITY,
+                        path_segments=["信用卡", self.config.name],
+                        raw_name=f"信用卡-{self.config.name}",
+                    ),
+                    to_account_path=ParsedAccountPath(
+                        account_type=AccountType.EXPENSE,
+                        path_segments=[suggestion.suggested_account_name],
+                        raw_name=suggestion.suggested_account_name,
+                    ),
                 )
                 result.append(tx)
 
