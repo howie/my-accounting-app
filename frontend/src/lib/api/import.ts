@@ -3,6 +3,7 @@ import { apiGet, apiPost, apiPostMultipart } from '../api'
 export enum ImportType {
   MYAB_CSV = 'MYAB_CSV',
   CREDIT_CARD = 'CREDIT_CARD',
+  BANK_STATEMENT = 'BANK_STATEMENT',
 }
 
 export interface BankConfig {
@@ -76,7 +77,7 @@ export const importApi = {
     return apiGet<any>(`/import/jobs/${jobId}`)
   },
 
-  getBanks: async () => {
-    return apiGet<{ banks: BankConfig[] }>(`/import/banks`)
+  getBanks: async (statementType: string = 'CREDIT_CARD') => {
+    return apiGet<{ banks: BankConfig[] }>(`/import/banks?statement_type=${statementType}`)
   },
 }

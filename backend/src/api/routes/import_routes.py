@@ -4,7 +4,7 @@ import uuid
 from datetime import datetime
 from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from sqlmodel import Session, col, select
 
 from src.api.deps import get_session
@@ -20,7 +20,7 @@ from src.schemas.data_import import (
     ImportType,
     ValidationError,
 )
-from src.services.csv_parser import CreditCardCsvParser, MyAbCsvParser
+from src.services.csv_parser import BankStatementCsvParser, CreditCardCsvParser, MyAbCsvParser
 from src.services.import_service import ImportService
 
 router = APIRouter()
@@ -32,15 +32,13 @@ async def create_import_preview(
     file: Annotated[UploadFile, File(...)],
     import_type: Annotated[ImportType, Form(...)],
     session: Session = Depends(get_session),
-    bank_code: Annotated[str | None, Form()] = None,  # noqa: ARG001 - Reserved for credit card import
+    bank_code: Annotated[str | None, Form()] = None,
     reference_ledger_id: Annotated[uuid.UUID | None, Form()] = None,
 ) -> Any:
     """
     Parse CSV and generate import preview.
     """
     # 1. Validate file size (10MB limit)
-    # Note: parsing happens after save, checking size of stream is tricky without reading.
-    # We check after reading or during read loop.
     MAX_SIZE = 10 * 1024 * 1024
 
     # 2. Save file temporarily
@@ -48,8 +46,6 @@ async def create_import_preview(
     os.makedirs(upload_dir, exist_ok=True)
 
     session_id = uuid.uuid4()
-    # Sanitize filename or just use extension?
-    # file.filename is optional, string|None
     filename = file.filename or "import.csv"
     file_ext = os.path.splitext(filename)[1]
     save_path = os.path.join(upload_dir, f"{str(session_id)}{file_ext}")
@@ -61,7 +57,6 @@ async def create_import_preview(
         while chunk := await file.read(8192):
             size += len(chunk)
             if size > MAX_SIZE:
-                # Clean up and raise
                 f.close()
                 os.remove(save_path)
                 raise HTTPException(
@@ -74,9 +69,7 @@ async def create_import_preview(
     file_hash = sha256.hexdigest()
 
     # 3. Parse
-    parsed_txs: list[
-        Any
-    ] = []  # Use generic list to avoid union issues with different parsers for now
+    parsed_txs: list[Any] = []
     validation_errors: list[ValidationError] = []
 
     with open(save_path, "rb") as f:
@@ -92,17 +85,24 @@ async def create_import_preview(
                     )
                 parser_cc = CreditCardCsvParser(bank_code)
                 parsed_txs, validation_errors = parser_cc.parse(f)
+            elif import_type == ImportType.BANK_STATEMENT:
+                if not bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="bank_code is required for bank statement import",
+                    )
+                parser_bs = BankStatementCsvParser(bank_code)
+                parsed_txs, validation_errors = parser_bs.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED,
                     detail="Import type not supported yet",
                 )
         except ValueError as e:
-            # Fatal parsing error (e.g. file encoding, fundamental format)
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
-    # 3b. LLM category enhancement (credit card only)
-    if import_type == ImportType.CREDIT_CARD and parsed_txs:
+    # 3b. LLM category enhancement (credit card and bank statement)
+    if import_type in (ImportType.CREDIT_CARD, ImportType.BANK_STATEMENT) and parsed_txs:
         from src.models.account import AccountType as ModelAccountType  # noqa: PLC0415
         from src.services.llm_category_enhancer import LLMCategoryEnhancer  # noqa: PLC0415
 
@@ -110,12 +110,20 @@ async def create_import_preview(
         if reference_ledger_id:
             ledger_ids.append(reference_ledger_id)
 
-        expense_accounts_raw = session.exec(
-            select(Account).where(
-                col(Account.ledger_id).in_(ledger_ids),
-                Account.type == ModelAccountType.EXPENSE,
-            )
-        ).all()
+        if import_type == ImportType.BANK_STATEMENT:
+            expense_accounts_raw = session.exec(
+                select(Account).where(
+                    col(Account.ledger_id).in_(ledger_ids),
+                    col(Account.type).in_([ModelAccountType.EXPENSE, ModelAccountType.INCOME]),
+                )
+            ).all()
+        else:
+            expense_accounts_raw = session.exec(
+                select(Account).where(
+                    col(Account.ledger_id).in_(ledger_ids),
+                    Account.type == ModelAccountType.EXPENSE,
+                )
+            ).all()
 
         # Deduplicate: prefer current ledger's version when names clash
         seen_expense: set[str] = set()
@@ -182,7 +190,9 @@ async def create_import_preview(
         import_type=import_type,
         source_filename=filename,
         source_file_hash=file_hash,
-        bank_code=bank_code if import_type == ImportType.CREDIT_CARD else None,
+        bank_code=bank_code
+        if import_type in (ImportType.CREDIT_CARD, ImportType.BANK_STATEMENT)
+        else None,
         status=ImportStatus.PENDING,
         progress_total=len(mapped_txs),
         imported_count=0,
@@ -257,6 +267,14 @@ async def execute_import(
                     )
                 parser_cc = CreditCardCsvParser(import_session.bank_code)
                 parsed_txs, _ = parser_cc.parse(f)
+            elif import_session.import_type == ImportType.BANK_STATEMENT:
+                if not import_session.bank_code:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Bank code not found in import session",
+                    )
+                parser_bs = BankStatementCsvParser(import_session.bank_code)
+                parsed_txs, _ = parser_bs.parse(f)
             else:
                 raise HTTPException(
                     status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Import type not supported"
@@ -299,13 +317,24 @@ async def get_import_job_status(_job_id: uuid.UUID) -> Any:
 
 
 @router.get("/import/banks", response_model=dict[str, list[BankConfig]])
-async def list_supported_banks() -> Any:
+async def list_supported_banks(
+    statement_type: str = Query(default="CREDIT_CARD"),
+) -> Any:
     """
-    List supported banks for credit card import.
-    """
-    from src.services.bank_configs import get_supported_banks
+    List supported banks.
 
-    banks = get_supported_banks()
+    Args:
+        statement_type: "CREDIT_CARD" (default) or "BANK_STATEMENT"
+    """
+    if statement_type == "BANK_STATEMENT":
+        from src.services.bank_configs import get_supported_bank_statement_banks  # noqa: PLC0415
+
+        banks = get_supported_bank_statement_banks()
+    else:
+        from src.services.bank_configs import get_supported_banks  # noqa: PLC0415
+
+        banks = get_supported_banks()
+
     return {"banks": [BankConfig(code=b.code, name=b.name, encoding=b.encoding) for b in banks]}
 
 

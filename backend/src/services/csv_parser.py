@@ -584,3 +584,196 @@ class CreditCardCsvParser(CsvParser):
                 )
 
         return result, errors
+
+
+class BankStatementCsvParser(CsvParser):
+    """Parser for bank savings/checking account statement CSV files."""
+
+    def __init__(self, bank_code: str):
+        """
+        Initialize parser with bank statement configuration.
+
+        Args:
+            bank_code: Bank code (e.g., CATHAY, CTBC)
+
+        Raises:
+            ValueError: If bank is not supported
+        """
+        from src.services.bank_configs import get_bank_statement_config
+
+        self.config = get_bank_statement_config(bank_code)
+        if self.config is None:
+            raise ValueError(f"Unsupported bank for statement import: {bank_code}")
+
+    def _find_data_start_row(self, rows: list[list[str]]) -> int:
+        """Locate data start row using header_marker, or fall back to skip_rows."""
+        if self.config.header_marker:
+            for idx, row in enumerate(rows):
+                if any(self.config.header_marker in cell for cell in row):
+                    return idx + 1
+        return self.config.skip_rows
+
+    def _parse_amount(self, raw: str) -> Decimal | None:
+        """Parse a raw amount string. Returns None if empty or invalid."""
+        cleaned = raw.strip().replace(",", "").replace("$", "").replace("NT", "")
+        if not cleaned:
+            return None
+        try:
+            return Decimal(cleaned)
+        except InvalidOperation:
+            return None
+
+    def parse(self, file: BinaryIO) -> tuple[list[ParsedTransaction], list[ValidationError]]:
+        """
+        Parse bank statement CSV file.
+
+        Returns:
+            Tuple of (List of ParsedTransaction objects, List of ValidationError objects)
+        """
+        from src.services.category_suggester import CategorySuggester
+
+        encoding = self.config.encoding or self.detect_encoding(file)
+        file.seek(0)
+
+        try:
+            content = file.read().decode(encoding)
+        except UnicodeDecodeError as e:
+            raise ValueError(f"Failed to decode file with encoding {encoding}: {e}") from e
+
+        if content.startswith("\ufeff"):
+            content = content[1:]
+
+        f = io.StringIO(content)
+        reader = csv.reader(f)
+        rows = list(reader)
+
+        data_start = self._find_data_start_row(rows)
+        data_rows = rows[data_start:]
+
+        suggester = CategorySuggester()
+        result = []
+        errors = []
+
+        for i, row in enumerate(data_rows, start=1):
+            try:
+                # Skip blank rows
+                if not row or all(cell.strip() == "" for cell in row):
+                    continue
+
+                # Validate minimum columns
+                required_cols = [self.config.date_column, self.config.description_column]
+                if self.config.amount_column is not None:
+                    required_cols.append(self.config.amount_column)
+                elif self.config.debit_column is not None and self.config.credit_column is not None:
+                    required_cols += [self.config.debit_column, self.config.credit_column]
+
+                if len(row) <= max(required_cols):
+                    continue
+
+                # Parse date
+                date_str = row[self.config.date_column].strip()
+                if not date_str:
+                    continue
+                try:
+                    parsed_date = datetime.strptime(date_str, self.config.date_format).date()
+                except ValueError:
+                    errors.append(
+                        ValidationError(
+                            row_number=i,
+                            error_type=ValidationErrorType.INVALID_DATE,
+                            message=f"Invalid date format: {date_str}",
+                            value=date_str,
+                        )
+                    )
+                    continue
+
+                description = row[self.config.description_column].strip()
+
+                # Determine debit / credit amounts
+                if self.config.amount_column is not None:
+                    # Signed single-column mode
+                    amount_val = self._parse_amount(row[self.config.amount_column])
+                    if amount_val is None:
+                        continue
+                    if amount_val < 0:
+                        debit_amount = abs(amount_val)
+                        credit_amount = Decimal("0")
+                    else:
+                        debit_amount = Decimal("0")
+                        credit_amount = amount_val
+                else:
+                    # Dual-column mode: debit + credit
+                    debit_raw = (
+                        row[self.config.debit_column].strip()
+                        if self.config.debit_column is not None
+                        else ""
+                    )
+                    credit_raw = (
+                        row[self.config.credit_column].strip()
+                        if self.config.credit_column is not None
+                        else ""
+                    )
+                    debit_amount = self._parse_amount(debit_raw) or Decimal("0")
+                    credit_amount = self._parse_amount(credit_raw) or Decimal("0")
+
+                # Skip rows with no movement (e.g., balance summary rows)
+                if debit_amount == 0 and credit_amount == 0:
+                    continue
+
+                bank_account_path = ParsedAccountPath(
+                    account_type=AccountType.ASSET,
+                    path_segments=self.config.bank_account_name.split("."),
+                    raw_name=self.config.bank_account_name,
+                )
+
+                if debit_amount > 0:
+                    # Out-flow: EXPENSE — from bank account → expense category
+                    suggestion = suggester.suggest(description)
+                    tx = ParsedTransaction(
+                        row_number=i,
+                        date=parsed_date,
+                        transaction_type=TransactionType.EXPENSE,
+                        from_account_name=self.config.bank_account_name,
+                        to_account_name=suggestion.suggested_account_name,
+                        amount=debit_amount,
+                        description=description,
+                        category_suggestion=suggestion,
+                        from_account_path=bank_account_path,
+                        to_account_path=ParsedAccountPath(
+                            account_type=AccountType.EXPENSE,
+                            path_segments=[suggestion.suggested_account_name],
+                            raw_name=suggestion.suggested_account_name,
+                        ),
+                    )
+                    result.append(tx)
+
+                if credit_amount > 0:
+                    # In-flow: INCOME — from income category → bank account
+                    tx = ParsedTransaction(
+                        row_number=i,
+                        date=parsed_date,
+                        transaction_type=TransactionType.INCOME,
+                        from_account_name="其他收入",
+                        to_account_name=self.config.bank_account_name,
+                        amount=credit_amount,
+                        description=description,
+                        from_account_path=ParsedAccountPath(
+                            account_type=AccountType.INCOME,
+                            path_segments=["其他收入"],
+                            raw_name="其他收入",
+                        ),
+                        to_account_path=bank_account_path,
+                    )
+                    result.append(tx)
+
+            except Exception as e:
+                errors.append(
+                    ValidationError(
+                        row_number=i,
+                        error_type=ValidationErrorType.INVALID_FORMAT,
+                        message=f"Error parsing row {i}: {e}",
+                        value=str(row),
+                    )
+                )
+
+        return result, errors

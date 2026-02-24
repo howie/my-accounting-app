@@ -28,17 +28,19 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
     }
   }
 
+  const requiresBankCode =
+    importType === ImportType.CREDIT_CARD || importType === ImportType.BANK_STATEMENT
+
   const handleImportTypeChange = (type: ImportType) => {
     setImportType(type)
-    // Reset bank code when switching import types
-    if (type !== ImportType.CREDIT_CARD) {
+    if (type === ImportType.MYAB_CSV) {
       setBankCode(null)
     }
   }
 
   const handleUpload = async () => {
     if (!file) return
-    if (importType === ImportType.CREDIT_CARD && !bankCode) {
+    if (requiresBankCode && !bankCode) {
       setError(t('import.selectBankRequired'))
       return
     }
@@ -51,7 +53,7 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
         ledgerId,
         file,
         importType,
-        importType === ImportType.CREDIT_CARD ? (bankCode ?? undefined) : undefined,
+        requiresBankCode ? (bankCode ?? undefined) : undefined,
         referenceLedgerId || undefined
       )
       onPreviewLoaded(response)
@@ -80,11 +82,17 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
           >
             <option value={ImportType.MYAB_CSV}>{t('import.myabCsv')}</option>
             <option value={ImportType.CREDIT_CARD}>{t('import.creditCard')}</option>
+            <option value={ImportType.BANK_STATEMENT}>{t('import.bankStatement')}</option>
           </select>
         </div>
 
-        {importType === ImportType.CREDIT_CARD && (
-          <BankSelector value={bankCode} onChange={setBankCode} disabled={loading} />
+        {requiresBankCode && (
+          <BankSelector
+            value={bankCode}
+            onChange={setBankCode}
+            disabled={loading}
+            statementType={importType}
+          />
         )}
 
         {otherLedgers.length > 0 && (
@@ -125,9 +133,9 @@ export default function FileUploader({ ledgerId, onPreviewLoaded }: FileUploader
 
         <button
           onClick={handleUpload}
-          disabled={!file || loading || (importType === ImportType.CREDIT_CARD && !bankCode)}
+          disabled={!file || loading || (requiresBankCode && !bankCode)}
           className={`w-full rounded-md px-4 py-2 font-medium text-white transition-colors ${
-            !file || loading || (importType === ImportType.CREDIT_CARD && !bankCode)
+            !file || loading || (requiresBankCode && !bankCode)
               ? 'cursor-not-allowed bg-gray-400'
               : 'bg-blue-600 hover:bg-blue-700'
           }`}
