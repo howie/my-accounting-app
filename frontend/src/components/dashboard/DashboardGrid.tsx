@@ -1,6 +1,5 @@
-
-
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useDashboard } from '@/lib/hooks/useDashboard'
 import { SummaryCards } from './SummaryCards'
 import { IncomeExpenseChart } from './IncomeExpenseChart'
@@ -16,6 +15,7 @@ import { RecurringAlerts } from './RecurringAlerts'
  * Displays balance overview, income/expense chart, and trends.
  */
 export function DashboardGrid() {
+  const { t } = useTranslation()
   const { currentLedger } = useLedgerContext()
   const [startDate, setStartDate] = useState<Date | undefined>()
   const [endDate, setEndDate] = useState<Date | undefined>()
@@ -37,8 +37,8 @@ export function DashboardGrid() {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-gray-500">
         <AlertCircle className="mb-4 h-12 w-12 text-gray-400" />
-        <h2 className="text-lg font-medium">No Ledger Selected</h2>
-        <p className="text-sm">Please select or create a ledger to view your dashboard.</p>
+        <h2 className="text-lg font-medium">{t('dashboard.noLedger')}</h2>
+        <p className="text-sm">{t('dashboard.noLedgerDesc')}</p>
       </div>
     )
   }
@@ -48,7 +48,7 @@ export function DashboardGrid() {
     return (
       <div className="flex h-64 flex-col items-center justify-center text-red-500">
         <AlertCircle className="mb-4 h-12 w-12" />
-        <h2 className="text-lg font-medium">Error Loading Dashboard</h2>
+        <h2 className="text-lg font-medium">{t('dashboard.errorLoading')}</h2>
         <p className="text-sm">{error.message}</p>
       </div>
     )
@@ -59,9 +59,11 @@ export function DashboardGrid() {
       {/* Header */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('dashboard.title')}
+          </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Financial overview for {currentLedger.name}
+            {t('dashboard.overview', { name: currentLedger.name })}
           </p>
         </div>
         <DateRangePicker

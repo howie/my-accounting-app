@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -19,7 +17,15 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { ChevronDown, ChevronRight, Pencil, Trash2, GripVertical } from 'lucide-react'
+import {
+  Archive,
+  ArchiveRestore,
+  ChevronDown,
+  ChevronRight,
+  Pencil,
+  Trash2,
+  GripVertical,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -32,6 +38,10 @@ interface AccountTreeProps {
   accounts: AccountTreeNode[]
   onEdit: (account: AccountTreeNode) => void
   onDelete: (account: AccountTreeNode) => void
+  onArchive: (account: AccountTreeNode) => void
+  onUnarchive: (account: AccountTreeNode) => void
+  showArchived: boolean
+  onToggleShowArchived: () => void
 }
 
 const accountTypeColors: Record<AccountType, string> = {
@@ -48,6 +58,8 @@ interface SortableAccountNodeProps {
   toggleExpand: (id: string) => void
   onEdit: (account: AccountTreeNode) => void
   onDelete: (account: AccountTreeNode) => void
+  onArchive: (account: AccountTreeNode) => void
+  onUnarchive: (account: AccountTreeNode) => void
 }
 
 function SortableAccountNode({
@@ -57,6 +69,8 @@ function SortableAccountNode({
   toggleExpand,
   onEdit,
   onDelete,
+  onArchive,
+  onUnarchive,
 }: SortableAccountNodeProps) {
   const { t } = useTranslation()
   const hasChildren = account.children && account.children.length > 0
@@ -120,12 +134,23 @@ function SortableAccountNode({
           )}
 
           {/* Account name */}
-          <span className="truncate font-medium">{account.name}</span>
+          <span
+            className={cn('truncate font-medium', account.is_archived && 'text-muted-foreground')}
+          >
+            {account.name}
+          </span>
 
           {/* System badge */}
           {account.is_system && (
             <span className="flex-shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
               {t('common.system')}
+            </span>
+          )}
+
+          {/* Archived badge */}
+          {account.is_archived && (
+            <span className="flex-shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+              {t('accountManagement.archivedSection')}
             </span>
           )}
         </div>
@@ -147,24 +172,49 @@ function SortableAccountNode({
           {/* Actions */}
           {!account.is_system && (
             <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => onEdit(account)}
-                title={t('accountManagement.editAccount')}
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive hover:text-destructive"
-                onClick={() => onDelete(account)}
-                title={t('accountManagement.deleteAccount')}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              {!account.is_archived && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onEdit(account)}
+                  title={t('accountManagement.editAccount')}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {account.is_archived ? (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onUnarchive(account)}
+                  title={t('accountManagement.unarchiveAccount')}
+                >
+                  <ArchiveRestore className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => onArchive(account)}
+                  title={t('accountManagement.archiveAccount')}
+                >
+                  <Archive className="h-4 w-4" />
+                </Button>
+              )}
+              {!account.is_archived && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => onDelete(account)}
+                  title={t('accountManagement.deleteAccount')}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           )}
         </div>
@@ -180,6 +230,8 @@ function SortableAccountNode({
           toggleExpand={toggleExpand}
           onEdit={onEdit}
           onDelete={onDelete}
+          onArchive={onArchive}
+          onUnarchive={onUnarchive}
         />
       )}
     </div>
@@ -194,6 +246,8 @@ interface SortableAccountListProps {
   toggleExpand: (id: string) => void
   onEdit: (account: AccountTreeNode) => void
   onDelete: (account: AccountTreeNode) => void
+  onArchive: (account: AccountTreeNode) => void
+  onUnarchive: (account: AccountTreeNode) => void
 }
 
 function SortableAccountList({
@@ -204,6 +258,8 @@ function SortableAccountList({
   toggleExpand,
   onEdit,
   onDelete,
+  onArchive,
+  onUnarchive,
 }: SortableAccountListProps) {
   const { currentLedger } = useLedgerContext()
   const reorderMutation = useReorderAccounts(currentLedger?.id || '')
@@ -259,6 +315,8 @@ function SortableAccountList({
               toggleExpand={toggleExpand}
               onEdit={onEdit}
               onDelete={onDelete}
+              onArchive={onArchive}
+              onUnarchive={onUnarchive}
             />
           ))}
         </div>
@@ -267,7 +325,15 @@ function SortableAccountList({
   )
 }
 
-export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
+export function AccountTree({
+  accounts,
+  onEdit,
+  onDelete,
+  onArchive,
+  onUnarchive,
+  showArchived,
+  onToggleShowArchived,
+}: AccountTreeProps) {
   const { t } = useTranslation()
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     // Expand all by default
@@ -313,6 +379,17 @@ export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-end">
+        <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={onToggleShowArchived}
+            className="rounded border-input"
+          />
+          {showArchived ? t('accountManagement.hideArchived') : t('accountManagement.showArchived')}
+        </label>
+      </div>
       {typeOrder.map((type) => {
         const typeAccounts = groupedAccounts[type]
         if (!typeAccounts || typeAccounts.length === 0) {
@@ -351,6 +428,8 @@ export function AccountTree({ accounts, onEdit, onDelete }: AccountTreeProps) {
               toggleExpand={toggleExpand}
               onEdit={onEdit}
               onDelete={onDelete}
+              onArchive={onArchive}
+              onUnarchive={onUnarchive}
             />
           </div>
         )

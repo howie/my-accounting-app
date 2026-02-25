@@ -12,9 +12,14 @@ import { render, screen, waitFor } from '@testing-library/react'
 import { SidebarItem } from '@/components/layout/SidebarItem'
 import type { SidebarCategory, SidebarAccountItem, AccountType } from '@/types/dashboard'
 
-// Mock next/navigation
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+// Mock react-router-dom (SidebarItem uses useLocation and Link from react-router-dom)
+vi.mock('react-router-dom', () => ({
+  useLocation: () => ({ pathname: '/' }),
+  Link: ({ children, to, ...props }: any) => (
+    <a href={to} {...props}>
+      {children}
+    </a>
+  ),
 }))
 
 // Track expanded accounts for tests

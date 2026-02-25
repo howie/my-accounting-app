@@ -37,6 +37,8 @@ class AccountRead(SQLModel):
     depth: int
     sort_order: int = 0
     has_children: bool = False
+    is_archived: bool = False
+    archived_at: datetime | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -53,6 +55,7 @@ class AccountListItem(SQLModel):
     depth: int
     sort_order: int = 0
     has_children: bool = False
+    is_archived: bool = False
 
 
 class AccountTreeNode(SQLModel):
@@ -66,6 +69,7 @@ class AccountTreeNode(SQLModel):
     parent_id: uuid.UUID | None
     depth: int
     sort_order: int = 0
+    is_archived: bool = False
     children: list[AccountTreeNode] = Field(default_factory=list)
 
 

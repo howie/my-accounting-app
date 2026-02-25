@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 
 import { useLedgerContext } from '@/lib/context/LedgerContext'
-import { useAccountTree } from '@/lib/hooks/useAccounts'
+import { useAccountTree, useArchiveAccount, useUnarchiveAccount } from '@/lib/hooks/useAccounts'
 import { AccountTree } from '@/components/settings/AccountTree'
 import { AccountEditDialog } from '@/components/settings/AccountEditDialog'
 import { AccountDeleteDialog } from '@/components/settings/AccountDeleteDialog'
@@ -21,12 +21,25 @@ export default function AccountManagementPage() {
   const { currentLedger } = useLedgerContext()
   const ledgerId = currentLedger?.id || ''
 
-  const { data: accounts, isLoading, error } = useAccountTree(ledgerId)
+  const [showArchived, setShowArchived] = useState(false)
+  const { data: accounts, isLoading, error } = useAccountTree(ledgerId, undefined, showArchived)
+  const archiveMutation = useArchiveAccount(ledgerId)
+  const unarchiveMutation = useUnarchiveAccount(ledgerId)
 
   // Dialog states
   const [showAddForm, setShowAddForm] = useState(false)
   const [editAccount, setEditAccount] = useState<AccountTreeNode | null>(null)
   const [deleteAccount, setDeleteAccount] = useState<AccountTreeNode | null>(null)
+
+  const handleArchive = (account: AccountTreeNode) => {
+    if (window.confirm(t('confirmArchive'))) {
+      archiveMutation.mutate(account.id)
+    }
+  }
+
+  const handleUnarchive = (account: AccountTreeNode) => {
+    unarchiveMutation.mutate(account.id)
+  }
 
   if (!currentLedger) {
     return (
@@ -69,7 +82,15 @@ export default function AccountManagementPage() {
 
       {/* Account tree */}
       {accounts && accounts.length > 0 && (
-        <AccountTree accounts={accounts} onEdit={setEditAccount} onDelete={setDeleteAccount} />
+        <AccountTree
+          accounts={accounts}
+          onEdit={setEditAccount}
+          onDelete={setDeleteAccount}
+          onArchive={handleArchive}
+          onUnarchive={handleUnarchive}
+          showArchived={showArchived}
+          onToggleShowArchived={() => setShowArchived((prev) => !prev)}
+        />
       )}
 
       {/* Empty state */}

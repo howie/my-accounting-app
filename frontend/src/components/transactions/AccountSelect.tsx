@@ -1,5 +1,3 @@
-
-
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -57,12 +55,13 @@ export function AccountSelect({
 
   // Filter and group accounts
   const groupedAccounts = useMemo(() => {
-    // Filter by allowed types, exclude specific account, and only show leaf accounts
+    // Filter by allowed types, exclude specific account, archived accounts, and only show leaf accounts
     const filtered = accounts.filter(
       (account) =>
         allowedTypes.includes(account.type) &&
         account.id !== excludeAccountId &&
-        !account.has_children
+        !account.has_children &&
+        !account.is_archived
     )
 
     // Group by type

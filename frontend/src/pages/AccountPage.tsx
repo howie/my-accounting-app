@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArrowLeft } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ import { useEffect } from 'react'
  * Shows transactions for a specific account selected from sidebar.
  */
 export default function AccountPage() {
+  const { t } = useTranslation()
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -55,11 +57,9 @@ export default function AccountPage() {
     return (
       <div className="p-6 lg:p-8">
         <div className="rounded-lg border p-8 text-center">
-          <p className="text-muted-foreground">
-            Please select a ledger to view account transactions.
-          </p>
+          <p className="text-muted-foreground">{t('accountPage.selectLedger')}</p>
           <Button variant="outline" onClick={() => navigate('/ledgers')} className="mt-4">
-            Select Ledger
+            {t('accountPage.selectLedgerButton')}
           </Button>
         </div>
       </div>
@@ -71,7 +71,7 @@ export default function AccountPage() {
       {/* Back button */}
       <Button variant="ghost" size="sm" onClick={() => navigate('/')} className="-ml-2 mb-4">
         <ArrowLeft className="mr-1 h-4 w-4" />
-        Back to Dashboard
+        {t('accountPage.backToDashboard')}
       </Button>
 
       {/* Add Transaction button */}

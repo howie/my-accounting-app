@@ -13,12 +13,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-// Mock next-intl
+// Mock react-i18next
 vi.mock('react-i18next', () => ({
-  useTranslation: () => (key: string) => {
+  useTranslation: () => {
     const translations: Record<string, string> = {
       'transactionModal.title': 'Add Transaction',
       'transactionModal.trigger': 'Add Transaction',
+      'transactionEntry.editTransaction': 'Edit Transaction',
       'transactionForm.title': 'New Transaction',
       'transactionForm.typeLabel': 'Transaction Type',
       'transactionForm.dateLabel': 'Date',
@@ -33,6 +34,12 @@ vi.mock('react-i18next', () => ({
       'transactionForm.invalidAmount': 'Invalid amount',
       'transactionForm.accountsRequired': 'Both accounts are required',
       'transactionForm.failedToCreate': 'Failed to create transaction',
+      'transactionForm.paymentAccount': 'Payment Account',
+      'transactionForm.expenseCategory': 'Expense Category',
+      'transactionForm.incomeSource': 'Income Source',
+      'transactionForm.depositAccount': 'Deposit Account',
+      'transactionForm.transferFrom': 'Transfer From',
+      'transactionForm.transferTo': 'Transfer To',
       'common.cancel': 'Cancel',
       'transactionTypes.EXPENSE': 'Expense',
       'transactionTypes.INCOME': 'Income',
@@ -44,9 +51,16 @@ vi.mock('react-i18next', () => ({
       'accountTypes.EXPENSE': 'Expense',
       'transactionEntry.notes': 'Notes',
       'transactionEntry.notesPlaceholder': 'Optional notes',
+      'transactionEntry.saveAsTemplate': 'Save as Template',
+      'transactions.updateTransaction': 'Update',
+      'transactions.updating': 'Updating...',
       'validation.descriptionRequired': 'Description is required',
+      'tags.title': 'Tags',
     }
-    return translations[key] || key
+    return {
+      t: (key: string) => translations[key] || key,
+      i18n: { language: 'en', changeLanguage: vi.fn() },
+    }
   },
 }))
 
@@ -95,6 +109,14 @@ vi.mock('@/lib/hooks/useTransactions', () => ({
   useCreateTransaction: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
+  }),
+  useUpdateTransaction: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useTransactionSuggestions: () => ({
+    data: [],
+    isLoading: false,
   }),
 }))
 
@@ -217,9 +239,7 @@ describe('TransactionModal', () => {
   describe('account pre-selection', () => {
     it('should pass preSelectedAccountId to TransactionForm', async () => {
       const user = userEvent.setup()
-      render(
-        <TransactionModal ledgerId="test-ledger" preSelectedAccountId="cash-id" />
-      )
+      render(<TransactionModal ledgerId="test-ledger" preSelectedAccountId="cash-id" />)
 
       await user.click(screen.getByText('Add Transaction'))
 

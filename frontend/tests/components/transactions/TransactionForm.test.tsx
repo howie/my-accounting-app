@@ -14,9 +14,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-// Mock next-intl
+// Mock react-i18next
 vi.mock('react-i18next', () => ({
-  useTranslation: () => (key: string) => {
+  useTranslation: () => {
     const translations: Record<string, string> = {
       'transactionForm.title': 'New Transaction',
       'transactionForm.typeLabel': 'Transaction Type',
@@ -32,6 +32,12 @@ vi.mock('react-i18next', () => ({
       'transactionForm.invalidAmount': 'Invalid amount',
       'transactionForm.accountsRequired': 'Both accounts are required',
       'transactionForm.failedToCreate': 'Failed to create transaction',
+      'transactionForm.paymentAccount': 'Payment Account',
+      'transactionForm.expenseCategory': 'Expense Category',
+      'transactionForm.incomeSource': 'Income Source',
+      'transactionForm.depositAccount': 'Deposit Account',
+      'transactionForm.transferFrom': 'Transfer From',
+      'transactionForm.transferTo': 'Transfer To',
       'transactionTypes.EXPENSE': 'Expense',
       'transactionTypes.INCOME': 'Income',
       'transactionTypes.TRANSFER': 'Transfer',
@@ -43,16 +49,26 @@ vi.mock('react-i18next', () => ({
       'accountTypes.INCOME': 'Income',
       'accountTypes.EXPENSE': 'Expense',
       'common.cancel': 'Cancel',
+      'common.confirm': 'Confirm',
       'transactionEntry.notes': 'Notes',
       'transactionEntry.notesPlaceholder': 'Optional notes',
       'transactionEntry.expressionHint': 'Enter expression',
+      'transactionEntry.saveAsTemplate': 'Save as Template',
+      'transactions.updateTransaction': 'Update',
+      'transactions.updating': 'Updating...',
       'validation.descriptionRequired': 'Description is required',
       'validation.descriptionTooLong': 'Description too long',
       'validation.amountRequired': 'Amount is required',
       'validation.sameAccountError': 'Same account error',
       'validation.notesTooLong': 'Notes too long',
+      'validation.zeroAmountWarning': 'Zero Amount',
+      'validation.zeroAmountConfirm': 'Are you sure?',
+      'tags.title': 'Tags',
     }
-    return translations[key] || key
+    return {
+      t: (key: string) => translations[key] || key,
+      i18n: { language: 'en', changeLanguage: vi.fn() },
+    }
   },
 }))
 
@@ -139,12 +155,20 @@ vi.mock('@/lib/hooks/useAccounts', () => ({
   }),
 }))
 
-// Mock createTransaction mutation
+// Mock transaction hooks
 const mockMutateAsync = vi.fn()
 vi.mock('@/lib/hooks/useTransactions', () => ({
   useCreateTransaction: () => ({
     mutateAsync: mockMutateAsync,
     isPending: false,
+  }),
+  useUpdateTransaction: () => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  }),
+  useTransactionSuggestions: () => ({
+    data: [],
+    isLoading: false,
   }),
 }))
 
@@ -222,7 +246,9 @@ describe('TransactionForm', () => {
       render(<TransactionForm ledgerId="test-ledger" />)
 
       const fromSelect = screen.getByTestId('from-account-select') as HTMLSelectElement
-      const optionTexts = Array.from(fromSelect.querySelectorAll('option')).map((o) => o.textContent)
+      const optionTexts = Array.from(fromSelect.querySelectorAll('option')).map(
+        (o) => o.textContent
+      )
 
       // EXPENSE: from should be ASSET or LIABILITY
       expect(optionTexts.some((t) => t?.includes('Cash'))).toBe(true)
@@ -260,7 +286,9 @@ describe('TransactionForm', () => {
       expect(fromOptionTexts.some((t) => t?.includes('Cash'))).toBe(false)
 
       const toSelect = screen.getByTestId('to-account-select') as HTMLSelectElement
-      const toOptionTexts = Array.from(toSelect.querySelectorAll('option')).map((o) => o.textContent)
+      const toOptionTexts = Array.from(toSelect.querySelectorAll('option')).map(
+        (o) => o.textContent
+      )
 
       // INCOME: to should be ASSET or LIABILITY
       expect(toOptionTexts.some((t) => t?.includes('Cash'))).toBe(true)

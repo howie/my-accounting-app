@@ -1,5 +1,3 @@
-
-
 import { useState, useMemo, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,8 +8,18 @@ import { AmountInput } from '@/components/transactions/AmountInput'
 import { TagSelect } from '@/components/transactions/TagSelect'
 import { SaveTemplateDialog } from '@/components/templates/SaveTemplateDialog'
 import { useAccounts } from '@/lib/hooks/useAccounts'
-import { useCreateTransaction } from '@/lib/hooks/useTransactions'
-import type { TransactionType, AccountType, TransactionCreate } from '@/types'
+import {
+  useCreateTransaction,
+  useUpdateTransaction,
+  useTransactionSuggestions,
+} from '@/lib/hooks/useTransactions'
+import type {
+  TransactionType,
+  AccountType,
+  TransactionCreate,
+  TransactionUpdate,
+  Transaction,
+} from '@/types'
 
 export interface TransactionFormProps {
   ledgerId: string
@@ -19,6 +27,8 @@ export interface TransactionFormProps {
   preSelectedAccountId?: string
   /** Pre-selected account type (to determine from/to placement) */
   preSelectedAccountType?: AccountType
+  /** Existing transaction data for edit mode */
+  editTransaction?: Transaction
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -77,36 +87,89 @@ function getAccountPlacement(
   return 'from'
 }
 
+function getFromLabel(type: TransactionType, t: (key: string) => string): string {
+  switch (type) {
+    case 'EXPENSE':
+      return t('transactionForm.paymentAccount')
+    case 'INCOME':
+      return t('transactionForm.incomeSource')
+    case 'TRANSFER':
+      return t('transactionForm.transferFrom')
+  }
+}
+
+function getToLabel(type: TransactionType, t: (key: string) => string): string {
+  switch (type) {
+    case 'EXPENSE':
+      return t('transactionForm.expenseCategory')
+    case 'INCOME':
+      return t('transactionForm.depositAccount')
+    case 'TRANSFER':
+      return t('transactionForm.transferTo')
+  }
+}
+
 export function TransactionForm({
   ledgerId,
   preSelectedAccountId,
   preSelectedAccountType,
+  editTransaction,
   onSuccess,
   onCancel,
 }: TransactionFormProps) {
   const { t } = useTranslation()
+  const isEditMode = !!editTransaction
 
-  // Form state
-  const [transactionType, setTransactionType] = useState<TransactionType>(() =>
-    preSelectedAccountType ? suggestTransactionType(preSelectedAccountType) : 'EXPENSE'
+  // Form state - initialize from editTransaction if in edit mode
+  const [transactionType, setTransactionType] = useState<TransactionType>(() => {
+    if (editTransaction) return editTransaction.transaction_type
+    if (preSelectedAccountType) return suggestTransactionType(preSelectedAccountType)
+    return 'EXPENSE'
+  })
+  const [date, setDate] = useState(() =>
+    editTransaction ? editTransaction.date : new Date().toISOString().split('T')[0]
   )
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
-  const [description, setDescription] = useState('')
-  const [amountInput, setAmountInput] = useState('')
-  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(null)
-  const [amountExpression, setAmountExpression] = useState<string | null>(null)
-  const [fromAccountId, setFromAccountId] = useState('')
-  const [toAccountId, setToAccountId] = useState('')
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([])
-  const [notes, setNotes] = useState('')
+  const [description, setDescription] = useState(() =>
+    editTransaction ? editTransaction.description : ''
+  )
+  const [amountInput, setAmountInput] = useState(() =>
+    editTransaction ? editTransaction.amount : ''
+  )
+  const [calculatedAmount, setCalculatedAmount] = useState<number | null>(() =>
+    editTransaction ? parseFloat(editTransaction.amount) : null
+  )
+  const [amountExpression, setAmountExpression] = useState<string | null>(() =>
+    editTransaction ? editTransaction.amount_expression : null
+  )
+  const [fromAccountId, setFromAccountId] = useState(() =>
+    editTransaction ? editTransaction.from_account_id : ''
+  )
+  const [toAccountId, setToAccountId] = useState(() =>
+    editTransaction ? editTransaction.to_account_id : ''
+  )
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(() =>
+    editTransaction?.tags ? editTransaction.tags.map((tag) => tag.id) : []
+  )
+  const [notes, setNotes] = useState(() => (editTransaction ? editTransaction.notes || '' : ''))
   const [error, setError] = useState<string | null>(null)
   const [showZeroAmountConfirm, setShowZeroAmountConfirm] = useState(false)
   const [showSaveTemplateDialog, setShowSaveTemplateDialog] = useState(false)
+  const [showSuggestions, setShowSuggestions] = useState(false)
 
   const { data: accountsData } = useAccounts(ledgerId)
   const createTransaction = useCreateTransaction(ledgerId)
+  const updateTransaction = useUpdateTransaction(ledgerId)
+  const { data: suggestions = [] } = useTransactionSuggestions(isEditMode ? '' : ledgerId)
 
   const accounts = useMemo(() => accountsData || [], [accountsData])
+
+  const filteredSuggestions = useMemo(() => {
+    if (isEditMode) return []
+    if (!description.trim()) return suggestions.slice(0, 8)
+    return suggestions
+      .filter((s) => s.description.toLowerCase().includes(description.toLowerCase()))
+      .slice(0, 8)
+  }, [isEditMode, description, suggestions])
 
   const transactionTypes = transactionTypeKeys.map((value) => ({
     value,
@@ -117,8 +180,9 @@ export function TransactionForm({
   const validFromTypes = getValidFromAccounts(transactionType)
   const validToTypes = getValidToAccounts(transactionType)
 
-  // Handle pre-selection on mount
+  // Handle pre-selection on mount (only for create mode)
   useEffect(() => {
+    if (isEditMode) return
     if (preSelectedAccountId && preSelectedAccountType && accounts.length > 0) {
       const placement = getAccountPlacement(preSelectedAccountType, transactionType)
       if (placement === 'from' && validFromTypes.includes(preSelectedAccountType)) {
@@ -127,11 +191,22 @@ export function TransactionForm({
         setToAccountId(preSelectedAccountId)
       }
     }
-  }, [preSelectedAccountId, preSelectedAccountType, accounts, transactionType, validFromTypes, validToTypes])
+  }, [
+    isEditMode,
+    preSelectedAccountId,
+    preSelectedAccountType,
+    accounts,
+    transactionType,
+    validFromTypes,
+    validToTypes,
+  ])
 
   // Reset account selections when transaction type changes
   const handleTypeChange = (type: TransactionType) => {
     setTransactionType(type)
+
+    // In edit mode, keep current account selections
+    if (isEditMode) return
 
     // Preserve pre-selected account if still valid
     if (preSelectedAccountId && preSelectedAccountType) {
@@ -164,19 +239,36 @@ export function TransactionForm({
   // Perform the actual transaction submission
   const submitTransaction = async (amount: number) => {
     try {
-      const transactionData: TransactionCreate = {
-        date,
-        description: description.trim(),
-        amount,
-        from_account_id: fromAccountId,
-        to_account_id: toAccountId,
-        transaction_type: transactionType,
-        notes: notes.trim() || null,
-        amount_expression: amountExpression,
-        tag_ids: selectedTagIds,
+      if (isEditMode && editTransaction) {
+        const updateData: TransactionUpdate = {
+          date,
+          description: description.trim(),
+          amount,
+          from_account_id: fromAccountId,
+          to_account_id: toAccountId,
+          transaction_type: transactionType,
+          notes: notes.trim() || null,
+          amount_expression: amountExpression,
+          tag_ids: selectedTagIds,
+        }
+        await updateTransaction.mutateAsync({
+          transactionId: editTransaction.id,
+          data: updateData,
+        })
+      } else {
+        const transactionData: TransactionCreate = {
+          date,
+          description: description.trim(),
+          amount,
+          from_account_id: fromAccountId,
+          to_account_id: toAccountId,
+          transaction_type: transactionType,
+          notes: notes.trim() || null,
+          amount_expression: amountExpression,
+          tag_ids: selectedTagIds,
+        }
+        await createTransaction.mutateAsync(transactionData)
       }
-
-      await createTransaction.mutateAsync(transactionData)
       onSuccess?.()
     } catch (err) {
       setError(err instanceof Error ? err.message : t('transactionForm.failedToCreate'))
@@ -242,6 +334,8 @@ export function TransactionForm({
     await submitTransaction(calculatedAmount)
   }
 
+  const isPending = isEditMode ? updateTransaction.isPending : createTransaction.isPending
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {error && (
@@ -295,16 +389,53 @@ export function TransactionForm({
         <label htmlFor="description" className="mb-2 block text-sm font-medium">
           {t('transactionForm.descriptionLabel')}
         </label>
-        <Input
-          id="description"
-          type="text"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder={t('transactionForm.descriptionPlaceholder')}
-          maxLength={200}
-          required
-          data-testid="description-input"
-        />
+        <div className="relative">
+          <Input
+            id="description"
+            type="text"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value)
+              if (!isEditMode) setShowSuggestions(true)
+            }}
+            onFocus={() => {
+              if (!isEditMode) setShowSuggestions(true)
+            }}
+            onBlur={() => {
+              setTimeout(() => setShowSuggestions(false), 200)
+            }}
+            placeholder={t('transactionForm.descriptionPlaceholder')}
+            maxLength={200}
+            required
+            autoComplete="off"
+            data-testid="description-input"
+          />
+          {showSuggestions && filteredSuggestions.length > 0 && (
+            <div className="absolute z-50 mt-1 w-full rounded-md border bg-popover shadow-md">
+              {filteredSuggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  type="button"
+                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-accent"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    setDescription(suggestion.description)
+                    if (suggestion.type === transactionType) {
+                      setFromAccountId(suggestion.fromAccountId)
+                      setToAccountId(suggestion.toAccountId)
+                    }
+                    setShowSuggestions(false)
+                  }}
+                >
+                  <span className="truncate">{suggestion.description}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    {suggestion.count > 1 ? `\u00D7${suggestion.count}` : ''}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Amount */}
@@ -326,7 +457,7 @@ export function TransactionForm({
       {/* From Account */}
       <div>
         <label htmlFor="fromAccount" className="mb-2 block text-sm font-medium">
-          {t('transactionForm.fromAccountLabel')}
+          {getFromLabel(transactionType, t)}
         </label>
         <AccountSelect
           id="fromAccount"
@@ -343,7 +474,7 @@ export function TransactionForm({
       {/* To Account */}
       <div>
         <label htmlFor="toAccount" className="mb-2 block text-sm font-medium">
-          {t('transactionForm.toAccountLabel')}
+          {getToLabel(transactionType, t)}
         </label>
         <AccountSelect
           id="toAccount"
@@ -372,9 +503,7 @@ export function TransactionForm({
           className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           data-testid="notes-input"
         />
-        <div className="mt-1 text-xs text-muted-foreground">
-          {notes.length}/500
-        </div>
+        <div className="mt-1 text-xs text-muted-foreground">{notes.length}/500</div>
       </div>
 
       {/* Tags */}
@@ -385,20 +514,28 @@ export function TransactionForm({
 
       {/* Actions */}
       <div className="flex flex-wrap gap-2 pt-2">
-        <Button type="submit" disabled={createTransaction.isPending} data-testid="submit-button">
-          {createTransaction.isPending
-            ? t('transactionForm.saving')
-            : t('transactionForm.saveTransaction')}
+        <Button type="submit" disabled={isPending} data-testid="submit-button">
+          {isPending
+            ? isEditMode
+              ? t('transactions.updating')
+              : t('transactionForm.saving')
+            : isEditMode
+              ? t('transactions.updateTransaction')
+              : t('transactionForm.saveTransaction')}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowSaveTemplateDialog(true)}
-          disabled={!description.trim() || calculatedAmount === null || !fromAccountId || !toAccountId}
-          data-testid="save-as-template-button"
-        >
-          {t('transactionEntry.saveAsTemplate')}
-        </Button>
+        {!isEditMode && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowSaveTemplateDialog(true)}
+            disabled={
+              !description.trim() || calculatedAmount === null || !fromAccountId || !toAccountId
+            }
+            data-testid="save-as-template-button"
+          >
+            {t('transactionEntry.saveAsTemplate')}
+          </Button>
+        )}
         {onCancel && (
           <Button type="button" variant="outline" onClick={onCancel} data-testid="cancel-button">
             {t('common.cancel')}
@@ -407,18 +544,20 @@ export function TransactionForm({
       </div>
 
       {/* Save as Template Dialog */}
-      <SaveTemplateDialog
-        ledgerId={ledgerId}
-        open={showSaveTemplateDialog}
-        onOpenChange={setShowSaveTemplateDialog}
-        templateData={{
-          transaction_type: transactionType,
-          from_account_id: fromAccountId,
-          to_account_id: toAccountId,
-          amount: calculatedAmount || 0,
-          description: description.trim(),
-        }}
-      />
+      {!isEditMode && (
+        <SaveTemplateDialog
+          ledgerId={ledgerId}
+          open={showSaveTemplateDialog}
+          onOpenChange={setShowSaveTemplateDialog}
+          templateData={{
+            transaction_type: transactionType,
+            from_account_id: fromAccountId,
+            to_account_id: toAccountId,
+            amount: calculatedAmount || 0,
+            description: description.trim(),
+          }}
+        />
+      )}
 
       {/* Zero Amount Confirmation Dialog (DI-004) */}
       {showZeroAmountConfirm && (
@@ -431,10 +570,7 @@ export function TransactionForm({
         >
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
           <div className="relative z-10 mx-4 w-full max-w-sm rounded-lg border bg-background p-6 shadow-lg">
-            <h3
-              id="zero-amount-dialog-title"
-              className="mb-2 text-lg font-semibold"
-            >
+            <h3 id="zero-amount-dialog-title" className="mb-2 text-lg font-semibold">
               {t('validation.zeroAmountWarning')}
             </h3>
             <p className="mb-4 text-sm text-muted-foreground">

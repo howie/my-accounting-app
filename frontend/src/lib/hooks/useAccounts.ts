@@ -1,8 +1,7 @@
-
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { apiDelete, apiGet, apiPatch, apiPost } from '@/lib/api'
+import { archiveAccount, unarchiveAccount } from '@/lib/api/accounts'
 import type {
   Account,
   AccountCreate,
@@ -88,13 +87,20 @@ export function useDeleteAccount(ledgerId: string) {
   })
 }
 
-export function useAccountTree(ledgerId: string, typeFilter?: AccountType) {
+export function useAccountTree(
+  ledgerId: string,
+  typeFilter?: AccountType,
+  includeArchived?: boolean
+) {
   return useQuery({
-    queryKey: [...ACCOUNTS_TREE_KEY(ledgerId), { type: typeFilter }],
+    queryKey: [...ACCOUNTS_TREE_KEY(ledgerId), { type: typeFilter, includeArchived }],
     queryFn: async () => {
-      const params = typeFilter ? `?type=${typeFilter}` : ''
+      const searchParams = new URLSearchParams()
+      if (typeFilter) searchParams.set('type', typeFilter)
+      if (includeArchived) searchParams.set('include_archived', 'true')
+      const qs = searchParams.toString()
       const response = await apiGet<AccountTreeResponse>(
-        `/ledgers/${ledgerId}/accounts/tree${params}`
+        `/ledgers/${ledgerId}/accounts/tree${qs ? `?${qs}` : ''}`
       )
       return response.data
     },
@@ -173,6 +179,30 @@ export function useReassignAndDelete(ledgerId: string) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })
       queryClient.invalidateQueries({ queryKey: ACCOUNTS_TREE_KEY(ledgerId) })
+    },
+  })
+}
+
+export function useArchiveAccount(ledgerId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (accountId: string) => archiveAccount(ledgerId, accountId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_TREE_KEY(ledgerId) })
+      queryClient.invalidateQueries({ queryKey: SIDEBAR_ACCOUNTS_KEY(ledgerId) })
+    },
+  })
+}
+
+export function useUnarchiveAccount(ledgerId: string) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (accountId: string) => unarchiveAccount(ledgerId, accountId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_KEY(ledgerId) })
+      queryClient.invalidateQueries({ queryKey: ACCOUNTS_TREE_KEY(ledgerId) })
+      queryClient.invalidateQueries({ queryKey: SIDEBAR_ACCOUNTS_KEY(ledgerId) })
     },
   })
 }
